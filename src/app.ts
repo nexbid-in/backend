@@ -1,2 +1,5 @@
+import "dotenv/config";
 
-console.log("Trading Platform Backend - Booting...");
+import { logger } from "./infrastructure/logging/logger";
+
+logger.info("Application starting...");
