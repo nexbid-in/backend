@@ -3,6 +3,7 @@ import morgan from "morgan";
 
 import { prisma } from "../../infrastructure/database/prisma";
 import { logger } from "../../infrastructure/logging/logger";
+import redis from "../../infrastructure/config/redis";
 
 
 export const createApp = () => {
@@ -11,7 +12,8 @@ export const createApp = () => {
     app.use(morgan("dev"));
     app.use(express.json());
 
-    app.get("/health", (req, res) => {
+    app.get("/health", async (req, res) => {
+        await redis.del("data");
         res.json({
             status: "ok",
             timestamp: new Date().toISOString(),
@@ -31,6 +33,8 @@ export const createApp = () => {
                 data: { email, name, password }
             });
 
+            redis.set("data", "Hello from redis!");
+
             res.status(201).json(user);
         } catch (error: any) {
             logger.error(error)
@@ -40,7 +44,8 @@ export const createApp = () => {
 
     app.get("/getusers", async (req, res) => {
         const users = await prisma.user.findMany();
-        res.status(200).json(users);
+        const data = await redis.get("data");
+        res.status(200).json({ users, data});
     });
 
     return app;
