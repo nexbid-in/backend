@@ -6,6 +6,7 @@ const redis = new IORedis({
   port: Number(process.env.REDIS_PORT ?? 6379),
   maxRetriesPerRequest: null,
   enableReadyCheck: true, 
+  lazyConnect: true,
 });
 
 export function connectRedis(): Promise<void> {
