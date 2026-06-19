@@ -6,11 +6,15 @@ const redis = new IORedis({
   port: Number(process.env.REDIS_PORT ?? 6379),
   maxRetriesPerRequest: null,
   enableReadyCheck: true, 
-  lazyConnect: true,
 });
 
 export function connectRedis(): Promise<void> {
   return new Promise((resolve, reject) => {
+    if (redis.status === "ready") {
+      logger.info('Redis connected');
+      return resolve();
+    }
+    
     redis.once("ready", () => {
       logger.info("Redis connected");
       resolve();
