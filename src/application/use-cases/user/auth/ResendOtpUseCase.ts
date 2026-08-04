@@ -27,10 +27,16 @@ export class ResendOtpUseCase implements IResendOtpUseCase {
                 throw new AppError(ErrorCodes.USER_ALREADY_EXISTS);
             }
 
+            const existingRecord = await this._otpRepo.get(email);
+
+            if (!existingRecord) {
+                throw new AppError(ErrorCodes.OTP_EXPIRED);
+            }
+
             const otp = this._otpService.generate();
             const otpHash = await this._otpService.hash(otp);
 
-            await this._otpRepo.save(email, otpHash);
+            await this._otpRepo.save(email, otpHash, existingRecord.data);
 
             const subject = "Your nexbid Registration OTP Code (Resent)";
 

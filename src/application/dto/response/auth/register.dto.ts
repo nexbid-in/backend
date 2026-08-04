@@ -5,6 +5,7 @@ export type UserRegisterResponseDTO = {
   user: {
     id: string;
     email: string;
-    fullName: string;
+    firstName: string;
+    lastName: string;
   };
 };

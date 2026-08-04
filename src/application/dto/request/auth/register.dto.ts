@@ -1,9 +1,8 @@
 
 
 export type UserRegisterDTO = {
-  registrationToken: string;
-  fullName: string;
-  dob: string;
-  mobile: string;
-  pin: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
 };

@@ -10,7 +10,6 @@ import { UserIdGenerator } from "../../../infrastructure/services/idGenerator/Us
 import { UniqueUserIdService } from "../../../infrastructure/services/idGenerator/UniqueUserIdService";
 
 import { StartEmailRegistrationUseCase } from "../../../application/use-cases/user/auth/StartEmailRegistrationUseCase";
-import { CompleteRegistrationUseCase } from "../../../application/use-cases/user/auth/CompleteRegistrationUseCase";
 import { VerifyEmailOtpUseCase } from "../../../application/use-cases/user/auth/VerifyEmailOtpUseCase";
 import { ResendOtpUseCase } from "../../../application/use-cases/user/auth/ResendOtpUseCase";
 
@@ -27,12 +26,11 @@ const pinHashService = new PinHashService();
 const userIdGenerator = new UserIdGenerator();
 const uniqueUserIdService = new UniqueUserIdService(userRepository, userIdGenerator);
 
-const startEmailRegistrationUseCase = new StartEmailRegistrationUseCase(userRepository, redisEmailOtpRepository, otpService, emailService);
-const verifyEmailOtpUseCase = new VerifyEmailOtpUseCase(redisEmailOtpRepository, otpService, registrationTokenService);
+const startEmailRegistrationUseCase = new StartEmailRegistrationUseCase(userRepository, redisEmailOtpRepository, otpService, emailService, pinHashService);
+const verifyEmailOtpUseCase = new VerifyEmailOtpUseCase(redisEmailOtpRepository, otpService, userRepository, uniqueUserIdService, authTokenService);
 const resendOtpUseCase = new ResendOtpUseCase(userRepository, redisEmailOtpRepository, otpService, emailService);
-const completeRegistrationUseCase = new CompleteRegistrationUseCase(userRepository, pinHashService, uniqueUserIdService, authTokenService, registrationTokenService);
 
-export const authController = new AuthController(startEmailRegistrationUseCase, verifyEmailOtpUseCase, resendOtpUseCase, completeRegistrationUseCase);
+export const authController = new AuthController(startEmailRegistrationUseCase, verifyEmailOtpUseCase, resendOtpUseCase);
 
 
 

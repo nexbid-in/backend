@@ -15,15 +15,6 @@ export class UserRepository extends BaseRepository implements IUserRepository {
         return !!user;
     }
 
-    async existsByMobile(mobile: string): Promise<boolean> {
-        const user = await prisma.user.findUnique({
-            where: { mobile },
-            select: { id: true }
-        });
-
-        return !!user;
-    }
-
     async existsById(id: string): Promise<boolean> {
         return this._existsById(prisma.user, id);
     }

@@ -1,14 +1,7 @@
+import { VerifyEmailDTO } from "../../../dto/request/auth/verify-email.dto";
+import { UserRegisterResponseDTO } from "../../../dto/response/auth/register.dto";
 
 
 export interface IVerifyEmailOtpUseCse {
-    execute(input: IVerifyEmailOtpInput): Promise<IVerifyEmailOtpOutput>;
-}
-
-export interface IVerifyEmailOtpInput {
-    email: string;
-    otp: string;
-}
-
-export interface IVerifyEmailOtpOutput {
-    registrationToken: string;
+    execute(input: VerifyEmailDTO): Promise<UserRegisterResponseDTO>;
 }

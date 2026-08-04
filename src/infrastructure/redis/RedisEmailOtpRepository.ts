@@ -1,4 +1,4 @@
-import { IEmailOtpRepository } from "../../domain/repositories/user/IEmailOtpRepository";
+import { IEmailOtpRepository, ITempRegistrationData } from "../../domain/repositories/user/IEmailOtpRepository";
 import redis from "../config/redis";
 
 
@@ -9,10 +9,10 @@ export class RedisEmailOtpRepository implements IEmailOtpRepository {
         return `email_otp: ${email}`;
     }
 
-    async save(email: string, otpHash: string): Promise<void> {
+    async save(email: string, otpHash: string, data: ITempRegistrationData): Promise<void> {
         await redis.set(
             this.key(email),
-            JSON.stringify({ otpHash, attempts: 0 }),
+            JSON.stringify({ otpHash, attempts: 0, data }),
             "EX",
             this.TTL
         );
@@ -22,9 +22,9 @@ export class RedisEmailOtpRepository implements IEmailOtpRepository {
         return (await redis.exists(this.key(email))) === 1;
     }
 
-    async get(email: string): Promise<{ otpHash: string; attempts: number; } | null> {
-        const data = await redis.get(this.key(email));
-        return data ? JSON.parse(data) : null;
+    async get(email: string): Promise<{ otpHash: string; attempts: number; data: ITempRegistrationData } | null> {
+        const rawData = await redis.get(this.key(email));
+        return rawData ? JSON.parse(rawData) : null;
     }
 
     async incrementAttempts(email: string): Promise<void> {
