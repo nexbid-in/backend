@@ -1,6 +1,5 @@
 
-
-export type UserRegisterResponseDTO = {
+export type AuthResponseDTO = {
   accessToken: string;
   user: {
     id: string;

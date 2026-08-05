@@ -1,5 +1,5 @@
 import { InvalidEmailError } from "../../../../domain/errors/InvalidEmailError";
-import { IEmailOtpRepository } from "../../../../domain/repositories/user/IEmailOtpRepository";
+import { IRedisTempUserRepository } from "../../../../domain/repositories/user/IRedisTempUserRepository";
 import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
 import { Email } from "../../../../domain/value-objects/Email";
 import { AppError } from "../../../../shared/errors/AppError";
@@ -12,10 +12,10 @@ import { IResendOtpInput, IResendOtpUseCase } from "../../../interface/use-cases
 export class ResendOtpUseCase implements IResendOtpUseCase {
     constructor(
         private readonly _userRepo: IUserRepository,
-        private readonly _otpRepo: IEmailOtpRepository,
+        private readonly _otpRepo: IRedisTempUserRepository,
         private readonly _otpService: IOtpService,
         private readonly _emailService: IEmailService
-    ) {}
+    ) { }
 
     async execute(input: IResendOtpInput): Promise<void> {
         try {

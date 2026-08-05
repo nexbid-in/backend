@@ -1,27 +1,27 @@
 import { Email } from "../../../../domain/value-objects/Email";
 import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
-import { IEmailOtpRepository } from "../../../../domain/repositories/user/IEmailOtpRepository";
+import { IRedisTempUserRepository } from "../../../../domain/repositories/user/IRedisTempUserRepository";
 import { IOtpService } from "../../../interface/services/IOtpService";
 import { IEmailService } from "../../../interface/services/IEmailService";
-import { IUserRegistrationUseCase } from "../../../interface/use-cases/user/IUserRegistrationUseCase";
+import { IRegisterUserUseCase } from "../../../interface/use-cases/user/IRegisterUserUseCase";
 import { AppError } from "../../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 import { InvalidEmailError } from "../../../../domain/errors/InvalidEmailError";
-import { IPinHashService } from "../../../interface/services/IPinService";
-import { UserRegisterDTO } from "../../../dto/request/auth/register.dto";
+import { IPasswordHashService } from "../../../interface/services/IPasswordHashService";
+import { RegisterUserDTO } from "../../../dto/request/auth/register.dto";
 
 
-export class StartEmailRegistrationUseCase implements IUserRegistrationUseCase {
+export class RegisterUserUseCase implements IRegisterUserUseCase {
     constructor(
         private _userRepo: IUserRepository,
-        private _otpReop: IEmailOtpRepository,
+        private _otpReop: IRedisTempUserRepository,
         private _otpService: IOtpService,
         private _emailService: IEmailService,
-        private _passwordHashService: IPinHashService
+        private _passwordHashService: IPasswordHashService
 
     ) { }
 
-    async execute(input: UserRegisterDTO): Promise<void> {
+    async execute(input: RegisterUserDTO): Promise<void> {
 
         try {
             const emailVO = Email.create(input.email);

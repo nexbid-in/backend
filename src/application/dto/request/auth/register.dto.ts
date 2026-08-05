@@ -1,6 +1,6 @@
 
 
-export type UserRegisterDTO = {
+export type RegisterUserDTO = {
   firstName: string;
   lastName: string;
   email: string;

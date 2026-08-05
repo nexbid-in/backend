@@ -1,28 +1,28 @@
 import { User } from "../../../../domain/entities/User";
-import { IEmailOtpRepository } from "../../../../domain/repositories/user/IEmailOtpRepository";
+import { IRedisTempUserRepository } from "../../../../domain/repositories/user/IRedisTempUserRepository";
 import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
 import { AppError } from "../../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 import { VerifyEmailDTO } from "../../../dto/request/auth/verify-email.dto";
-import { UserRegisterResponseDTO } from "../../../dto/response/auth/register.dto";
+import { AuthResponseDTO } from "../../../dto/response/auth/auth-response.dto";
 import { IOtpService } from "../../../interface/services/IOtpService";
 import { IAuthTokenService } from "../../../interface/services/ITokenService";
 import { IUniqueUserIdService } from "../../../interface/services/IUserIdGenerator";
-import { IVerifyEmailOtpUseCse } from "../../../interface/use-cases/user/IVerifyEmailOtpUseCase";
+import { IVerifyEmailAndCreateAccountUseCase } from "../../../interface/use-cases/user/IVerifyEmailAndCreateAccountUseCase";
 
 
-export class VerifyEmailOtpUseCase implements IVerifyEmailOtpUseCse {
+export class VerifyEmailAndCreateAccountUseCase implements IVerifyEmailAndCreateAccountUseCase {
     private MAX_ATTEMPTS = 5;
 
     constructor(
-        private readonly _otpRepo: IEmailOtpRepository,
+        private readonly _otpRepo: IRedisTempUserRepository,
         private readonly _otpService: IOtpService,
         private readonly _userRepo: IUserRepository,
         private readonly _userIdService: IUniqueUserIdService,
         private readonly _authTokenService: IAuthTokenService
-    ) {}
+    ) { }
 
-    async execute(input: VerifyEmailDTO): Promise<UserRegisterResponseDTO> {
+    async execute(input: VerifyEmailDTO): Promise<AuthResponseDTO> {
 
         const record = await this._otpRepo.get(input.email);
 
