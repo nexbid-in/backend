@@ -1,7 +1,7 @@
 import "dotenv/config";
 
 import { logger } from "./infrastructure/logging/logger";
-import { createApp } from "./interfaces/http/app";
+import { createApp } from "./presentation/http/app";
 import { connectPrisma } from "./infrastructure/database/prisma";
 import { connectRedis } from "./infrastructure/config/redis";
 
