@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const emailSchema = z.string().email("Please enter a valid email address");
+const emailSchema = z.string().email("Please enter a valid email address");
 
 const passwordSchema = z.string()
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
@@ -15,4 +15,13 @@ export const userRegisterSchema = z.object({
     lastName: z.string().regex(/^[a-zA-Z]+$/, "Only letters allowed").min(1, "Min 1 character").max(20, "Max 20 characters"),
     email: emailSchema,
     password: passwordSchema,
+});
+
+export const verifyOtpSchema = z.object({
+    email: emailSchema,
+    otp: z.string().length(6, "OTP must be exactly 6 digits")
+});
+
+export const resendOtpSchema = z.object({
+    email: emailSchema,
 });

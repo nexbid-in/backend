@@ -31,7 +31,7 @@ export class RegisterUserUseCase implements IRegisterUserUseCase {
             const userExists = await this._userRepo.existsByEmail(email);
 
             if (userExists) {
-                throw new AppError(ErrorCodes.USER_ALREADY_EXISTS);
+                throw new AppError(ErrorCodes.EMAIL_ALREADY_EXISTS);
             }
 
             const passwordHash = await this._passwordHashService.hash(input.password);

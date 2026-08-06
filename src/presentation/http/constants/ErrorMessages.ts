@@ -1,14 +1,11 @@
 
 
 export const ErrorMessages = {
-  // Auth / Registration
-  REGISTRATION_TOKEN_MISSING: "Registration token missing",
+  // Auth
   INVALID_AUTH_HEADER: "Invalid authorization header",
-  INVALID_REGISTRATION_TOKEN: "Invalid or expired registration token",
   INVALID_EMAIL: "Invalid email address",
 
-  USER_ALREADY_EXISTS: "User already exists",
-  MOBILE_ALREADY_IN_USE: "Mobile number already in use",
+  EMAIL_ALREADY_EXISTS: "An account with this email already exists.",
 
   OTP_INVALID: "Invalid OTP",
   OTP_EXPIRED: "OTP has expired",

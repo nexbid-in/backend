@@ -13,7 +13,7 @@ const startServer = async () => {
 
         await connectRedis();
 
-        const PORT = process.env.PORT || 3000;
+        const PORT = process.env.PORT || 7000;
 
         app.listen(PORT, () => {
             logger.info(`Server is running at http://localhost:${PORT}`);

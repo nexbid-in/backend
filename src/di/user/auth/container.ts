@@ -12,7 +12,7 @@ import { RegisterUserUseCase } from "../../../application/use-cases/user/auth/Re
 import { VerifyEmailAndCreateAccountUseCase } from "../../../application/use-cases/user/auth/VerifyEmailAndCreateAccountUseCase";
 import { ResendOtpUseCase } from "../../../application/use-cases/user/auth/ResendOtpUseCase";
 
-import { AuthController } from "../../../interfaces/http/controllers/user/AuthController";
+import { AuthController } from "../../../presentation/http/controllers/user/AuthController";
 
 
 const userRepository = new UserRepository();

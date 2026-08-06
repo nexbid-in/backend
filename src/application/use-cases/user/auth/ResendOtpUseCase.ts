@@ -24,7 +24,7 @@ export class ResendOtpUseCase implements IResendOtpUseCase {
 
             const userExists = await this._userRepo.existsByEmail(email);
             if (userExists) {
-                throw new AppError(ErrorCodes.USER_ALREADY_EXISTS);
+                throw new AppError(ErrorCodes.EMAIL_ALREADY_EXISTS);
             }
 
             const existingRecord = await this._otpRepo.get(email);

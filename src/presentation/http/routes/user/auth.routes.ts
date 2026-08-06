@@ -1,6 +1,6 @@
 import express, { NextFunction, Request, Response } from "express";
 
-import { emailSchema, userRegisterSchema } from "../../../../infrastructure/services/validators/UserRegisterSchema";
+import { resendOtpSchema, userRegisterSchema, verifyOtpSchema } from "../../../../infrastructure/services/validators/UserRegisterSchema";
 import { zodValidate } from "../../../../infrastructure/middlewares/zodValidate";
 
 import { authController } from "../../../../di/user/auth/container";
@@ -13,11 +13,11 @@ router.post("/register",
 );
 
 router.post("/verify-otp", 
-    (req: Request, res: Response, next: NextFunction) => authController.verifyEmailAndCreateAccount(req, res, next)
+    zodValidate(verifyOtpSchema), (req: Request, res: Response, next: NextFunction) => authController.verifyEmailAndCreateAccount(req, res, next)
 );
 
 router.post("/resend-otp",
-    zodValidate(emailSchema), (req: Request, res: Response, next: NextFunction) => authController.resendOtp(req, res, next)
+    zodValidate(resendOtpSchema), (req: Request, res: Response, next: NextFunction) => authController.resendOtp(req, res, next)
 );
     
 
