@@ -60,4 +60,14 @@ export const HttpErrorMap: Record<
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     message: ErrorMessages.INTERNAL_SERVER_ERROR,
   },
+
+  [ErrorCodes.OTP_RATE_LIMIT_EXCEEDED]: {
+    status: HttpStatus.TOO_MANY_REQUESTS,
+    message: ErrorMessages.OTP_RATE_LIMIT_EXCEEDED,
+  },
+
+  [ErrorCodes.LOGIN_RATE_LIMIT_EXCEEDED]: {
+    status: HttpStatus.TOO_MANY_REQUESTS,
+    message: ErrorMessages.LOGIN_RATE_LIMIT_EXCEEDED,
+  }
 };

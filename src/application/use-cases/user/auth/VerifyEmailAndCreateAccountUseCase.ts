@@ -31,7 +31,6 @@ export class VerifyEmailAndCreateAccountUseCase implements IVerifyEmailAndCreate
         }
 
         if (record.attempts >= this.MAX_ATTEMPTS) {
-            await this._otpRepo.delete(input.email);
             throw new AppError(ErrorCodes.OTP_TOO_MANY_ATTEMPTS);
         }
 

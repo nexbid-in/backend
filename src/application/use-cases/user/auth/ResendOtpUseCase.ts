@@ -1,20 +1,20 @@
 import { InvalidEmailError } from "../../../../domain/errors/InvalidEmailError";
 import { IRedisTempUserRepository } from "../../../../domain/repositories/user/IRedisTempUserRepository";
-import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
 import { Email } from "../../../../domain/value-objects/Email";
 import { AppError } from "../../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 import { IEmailService } from "../../../interface/services/IEmailService";
 import { IOtpService } from "../../../interface/services/IOtpService";
+import { IRedisRateLimiter } from "../../../interface/services/IRedisRateLimiter";
 import { IResendOtpInput, IResendOtpUseCase } from "../../../interface/use-cases/user/IResendOtpUseCase";
 
 
 export class ResendOtpUseCase implements IResendOtpUseCase {
     constructor(
-        private readonly _userRepo: IUserRepository,
         private readonly _otpRepo: IRedisTempUserRepository,
         private readonly _otpService: IOtpService,
-        private readonly _emailService: IEmailService
+        private readonly _emailService: IEmailService,
+        private readonly _rateLimiter: IRedisRateLimiter,
     ) { }
 
     async execute(input: IResendOtpInput): Promise<void> {
@@ -22,9 +22,11 @@ export class ResendOtpUseCase implements IResendOtpUseCase {
             const emailVO = Email.create(input.email);
             const email = emailVO.getValue();
 
-            const userExists = await this._userRepo.existsByEmail(email);
-            if (userExists) {
-                throw new AppError(ErrorCodes.EMAIL_ALREADY_EXISTS);
+            const RATE_LIMIT_KEY = `rate_limit:otp:${email}`;
+            const isAllowed = await this._rateLimiter.incrementAndCheck(RATE_LIMIT_KEY, 5, 900);
+
+            if (!isAllowed) {
+                throw new AppError(ErrorCodes.OTP_RATE_LIMIT_EXCEEDED);
             }
 
             const existingRecord = await this._otpRepo.get(email);

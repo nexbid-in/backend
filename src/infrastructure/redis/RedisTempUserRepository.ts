@@ -18,10 +18,6 @@ export class RedisTempUserRepository implements IRedisTempUserRepository {
         );
     }
 
-    async exists(email: string): Promise<boolean> {
-        return (await redis.exists(this.key(email))) === 1;
-    }
-
     async get(email: string): Promise<{ otpHash: string; attempts: number; data: UnverifiedUser } | null> {
         const rawData = await redis.get(this.key(email));
         return rawData ? JSON.parse(rawData) : null;

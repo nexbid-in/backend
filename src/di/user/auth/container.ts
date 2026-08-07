@@ -1,6 +1,7 @@
 import { RedisTempUserRepository } from "../../../infrastructure/redis/RedisTempUserRepository";
 import { UserRepository } from "../../../infrastructure/repositories/user/UserRepository";
 
+import { RedisRateLimiter } from "../../../infrastructure/redis/RedisRateLimiter";
 import { OtpService } from "../../../infrastructure/services/otp/OtpService";
 import { EmailService } from "../../../infrastructure/services/nodeMailer/EmailService";
 import { AuthTokenService } from "../../../infrastructure/services/jwt/AuthTokenService";
@@ -16,19 +17,20 @@ import { AuthController } from "../../../presentation/http/controllers/user/Auth
 
 
 const userRepository = new UserRepository();
-const redisEmailOtpRepository = new RedisTempUserRepository();
+const redisTempUserRepository = new RedisTempUserRepository();
 const otpService = new OtpService();
 const emailService = new EmailService();
 const authTokenService = new AuthTokenService();
 const passwordHashService = new PasswordHashService();
 const userIdGenerator = new UserIdGenerator();
 const uniqueUserIdService = new UniqueUserIdService(userRepository, userIdGenerator);
+const redisRateLimiter = new RedisRateLimiter();
 
-const userRegistrationUseCase = new RegisterUserUseCase(userRepository, redisEmailOtpRepository, otpService, emailService, passwordHashService);
-const verifyEmailUseCase = new VerifyEmailAndCreateAccountUseCase(redisEmailOtpRepository, otpService, userRepository, uniqueUserIdService, authTokenService);
-const resendOtpUseCase = new ResendOtpUseCase(userRepository, redisEmailOtpRepository, otpService, emailService);
+const registerUserUseCase = new RegisterUserUseCase(userRepository, redisTempUserRepository, otpService, emailService, passwordHashService, redisRateLimiter);
+const verifyEmailAndCreateAccountUseCase = new VerifyEmailAndCreateAccountUseCase(redisTempUserRepository, otpService, userRepository, uniqueUserIdService, authTokenService);
+const resendOtpUseCase = new ResendOtpUseCase(redisTempUserRepository, otpService, emailService, redisRateLimiter);
 
-export const authController = new AuthController(userRegistrationUseCase, verifyEmailUseCase, resendOtpUseCase);
+export const authController = new AuthController(registerUserUseCase, verifyEmailAndCreateAccountUseCase, resendOtpUseCase);
 
 
 
