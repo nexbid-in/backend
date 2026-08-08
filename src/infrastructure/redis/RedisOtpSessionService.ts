@@ -1,8 +1,8 @@
-import { IRedisTempUserRepository, UnverifiedUser } from "../../domain/repositories/user/IRedisTempUserRepository";
+import { IOtpSessionService, UnverifiedUser } from "../../application/interface/services/IOtpSessionService";
 import redis from "../config/redis";
 
 
-export class RedisTempUserRepository implements IRedisTempUserRepository {
+export class RedisOtpSessionService implements IOtpSessionService {
     private TTL = 300;
 
     private key(email: string): string {

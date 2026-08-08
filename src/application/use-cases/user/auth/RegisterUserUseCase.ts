@@ -1,6 +1,6 @@
 import { Email } from "../../../../domain/value-objects/Email";
 import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
-import { IRedisTempUserRepository } from "../../../../domain/repositories/user/IRedisTempUserRepository";
+import { IOtpSessionService } from "../../../interface/services/IOtpSessionService";
 import { IOtpService } from "../../../interface/services/IOtpService";
 import { IEmailService } from "../../../interface/services/IEmailService";
 import { IRegisterUserUseCase } from "../../../interface/use-cases/user/IRegisterUserUseCase";
@@ -9,17 +9,17 @@ import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 import { InvalidEmailError } from "../../../../domain/errors/InvalidEmailError";
 import { IPasswordHashService } from "../../../interface/services/IPasswordHashService";
 import { RegisterUserDTO } from "../../../dto/request/auth/register.dto";
-import { IRedisRateLimiter } from "../../../interface/services/IRedisRateLimiter";
+import { IRateLimiter } from "../../../interface/services/IRateLimiter";
 
 
 export class RegisterUserUseCase implements IRegisterUserUseCase {
     constructor(
         private readonly _userRepo: IUserRepository,
-        private readonly _otpRepo: IRedisTempUserRepository,
+        private readonly _otpRepo: IOtpSessionService,
         private readonly _otpService: IOtpService,
         private readonly _emailService: IEmailService,
         private readonly _passwordHashService: IPasswordHashService,
-        private readonly _rateLimiter: IRedisRateLimiter,
+        private readonly _rateLimiter: IRateLimiter,
 
     ) { }
 

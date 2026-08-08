@@ -1,5 +1,5 @@
 import { User } from "../../../../domain/entities/User";
-import { IRedisTempUserRepository } from "../../../../domain/repositories/user/IRedisTempUserRepository";
+import { IOtpSessionService } from "../../../interface/services/IOtpSessionService";
 import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
 import { AppError } from "../../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
@@ -15,7 +15,7 @@ export class VerifyEmailAndCreateAccountUseCase implements IVerifyEmailAndCreate
     private MAX_ATTEMPTS = 5;
 
     constructor(
-        private readonly _otpRepo: IRedisTempUserRepository,
+        private readonly _otpRepo: IOtpSessionService,
         private readonly _otpService: IOtpService,
         private readonly _userRepo: IUserRepository,
         private readonly _userIdService: IUniqueUserIdService,

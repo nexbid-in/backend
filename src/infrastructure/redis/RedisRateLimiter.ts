@@ -1,7 +1,7 @@
-import { IRedisRateLimiter } from "../../application/interface/services/IRedisRateLimiter";
+import { IRateLimiter } from "../../application/interface/services/IRateLimiter";
 import redis from "../config/redis";
 
-export class RedisRateLimiter implements IRedisRateLimiter {
+export class RedisRateLimiter implements IRateLimiter {
     async incrementAndCheck(key: string, limit: number, windowInSeconds: number): Promise<boolean> {
         const currentCount = await redis.incr(key);
 

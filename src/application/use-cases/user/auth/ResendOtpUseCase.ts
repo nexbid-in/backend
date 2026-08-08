@@ -1,20 +1,20 @@
 import { InvalidEmailError } from "../../../../domain/errors/InvalidEmailError";
-import { IRedisTempUserRepository } from "../../../../domain/repositories/user/IRedisTempUserRepository";
+import { IOtpSessionService } from "../../../interface/services/IOtpSessionService";
 import { Email } from "../../../../domain/value-objects/Email";
 import { AppError } from "../../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 import { IEmailService } from "../../../interface/services/IEmailService";
 import { IOtpService } from "../../../interface/services/IOtpService";
-import { IRedisRateLimiter } from "../../../interface/services/IRedisRateLimiter";
+import { IRateLimiter } from "../../../interface/services/IRateLimiter";
 import { IResendOtpInput, IResendOtpUseCase } from "../../../interface/use-cases/user/IResendOtpUseCase";
 
 
 export class ResendOtpUseCase implements IResendOtpUseCase {
     constructor(
-        private readonly _otpRepo: IRedisTempUserRepository,
+        private readonly _otpRepo: IOtpSessionService,
         private readonly _otpService: IOtpService,
         private readonly _emailService: IEmailService,
-        private readonly _rateLimiter: IRedisRateLimiter,
+        private readonly _rateLimiter: IRateLimiter,
     ) { }
 
     async execute(input: IResendOtpInput): Promise<void> {
