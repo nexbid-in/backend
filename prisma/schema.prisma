@@ -12,27 +12,22 @@ datasource db {
 
 model User {
   // Core Identity
-  id         String   @id
-  email      String   @unique
-  mobile     String   @unique
-  fullName   String
-  dob        DateTime @db.Date
-  pinHash    String
+  id           String   @id
+  email        String   @unique
+  firstName    String
+  lastName     String
+  password     String
 
   // Optional Profile Info
-  gender                String?
-  incomeRange           Int?
-  occupation            String?
-  permanentAddress      String?
-  correspondenceAddress String?
-  profileImage          String?
+  mobile       String?  
+  profileImage String?
+  googleId     String?  @unique
 
   // Account Status
-  isBlocked Boolean @default(false)
-  isBanned  Boolean @default(false)
-  isActive  Boolean @default(true)
+  isBlocked    Boolean @default(false)
 
   // Metadata
-  createdAt DateTime @default(now())
+  createdAt    DateTime @default(now())
 }
+
 

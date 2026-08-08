@@ -1,10 +1,10 @@
 
-
-export type UserRegisterResponseDTO = {
+export type AuthResponseDTO = {
   accessToken: string;
   user: {
     id: string;
     email: string;
-    fullName: string;
+    firstName: string;
+    lastName: string;
   };
 };

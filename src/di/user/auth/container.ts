@@ -1,38 +1,36 @@
-import { RedisEmailOtpRepository } from "../../../infrastructure/redis/RedisEmailOtpRepository";
+import { RedisOtpSessionService } from "../../../infrastructure/redis/RedisOtpSessionService";
 import { UserRepository } from "../../../infrastructure/repositories/user/UserRepository";
 
+import { RedisRateLimiter } from "../../../infrastructure/redis/RedisRateLimiter";
 import { OtpService } from "../../../infrastructure/services/otp/OtpService";
 import { EmailService } from "../../../infrastructure/services/nodeMailer/EmailService";
-import { RegistrationTokenService } from "../../../infrastructure/services/jwt/RegistrationTokenService";
 import { AuthTokenService } from "../../../infrastructure/services/jwt/AuthTokenService";
-import { PinHashService } from "../../../infrastructure/services/pinHash/PinService";
+import { PasswordHashService } from "../../../infrastructure/services/hashing/PasswordHashService";
 import { UserIdGenerator } from "../../../infrastructure/services/idGenerator/UserIdGenerator";
 import { UniqueUserIdService } from "../../../infrastructure/services/idGenerator/UniqueUserIdService";
 
-import { StartEmailRegistrationUseCase } from "../../../application/use-cases/user/auth/StartEmailRegistrationUseCase";
-import { CompleteRegistrationUseCase } from "../../../application/use-cases/user/auth/CompleteRegistrationUseCase";
-import { VerifyEmailOtpUseCase } from "../../../application/use-cases/user/auth/VerifyEmailOtpUseCase";
+import { RegisterUserUseCase } from "../../../application/use-cases/user/auth/RegisterUserUseCase";
+import { VerifyEmailAndCreateAccountUseCase } from "../../../application/use-cases/user/auth/VerifyEmailAndCreateAccountUseCase";
 import { ResendOtpUseCase } from "../../../application/use-cases/user/auth/ResendOtpUseCase";
 
-import { AuthController } from "../../../interfaces/http/controllers/user/AuthController";
+import { AuthController } from "../../../presentation/http/controllers/user/AuthController";
 
 
 const userRepository = new UserRepository();
-const redisEmailOtpRepository = new RedisEmailOtpRepository();
+const redisOtpSessionService = new RedisOtpSessionService();
 const otpService = new OtpService();
 const emailService = new EmailService();
-const registrationTokenService = new RegistrationTokenService();
 const authTokenService = new AuthTokenService();
-const pinHashService = new PinHashService();
+const passwordHashService = new PasswordHashService();
 const userIdGenerator = new UserIdGenerator();
 const uniqueUserIdService = new UniqueUserIdService(userRepository, userIdGenerator);
+const redisRateLimiter = new RedisRateLimiter();
 
-const startEmailRegistrationUseCase = new StartEmailRegistrationUseCase(userRepository, redisEmailOtpRepository, otpService, emailService);
-const verifyEmailOtpUseCase = new VerifyEmailOtpUseCase(redisEmailOtpRepository, otpService, registrationTokenService);
-const resendOtpUseCase = new ResendOtpUseCase(userRepository, redisEmailOtpRepository, otpService, emailService);
-const completeRegistrationUseCase = new CompleteRegistrationUseCase(userRepository, pinHashService, uniqueUserIdService, authTokenService, registrationTokenService);
+const registerUserUseCase = new RegisterUserUseCase(userRepository, redisOtpSessionService, otpService, emailService, passwordHashService, redisRateLimiter);
+const verifyEmailAndCreateAccountUseCase = new VerifyEmailAndCreateAccountUseCase(redisOtpSessionService, otpService, userRepository, uniqueUserIdService, authTokenService);
+const resendOtpUseCase = new ResendOtpUseCase(redisOtpSessionService, otpService, emailService, redisRateLimiter);
 
-export const authController = new AuthController(startEmailRegistrationUseCase, verifyEmailOtpUseCase, resendOtpUseCase, completeRegistrationUseCase);
+export const authController = new AuthController(registerUserUseCase, verifyEmailAndCreateAccountUseCase, resendOtpUseCase);
 
 
 

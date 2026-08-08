@@ -1,18 +1,17 @@
 
 
 export const ErrorMessages = {
-  // Auth / Registration
-  REGISTRATION_TOKEN_MISSING: "Registration token missing",
+  // Auth
   INVALID_AUTH_HEADER: "Invalid authorization header",
-  INVALID_REGISTRATION_TOKEN: "Invalid or expired registration token",
   INVALID_EMAIL: "Invalid email address",
+  LOGIN_RATE_LIMIT_EXCEEDED : "Too many login attempts. Please try again in 5 minutes.",
 
-  USER_ALREADY_EXISTS: "User already exists",
-  MOBILE_ALREADY_IN_USE: "Mobile number already in use",
+  EMAIL_ALREADY_EXISTS: "An account with this email already exists.",
 
-  OTP_INVALID: "Invalid OTP",
-  OTP_EXPIRED: "OTP has expired",
-  OTP_TOO_MANY_ATTEMPTS: "Too many invalid OTP attempts. Please request a new OTP.",
+  OTP_INVALID: "Invalid verification code.",
+  OTP_EXPIRED: "Verification code has expired. Please register again.",
+  OTP_TOO_MANY_ATTEMPTS: "Too many incorrect attempts. Please request a new verification code.",
+  OTP_RATE_LIMIT_EXCEEDED: "Too many requests. Please try again in 15 minutes.",
 
   USER_ID_GENERATION_FAILED: "Failed to generate a unique user ID. Please try again.",
 

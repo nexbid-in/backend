@@ -31,6 +31,7 @@ export const errorHandler = (
 ) => {
   
   if (err instanceof ZodError) {
+    logger.debug(err)
     return res.status(HttpStatus.BAD_REQUEST).json({
       success: false,
       error: {
@@ -64,7 +65,7 @@ export const errorHandler = (
       return res.status(HttpStatus.CONFLICT).json({
         success: false,
         error: {
-          code: ErrorCodes.USER_ALREADY_EXISTS,
+          code: ErrorCodes.EMAIL_ALREADY_EXISTS,
           message: "Unique constraint violation",
         },
       });

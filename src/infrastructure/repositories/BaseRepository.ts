@@ -1,10 +1,20 @@
-import { PrismaCreateDelegate } from "../database/types/PrismaCreateDelegate";
-import { PrismaFindByIdDelegate } from "../database/types/PrismaFindByIdDelegate";
+import { IBaseRepository } from "../../domain/repositories/IBaseRepository";
 
+export abstract class BaseRepository<TDelegate> {
+    constructor(protected readonly model: TDelegate) {}
 
-export abstract class BaseRepository {
-    protected async _existsById(model: PrismaFindByIdDelegate, id: string): Promise<boolean> {
-        const record = await model.findUnique({
+    protected async _findById(id: string): Promise<any | null> {
+        return await (this.model as any).findUnique({
+            where: { id }
+        });
+    }
+
+    protected async _findAll(): Promise<any[]> {
+        return await (this.model as any).findMany();
+    }
+
+    public async existsById(id: string): Promise<boolean> {
+        const record = await (this.model as any).findUnique({
             where: { id },
             select: { id: true },
         });
@@ -12,7 +22,25 @@ export abstract class BaseRepository {
         return !!record;
     }
 
-    protected async _create<TData, TResult>(model: PrismaCreateDelegate<TData, TResult>, data: TData): Promise<TResult> {
-        return await model.create({ data });
+    protected async _create<TData>(data: TData): Promise<any> {
+        return await (this.model as any).create({ data });
+    }
+
+    protected async _update<TData>(id: string, data: TData): Promise<any> {
+        return await (this.model as any).update({
+            where: { id },
+            data
+        });
+    }
+
+    public async delete(id: string): Promise<boolean> {
+        try {
+            await (this.model as any).delete({
+                where: { id }
+            });
+            return true;
+        } catch (error) {
+            return false;
+        }
     }
 }

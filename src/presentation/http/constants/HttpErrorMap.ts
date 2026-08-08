@@ -6,29 +6,14 @@ export const HttpErrorMap: Record<
   ErrorCodes,
   { status: HttpStatus; message: string }
 > = {
-  [ErrorCodes.REGISTRATION_TOKEN_MISSING]: {
-    status: HttpStatus.UNAUTHORIZED,
-    message: ErrorMessages.REGISTRATION_TOKEN_MISSING,
-  },
-
-  [ErrorCodes.INVALID_REGISTRATION_TOKEN]: {
-    status: HttpStatus.UNAUTHORIZED,
-    message: ErrorMessages.INVALID_REGISTRATION_TOKEN,
-  },
-
   [ErrorCodes.INVALID_EMAIL]: {
     status: HttpStatus.BAD_REQUEST,
     message: ErrorMessages.INVALID_EMAIL,
   },
 
-  [ErrorCodes.USER_ALREADY_EXISTS]: {
+  [ErrorCodes.EMAIL_ALREADY_EXISTS]: {
     status: HttpStatus.CONFLICT,
-    message: ErrorMessages.USER_ALREADY_EXISTS,
-  },
-
-  [ErrorCodes.MOBILE_ALREADY_IN_USE]: {
-    status: HttpStatus.CONFLICT,
-    message: ErrorMessages.MOBILE_ALREADY_IN_USE,
+    message: ErrorMessages.EMAIL_ALREADY_EXISTS,
   },
 
   [ErrorCodes.OTP_INVALID]: {
@@ -75,4 +60,14 @@ export const HttpErrorMap: Record<
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     message: ErrorMessages.INTERNAL_SERVER_ERROR,
   },
+
+  [ErrorCodes.OTP_RATE_LIMIT_EXCEEDED]: {
+    status: HttpStatus.TOO_MANY_REQUESTS,
+    message: ErrorMessages.OTP_RATE_LIMIT_EXCEEDED,
+  },
+
+  [ErrorCodes.LOGIN_RATE_LIMIT_EXCEEDED]: {
+    status: HttpStatus.TOO_MANY_REQUESTS,
+    message: ErrorMessages.LOGIN_RATE_LIMIT_EXCEEDED,
+  }
 };

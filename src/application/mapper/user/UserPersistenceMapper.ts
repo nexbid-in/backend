@@ -7,41 +7,28 @@ export class UserPersistenceMapper {
     return {
       id: user.id,
       email: user.email,
-      mobile: user.mobile,
-      fullName: user.fullName,
-      dob: user.dob,
-      pinHash: user.pinHash,
-      gender: user.gender ?? null,
-      incomeRange: user.incomeRange ?? null,
-      occupation: user.occupation ?? null,
-      permanentAddress: user.permanentAddress ?? null,
-      correspondenceAddress: user.correspondenceAddress ?? null,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      password: user.password,
+      mobile: user.mobile ?? null,
       profileImage: user.profileImage ?? null,
-      isActive: user.isActive,
+      googleId: user.googleId ?? null,
       isBlocked: user.isBlocked,
-      isBanned: user.isBanned,
       createdAt: user.createdAt,
     };
   }
-
 
   static toDomain(raw: UserPersistenceDTO): User {
     return User.create({
         id: raw.id,
         email: raw.email,
-        mobile: raw.mobile,
-        fullName: raw.fullName,
-        dob: raw.dob,
-        pinHash: raw.pinHash,
-        gender: raw.gender ?? undefined,
-        incomeRange: raw.incomeRange ?? undefined,
-        occupation: raw.occupation ?? undefined,
-        permanentAddress: raw.permanentAddress ?? undefined,
-        correspondenceAddress: raw.correspondenceAddress ?? undefined,
+        firstName: raw.firstName,
+        lastName: raw.lastName,
+        password: raw.password,
+        mobile: raw.mobile ?? undefined,
         profileImage: raw.profileImage ?? undefined,
-        isActive: raw.isActive,
+        googleId: raw.googleId ?? undefined,
         isBlocked: raw.isBlocked,
-        isBanned: raw.isBanned,
         createdAt: raw.createdAt,
     });
  }
