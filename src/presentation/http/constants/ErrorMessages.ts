@@ -8,6 +8,7 @@ export const ErrorMessages = {
 
   EMAIL_ALREADY_EXISTS: "An account with this email already exists.",
 
+  FAILED_TO_SEND_OTP: "Failed to send verification code.",
   OTP_INVALID: "Invalid verification code.",
   OTP_EXPIRED: "Verification code has expired. Please register again.",
   OTP_TOO_MANY_ATTEMPTS: "Too many incorrect attempts. Please request a new verification code.",
@@ -18,9 +19,6 @@ export const ErrorMessages = {
 
   // Validation
   VALIDATION_FAILED: "Validation failed",
-
-  // Email
-  EMAIL_SEND_FAILED: "Failed to send OTP email",
 
   // Generic
   UNAUTHORIZED: "Unauthorized",

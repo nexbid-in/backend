@@ -37,9 +37,9 @@ export class EmailService implements IEmailService {
     } catch (error: unknown) {
       logger.error(
         { error, email },
-        "Failed to send OTP email"
+        "Failed to send OTP"
       );
-      throw new AppError(ErrorCodes.EMAIL_SEND_FAILED);
+      throw new AppError(ErrorCodes.FAILED_TO_SEND_OTP);
     }
   }
 }

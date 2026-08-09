@@ -26,9 +26,9 @@ export const HttpErrorMap: Record<
     message: ErrorMessages.OTP_EXPIRED,
   },
 
-  [ErrorCodes.EMAIL_SEND_FAILED]: {
+  [ErrorCodes.FAILED_TO_SEND_OTP]: {
     status: HttpStatus.SERVICE_UNAVAILABLE,
-    message: ErrorMessages.EMAIL_SEND_FAILED,
+    message: ErrorMessages.FAILED_TO_SEND_OTP,
   },
 
   [ErrorCodes.VALIDATION_FAILED]: {
