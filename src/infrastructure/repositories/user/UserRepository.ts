@@ -23,6 +23,16 @@ export class UserRepository extends BaseRepository<Prisma.UserDelegate> implemen
         return rawUsers.map((user: UserPersistenceDTO) => UserPersistenceMapper.toDomain(user));
     }
 
+    async findByEmail(email: string): Promise<User | null> {
+        const rawData = await prisma.user.findUnique({
+            where: { email }
+        });
+
+        if (!rawData) return null;
+
+        return UserPersistenceMapper.toDomain(rawData);
+    }
+
     async existsByEmail(email: string): Promise<boolean> {
         const user = await prisma.user.findUnique({
             where: { email },

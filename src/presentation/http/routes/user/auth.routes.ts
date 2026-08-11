@@ -20,5 +20,6 @@ router.post("/resend-otp",
     zodValidate(resendOtpSchema), (req: Request, res: Response, next: NextFunction) => authController.resendOtp(req, res, next)
 );
     
+router.post("/login", authController.login.bind(authController));
 
 export default router;

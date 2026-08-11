@@ -8,6 +8,8 @@ import { HttpStatus } from "../../constants/HttpStatus";
 import { SuccessMessages } from "../../constants/SuccessMessages";
 import { IResendOtpUseCase } from "../../../../application/interface/use-cases/user/IResendOtpUseCase";
 import { VerifyEmailDTO } from "../../../../application/dto/request/auth/verify-email.dto";
+import { ILoginUserUseCase } from "../../../../application/interface/use-cases/user/ILoginUserUseCase";
+import { loginUserSchema } from "../../../../application/dto/request/auth/login.dto";
 
 
 export class AuthController {
@@ -15,6 +17,7 @@ export class AuthController {
     private readonly _registerUser: IRegisterUserUseCase,
     private readonly _verifyEmailAndCreateAccount: IVerifyEmailAndCreateAccountUseCase,
     private readonly _resendOtp: IResendOtpUseCase,
+    private readonly _loginUser: ILoginUserUseCase,
   ) { }
 
   async register(
@@ -71,6 +74,21 @@ export class AuthController {
       });
     } catch (err) {
       next(err);
+    }
+  }
+
+  async login(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const validatedData = loginUserSchema.parse(req.body);
+      const response = await this._loginUser.execute(validatedData);
+
+      res.status(HttpStatus.OK).json(response);
+    } catch (error) {
+      next(error);
     }
   }
 }

@@ -26,4 +26,8 @@ export const ErrorMessages = {
   NOT_FOUND: "Resource not found",
 
   INTERNAL_SERVER_ERROR: "Internal server error",
+
+  INVALID_CREDENTIALS: "Invalid email or password.",
+  ACCOUNT_BLOCKED: "This account has been blocked.",
+
 } as const;

@@ -52,8 +52,8 @@ export const HttpErrorMap: Record<
   },
 
   [ErrorCodes.USER_ID_GENERATION_FAILED]: {
-      status: HttpStatus.SERVICE_UNAVAILABLE,
-      message: ErrorMessages.USER_ID_GENERATION_FAILED,
+    status: HttpStatus.SERVICE_UNAVAILABLE,
+    message: ErrorMessages.USER_ID_GENERATION_FAILED,
   },
 
   [ErrorCodes.INTERNAL_SERVER_ERROR]: {
@@ -69,5 +69,16 @@ export const HttpErrorMap: Record<
   [ErrorCodes.LOGIN_RATE_LIMIT_EXCEEDED]: {
     status: HttpStatus.TOO_MANY_REQUESTS,
     message: ErrorMessages.LOGIN_RATE_LIMIT_EXCEEDED,
-  }
+  },
+
+  [ErrorCodes.INVALID_CREDENTIALS]: {
+    status: HttpStatus.UNAUTHORIZED,
+    message: ErrorMessages.INVALID_CREDENTIALS,
+  },
+  
+  [ErrorCodes.ACCOUNT_BLOCKED]: {
+    status: HttpStatus.FORBIDDEN,
+    message: ErrorMessages.ACCOUNT_BLOCKED,
+  },
+
 };
