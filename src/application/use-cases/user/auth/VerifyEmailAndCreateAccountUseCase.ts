@@ -3,7 +3,7 @@ import { IOtpSessionService } from "../../../interface/services/IOtpSessionServi
 import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
 import { AppError } from "../../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
-import { VerifyEmailDTO } from "../../../dto/request/auth/verify-email.dto";
+import { VerifyEmailDTO } from "../../../dto/request/auth/register.dto";
 import { AuthResponseDTO } from "../../../dto/response/auth/auth-response.dto";
 import { IOtpService } from "../../../interface/services/IOtpService";
 import { IAuthTokenService } from "../../../interface/services/ITokenService";

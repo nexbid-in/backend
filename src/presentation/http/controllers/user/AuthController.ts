@@ -2,14 +2,12 @@ import { Request, Response, NextFunction } from "express";
 
 import { IRegisterUserUseCase } from "../../../../application/interface/use-cases/user/IRegisterUserUseCase";
 import { IVerifyEmailAndCreateAccountUseCase } from "../../../../application/interface/use-cases/user/IVerifyEmailAndCreateAccountUseCase";
-
-import { RegisterUserDTO } from "../../../../application/dto/request/auth/register.dto";
 import { HttpStatus } from "../../constants/HttpStatus";
 import { SuccessMessages } from "../../constants/SuccessMessages";
 import { IResendOtpUseCase } from "../../../../application/interface/use-cases/user/IResendOtpUseCase";
-import { VerifyEmailDTO } from "../../../../application/dto/request/auth/verify-email.dto";
 import { ILoginUserUseCase } from "../../../../application/interface/use-cases/user/ILoginUserUseCase";
 import { loginUserSchema } from "../../../../application/dto/request/auth/login.dto";
+import { registerUserSchema, resendOtpSchema, verifyEmailSchema } from "../../../../application/dto/request/auth/register.dto";
 
 
 export class AuthController {
@@ -26,9 +24,8 @@ export class AuthController {
     next: NextFunction
   ) {
     try {
-      const dto: RegisterUserDTO = req.body;
-
-      await this._registerUser.execute(dto);
+      const validatedData = registerUserSchema.parse(req.body);
+      await this._registerUser.execute(validatedData);
 
       return res.status(HttpStatus.OK).json({
         success: true,
@@ -45,8 +42,8 @@ export class AuthController {
     next: NextFunction
   ) {
     try {
-      const dto: VerifyEmailDTO = req.body;
-      const result = await this._verifyEmailAndCreateAccount.execute(dto);
+      const validatedData = verifyEmailSchema.parse(req.body);
+      const result = await this._verifyEmailAndCreateAccount.execute(validatedData);
 
       return res.status(HttpStatus.CREATED).json({
         success: true,
@@ -64,9 +61,8 @@ export class AuthController {
     next: NextFunction
   ) {
     try {
-      await this._resendOtp.execute({
-        email: req.body.email,
-      });
+      const validatedData = resendOtpSchema.parse(req.body);
+      await this._resendOtp.execute(validatedData);
 
       return res.status(HttpStatus.OK).json({
         success: true,

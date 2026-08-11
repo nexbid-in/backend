@@ -1,8 +1,5 @@
-
-export interface IResendOtpInput {
-    email: string;
-}
+import { ResendOtpDTO } from "../../../dto/request/auth/register.dto";
 
 export interface IResendOtpUseCase {
-    execute(input: IResendOtpInput): Promise<void>;
+    execute(input: ResendOtpDTO): Promise<void>;
 }

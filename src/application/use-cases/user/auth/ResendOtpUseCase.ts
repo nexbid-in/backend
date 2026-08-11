@@ -6,7 +6,8 @@ import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 import { IEmailService } from "../../../interface/services/IEmailService";
 import { IOtpService } from "../../../interface/services/IOtpService";
 import { IRateLimiter } from "../../../interface/services/IRateLimiter";
-import { IResendOtpInput, IResendOtpUseCase } from "../../../interface/use-cases/user/IResendOtpUseCase";
+import { IResendOtpUseCase } from "../../../interface/use-cases/user/IResendOtpUseCase";
+import { ResendOtpDTO } from "../../../dto/request/auth/register.dto";
 
 
 export class ResendOtpUseCase implements IResendOtpUseCase {
@@ -17,7 +18,7 @@ export class ResendOtpUseCase implements IResendOtpUseCase {
         private readonly _rateLimiter: IRateLimiter,
     ) { }
 
-    async execute(input: IResendOtpInput): Promise<void> {
+    async execute(input: ResendOtpDTO): Promise<void> {
         try {
             const emailVO = Email.create(input.email);
             const email = emailVO.getValue();
