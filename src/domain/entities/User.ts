@@ -1,9 +1,10 @@
+import { Email } from "../value-objects/Email";
 
 
 export type UserProps = {
   // Core Identity
   id: string;
-  email: string;
+  email: Email;
   firstName: string;
   lastName: string;
   password: string;
@@ -33,7 +34,7 @@ export class User {
 
     return new User({
       id: props.id,
-      email: props.email.toLowerCase(),
+      email: props.email,
       firstName: props.firstName,
       lastName: props.lastName,
       password: props.password,

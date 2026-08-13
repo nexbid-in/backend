@@ -1,4 +1,5 @@
 import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
+import { Email } from "../../../../domain/value-objects/Email";
 import { AppError } from "../../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 import { LoginUserDTO } from "../../../dto/request/auth/login.dto";
@@ -17,14 +18,16 @@ export class LoginUserUseCase implements ILoginUserUseCase {
     ) {}
 
     async execute(input: LoginUserDTO): Promise<AuthResponseDTO> {
-        const RATE_LIMIT_KEY = `rate_limit:login:${input.email}`;
+        const emailVO = Email.create(input.email);
+        
+        const RATE_LIMIT_KEY = `rate_limit:login:${emailVO.getValue()}`;
         const isAllowed = await this._rateLimiter.incrementAndCheck(RATE_LIMIT_KEY, 5, 300);
         
         if (!isAllowed) {
             throw new AppError(ErrorCodes.LOGIN_RATE_LIMIT_EXCEEDED);
         }
 
-        const user = await this._userRepo.findByEmail(input.email);
+        const user = await this._userRepo.findByEmail(emailVO.getValue());
         if (!user) {
             throw new AppError(ErrorCodes.INVALID_CREDENTIALS);
         }
@@ -40,14 +43,14 @@ export class LoginUserUseCase implements ILoginUserUseCase {
 
         const token = this._authTokenService.generate({
             userId: user.id,
-            email: user.email
+            email: user.email.getValue()
         });
 
         return {
             accessToken: token,
             user: {
                 id: user.id,
-                email: user.email,
+                email: user.email.getValue(),
                 firstName: user.firstName,
                 lastName: user.lastName
             }

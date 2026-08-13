@@ -1,14 +1,18 @@
 import { User } from "../../../../domain/entities/User";
-import { IOtpSessionService } from "../../../interface/services/IOtpSessionService";
-import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
-import { AppError } from "../../../../shared/errors/AppError";
-import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
+import { Email } from "../../../../domain/value-objects/Email";
+
 import { VerifyEmailDTO } from "../../../dto/request/auth/register.dto";
 import { AuthResponseDTO } from "../../../dto/response/auth/auth-response.dto";
+
+import { IVerifyEmailAndCreateAccountUseCase } from "../../../interface/use-cases/user/IVerifyEmailAndCreateAccountUseCase";
+import { IOtpSessionService } from "../../../interface/services/IOtpSessionService";
+import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
 import { IOtpService } from "../../../interface/services/IOtpService";
 import { IAuthTokenService } from "../../../interface/services/ITokenService";
 import { IUniqueUserIdService } from "../../../interface/services/IUserIdGenerator";
-import { IVerifyEmailAndCreateAccountUseCase } from "../../../interface/use-cases/user/IVerifyEmailAndCreateAccountUseCase";
+
+import { AppError } from "../../../../shared/errors/AppError";
+import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 
 
 export class VerifyEmailAndCreateAccountUseCase implements IVerifyEmailAndCreateAccountUseCase {
@@ -24,7 +28,9 @@ export class VerifyEmailAndCreateAccountUseCase implements IVerifyEmailAndCreate
 
     async execute(input: VerifyEmailDTO): Promise<AuthResponseDTO> {
 
-        const record = await this._otpRepo.get(input.email);
+        const emailVO = Email.create(input.email);
+
+        const record = await this._otpRepo.get(emailVO.getValue());
 
         if (!record) {
             throw new AppError(ErrorCodes.OTP_EXPIRED);
@@ -37,7 +43,7 @@ export class VerifyEmailAndCreateAccountUseCase implements IVerifyEmailAndCreate
         const isValid = await this._otpService.compare(input.otp, record.otpHash);
 
         if (!isValid) {
-            await this._otpRepo.incrementAttempts(input.email);
+            await this._otpRepo.incrementAttempts(emailVO.getValue());
             throw new AppError(ErrorCodes.OTP_INVALID);
         }
 
@@ -45,7 +51,7 @@ export class VerifyEmailAndCreateAccountUseCase implements IVerifyEmailAndCreate
 
         const user = User.create({
             id: userId,
-            email: input.email,
+            email: emailVO,
             firstName: record.data.firstName,
             lastName: record.data.lastName,
             password: record.data.passwordHash
@@ -55,7 +61,7 @@ export class VerifyEmailAndCreateAccountUseCase implements IVerifyEmailAndCreate
 
         const accessToken = this._authTokenService.generate({
             userId: user.id,
-            email: user.email
+            email: user.email.getValue()
         });
 
         await this._otpRepo.delete(input.email);
@@ -64,7 +70,7 @@ export class VerifyEmailAndCreateAccountUseCase implements IVerifyEmailAndCreate
             accessToken,
             user: {
                 id: user.id,
-                email: user.email,
+                email: user.email.getValue(),
                 firstName: user.firstName,
                 lastName: user.lastName
             }
