@@ -1,7 +1,7 @@
 import { User } from "../../../../domain/entities/User";
 import { Email } from "../../../../domain/value-objects/Email";
 
-import { VerifyEmailDTO } from "../../../dto/request/auth/register.dto";
+import { VerifyEmailDTO } from "../../../dto/user/auth/RegisterDTO";
 import { AuthResponseDTO } from "../../../dto/response/auth/auth-response.dto";
 
 import { IVerifyEmailAndCreateAccountUseCase } from "../../../interface/use-cases/user/IVerifyEmailAndCreateAccountUseCase";

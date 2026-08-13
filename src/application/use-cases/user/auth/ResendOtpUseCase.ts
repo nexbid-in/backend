@@ -7,7 +7,7 @@ import { IEmailService } from "../../../interface/services/IEmailService";
 import { IOtpService } from "../../../interface/services/IOtpService";
 import { IRateLimiter } from "../../../interface/services/IRateLimiter";
 import { IResendOtpUseCase } from "../../../interface/use-cases/user/IResendOtpUseCase";
-import { ResendOtpDTO } from "../../../dto/request/auth/register.dto";
+import { ResendOtpDTO } from "../../../dto/user/auth/RegisterDTO";
 
 
 export class ResendOtpUseCase implements IResendOtpUseCase {

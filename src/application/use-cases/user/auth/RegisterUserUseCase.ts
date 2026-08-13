@@ -8,7 +8,7 @@ import { AppError } from "../../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 import { InvalidEmailError } from "../../../../domain/errors/InvalidEmailError";
 import { IPasswordHashService } from "../../../interface/services/IPasswordHashService";
-import { RegisterUserDTO } from "../../../dto/request/auth/register.dto";
+import { RegisterUserDTO } from "../../../dto/user/auth/RegisterDTO";
 import { IRateLimiter } from "../../../interface/services/IRateLimiter";
 
 

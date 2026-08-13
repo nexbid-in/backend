@@ -6,8 +6,7 @@ import { HttpStatus } from "../../constants/HttpStatus";
 import { SuccessMessages } from "../../constants/SuccessMessages";
 import { IResendOtpUseCase } from "../../../../application/interface/use-cases/user/IResendOtpUseCase";
 import { ILoginUserUseCase } from "../../../../application/interface/use-cases/user/ILoginUserUseCase";
-import { loginUserSchema } from "../../../../application/dto/request/auth/login.dto";
-import { registerUserSchema, resendOtpSchema, verifyEmailSchema } from "../../../../application/dto/request/auth/register.dto";
+import { registerUserSchema, resendOtpSchema, verifyEmailSchema, loginUserSchema } from "../../validators/AuthValidator";
 
 
 export class AuthController {

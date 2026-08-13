@@ -2,7 +2,7 @@ import { IUserRepository } from "../../../../domain/repositories/user/IUserRepos
 import { Email } from "../../../../domain/value-objects/Email";
 import { AppError } from "../../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
-import { LoginUserDTO } from "../../../dto/request/auth/login.dto";
+import { LoginUserDTO } from "../../../dto/user/auth/LoginDTO";
 import { AuthResponseDTO } from "../../../dto/response/auth/auth-response.dto";
 import { IPasswordHashService } from "../../../interface/services/IPasswordHashService";
 import { IRateLimiter } from "../../../interface/services/IRateLimiter";
@@ -19,7 +19,7 @@ export class LoginUserUseCase implements ILoginUserUseCase {
 
     async execute(input: LoginUserDTO): Promise<AuthResponseDTO> {
         const emailVO = Email.create(input.email);
-        
+
         const RATE_LIMIT_KEY = `rate_limit:login:${emailVO.getValue()}`;
         const isAllowed = await this._rateLimiter.incrementAndCheck(RATE_LIMIT_KEY, 5, 300);
         
