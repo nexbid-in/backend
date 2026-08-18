@@ -1,5 +1,4 @@
 
-
 export enum ErrorCodes {
   // Auth 
   INVALID_EMAIL = "INVALID_EMAIL",

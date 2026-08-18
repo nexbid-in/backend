@@ -2,10 +2,13 @@ import { Request, Response, NextFunction } from "express";
 
 import { IRegisterUserUseCase } from "../../../../application/interface/use-cases/user/IRegisterUserUseCase";
 import { IVerifyEmailAndCreateAccountUseCase } from "../../../../application/interface/use-cases/user/IVerifyEmailAndCreateAccountUseCase";
-import { HttpStatus } from "../../constants/HttpStatus";
-import { SuccessMessages } from "../../constants/SuccessMessages";
 import { IResendOtpUseCase } from "../../../../application/interface/use-cases/user/IResendOtpUseCase";
 import { ILoginUserUseCase } from "../../../../application/interface/use-cases/user/ILoginUserUseCase";
+
+import { HttpStatus } from "../../constants/HttpStatus";
+import { SuccessMessages } from "../../constants/SuccessMessages";
+import { setAuthCookies } from "../../utils/cookieUtils";
+import { ApiResponse } from "../../utils/ApiResponse";
 import { registerUserSchema, resendOtpSchema, verifyEmailSchema, loginUserSchema } from "../../validators/AuthValidator";
 
 
@@ -26,10 +29,8 @@ export class AuthController {
       const validatedData = registerUserSchema.parse(req.body);
       await this._registerUser.execute(validatedData);
 
-      return res.status(HttpStatus.OK).json({
-        success: true,
-        message: SuccessMessages.OTP_SENT,
-      });
+      return ApiResponse.success(res, HttpStatus.OK, SuccessMessages.OTP_SENT);
+
     } catch (err) {
       next(err);
     }
@@ -42,13 +43,12 @@ export class AuthController {
   ) {
     try {
       const validatedData = verifyEmailSchema.parse(req.body);
-      const result = await this._verifyEmailAndCreateAccount.execute(validatedData);
+      const response = await this._verifyEmailAndCreateAccount.execute(validatedData);
 
-      return res.status(HttpStatus.CREATED).json({
-        success: true,
-        message: SuccessMessages.REGISTRATION_COMPLETED,
-        data: result,
-      });
+      setAuthCookies(res, response.accessToken);
+
+      return ApiResponse.success(res, HttpStatus.CREATED, SuccessMessages.REGISTRATION_COMPLETED, { user: response.user });
+      
     } catch (err) {
       next(err);
     }
@@ -63,10 +63,8 @@ export class AuthController {
       const validatedData = resendOtpSchema.parse(req.body);
       await this._resendOtp.execute(validatedData);
 
-      return res.status(HttpStatus.OK).json({
-        success: true,
-        message: SuccessMessages.OTP_SENT,
-      });
+      return ApiResponse.success(res, HttpStatus.OK, SuccessMessages.OTP_SENT);
+
     } catch (err) {
       next(err);
     }
@@ -81,7 +79,10 @@ export class AuthController {
       const validatedData = loginUserSchema.parse(req.body);
       const response = await this._loginUser.execute(validatedData);
 
-      res.status(HttpStatus.OK).json(response);
+      setAuthCookies(res, response.accessToken);
+
+      return ApiResponse.success(res, HttpStatus.OK, SuccessMessages.LOGIN_SUCCESS, { user: response.user });
+
     } catch (error) {
       next(error);
     }
