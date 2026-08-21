@@ -4,6 +4,7 @@ import { IRegisterUserUseCase } from "../../../../application/interface/use-case
 import { IVerifyEmailAndCreateAccountUseCase } from "../../../../application/interface/use-cases/user/IVerifyEmailAndCreateAccountUseCase";
 import { IResendOtpUseCase } from "../../../../application/interface/use-cases/user/IResendOtpUseCase";
 import { ILoginUserUseCase } from "../../../../application/interface/use-cases/user/ILoginUserUseCase";
+import { IGetCurrentUserUseCase } from "../../../../application/interface/use-cases/user/IGetCurrentUserUseCase";
 
 import { HttpStatus } from "../../constants/HttpStatus";
 import { SuccessMessages } from "../../constants/SuccessMessages";
@@ -18,6 +19,7 @@ export class AuthController {
     private readonly _verifyEmailAndCreateAccount: IVerifyEmailAndCreateAccountUseCase,
     private readonly _resendOtp: IResendOtpUseCase,
     private readonly _loginUser: ILoginUserUseCase,
+    private readonly _getCurrentUser: IGetCurrentUserUseCase
   ) { }
 
   async register(
@@ -48,7 +50,7 @@ export class AuthController {
       setAuthCookies(res, response.accessToken);
 
       return ApiResponse.success(res, HttpStatus.CREATED, SuccessMessages.REGISTRATION_COMPLETED, { user: response.user });
-      
+
     } catch (err) {
       next(err);
     }
@@ -87,4 +89,29 @@ export class AuthController {
       next(error);
     }
   }
+
+  async getCurrentUser(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      if (!req.user) {
+        return res.status(HttpStatus.UNAUTHORIZED).json({
+          success: false,
+          error: {
+            code: "UNAUTHORIZED",
+            message: "User not authenticated",
+          }
+        });
+      }
+
+      const response = await this._getCurrentUser.execute(req.user.userId);
+      return ApiResponse.success(res, HttpStatus.OK, "User authenticated", { user: response });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+
 }

@@ -10,4 +10,8 @@ export class AuthTokenService implements IAuthTokenService {
             { expiresIn: "1d"},
         );
     }
+
+    verify(token: string): IAuthTokenServiceInput {
+        return jwt.verify(token, process.env.JWT_SECRET!) as IAuthTokenServiceInput;
+    }
 }

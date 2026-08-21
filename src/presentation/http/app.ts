@@ -1,6 +1,7 @@
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 import appRoutes from "./routes/index";
 import { errorHandler } from "./middlewares/errorHandler";
@@ -19,6 +20,7 @@ export const createApp = () => {
 
     app.use(morgan("dev"));
     app.use(express.json());
+    app.use(cookieParser());
 
     app.use("/api", appRoutes);
 

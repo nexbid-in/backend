@@ -15,6 +15,7 @@ import { ResendOtpUseCase } from "../../../application/use-cases/user/auth/Resen
 import { LoginUserUseCase } from "../../../application/use-cases/user/auth/LoginUserUseCase";
 
 import { AuthController } from "../../../presentation/http/controllers/user/AuthController";
+import { GetCurrentUserUseCase } from "../../../application/use-cases/user/auth/GetCurrentUserUseCase";
 
 
 const userRepository = new UserRepository();
@@ -26,13 +27,14 @@ const passwordHashService = new PasswordHashService();
 const userIdGenerator = new UserIdGenerator();
 const uniqueUserIdService = new UniqueUserIdService(userRepository, userIdGenerator);
 const redisRateLimiter = new RedisRateLimiter();
-const loginUserUseCase = new LoginUserUseCase(userRepository, passwordHashService, authTokenService, redisRateLimiter);
 
 const registerUserUseCase = new RegisterUserUseCase(userRepository, redisOtpSessionService, otpService, emailService, passwordHashService, redisRateLimiter);
 const verifyEmailAndCreateAccountUseCase = new VerifyEmailAndCreateAccountUseCase(redisOtpSessionService, otpService, userRepository, uniqueUserIdService, authTokenService);
 const resendOtpUseCase = new ResendOtpUseCase(redisOtpSessionService, otpService, emailService, redisRateLimiter);
+const loginUserUseCase = new LoginUserUseCase(userRepository, passwordHashService, authTokenService, redisRateLimiter);
+const getCurrentUserUseCase = new GetCurrentUserUseCase(userRepository);
 
-export const authController = new AuthController(registerUserUseCase, verifyEmailAndCreateAccountUseCase, resendOtpUseCase, loginUserUseCase);
+export const authController = new AuthController(registerUserUseCase, verifyEmailAndCreateAccountUseCase, resendOtpUseCase, loginUserUseCase, getCurrentUserUseCase);
 
 
 
