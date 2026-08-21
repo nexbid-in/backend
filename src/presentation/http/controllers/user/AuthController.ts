@@ -8,7 +8,7 @@ import { IGetCurrentUserUseCase } from "../../../../application/interface/use-ca
 
 import { HttpStatus } from "../../constants/HttpStatus";
 import { SuccessMessages } from "../../constants/SuccessMessages";
-import { setAuthCookies } from "../../utils/cookieUtils";
+import { clearAuthCookies, setAuthCookies } from "../../utils/cookieUtils";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { registerUserSchema, resendOtpSchema, verifyEmailSchema, loginUserSchema } from "../../validators/AuthValidator";
 
@@ -109,6 +109,19 @@ export class AuthController {
       const response = await this._getCurrentUser.execute(req.user.userId);
       return ApiResponse.success(res, HttpStatus.OK, "User authenticated", { user: response });
 
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  logout(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      clearAuthCookies(res);
+      return ApiResponse.success(res, HttpStatus.OK, "Logged out successfully");
     } catch (error) {
       next(error);
     }

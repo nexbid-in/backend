@@ -13,7 +13,6 @@ declare global {
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   try {
     const token = req.cookies.accessToken;
-    console.log("token :-", token)
 
     if (!token) {
       return res.status(HttpStatus.UNAUTHORIZED).json({
@@ -27,7 +26,6 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
 
     const tokenService = new AuthTokenService();
     const decoded = tokenService.verify(token);
-    console.log(decoded)
     req.user = decoded;
     next();
   } catch (error) {
