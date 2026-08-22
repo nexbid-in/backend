@@ -13,7 +13,7 @@ export class GetCurrentUserUseCase implements IGetCurrentUserUseCase {
         const user = await this._userRepo.findById(id);
 
         if (!user) {
-            throw new AppError(ErrorCodes.NOT_FOUND, "User not found");
+            throw new AppError(ErrorCodes.NOT_FOUND);
         }
 
         return {

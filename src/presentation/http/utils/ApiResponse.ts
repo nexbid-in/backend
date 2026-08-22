@@ -8,4 +8,15 @@ export class ApiResponse {
             ...(data && { data }),
         });
     }
+
+    static error<T = unknown>(res: Response, status: number, code: string, message: string, details?: T) {
+        return res.status(status).json({
+            success: false,
+            error: {
+                code,
+                message,
+                ...(details && { details }),
+            }
+        });
+    }
 }

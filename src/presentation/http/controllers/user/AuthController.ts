@@ -11,6 +11,8 @@ import { SuccessMessages } from "../../constants/SuccessMessages";
 import { clearAuthCookies, setAuthCookies } from "../../utils/cookieUtils";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { registerUserSchema, resendOtpSchema, verifyEmailSchema, loginUserSchema } from "../../validators/AuthValidator";
+import { AppError } from "../../../../shared/errors/AppError";
+import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 
 
 export class AuthController {
@@ -97,13 +99,7 @@ export class AuthController {
   ) {
     try {
       if (!req.user) {
-        return res.status(HttpStatus.UNAUTHORIZED).json({
-          success: false,
-          error: {
-            code: "UNAUTHORIZED",
-            message: "User not authenticated",
-          }
-        });
+        throw new AppError(ErrorCodes.UNAUTHORIZED);
       }
 
       const response = await this._getCurrentUser.execute(req.user.userId);

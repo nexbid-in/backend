@@ -1,11 +1,13 @@
 import { Request, Response, NextFunction } from "express";
-import { HttpStatus } from "../constants/HttpStatus";
 import { AuthTokenService } from "../../../infrastructure/services/jwt/AuthTokenService";
+import { IAuthTokenServiceInput } from "../../../application/interface/services/ITokenService";
+import { AppError } from "../../../shared/errors/AppError";
+import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 
 declare global {
   namespace Express {
     interface Request {
-      user?: any;
+      user?: IAuthTokenServiceInput;
     }
   }
 }
@@ -15,13 +17,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     const token = req.cookies.accessToken;
 
     if (!token) {
-      return res.status(HttpStatus.UNAUTHORIZED).json({
-        success: false,
-        error: {
-          code: "UNAUTHORIZED",
-          message: "No authentication token provided",
-        },
-      });
+      throw new AppError(ErrorCodes.UNAUTHORIZED);
     }
 
     const tokenService = new AuthTokenService();
@@ -29,12 +25,6 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(HttpStatus.UNAUTHORIZED).json({
-      success: false,
-      error: {
-        code: "UNAUTHORIZED",
-        message: "Invalid or expired token",
-      },
-    });
+    next(error);
   }
 };
