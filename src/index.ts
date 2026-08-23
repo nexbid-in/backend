@@ -1,9 +1,8 @@
-import "dotenv/config";
-
 import { logger } from "./infrastructure/logging/logger";
 import { createApp } from "./presentation/http/app";
 import { connectPrisma } from "./infrastructure/database/prisma";
 import { connectRedis } from "./infrastructure/config/redis";
+import { env } from "./infrastructure/config/env";
 
 const startServer = async () => {
     try {
@@ -13,7 +12,7 @@ const startServer = async () => {
 
         await connectRedis();
 
-        const PORT = process.env.PORT || 7000;
+        const PORT = env.PORT;
 
         app.listen(PORT, () => {
             logger.info(`Server is running at http://localhost:${PORT}`);
