@@ -103,7 +103,7 @@ export class AuthController {
       }
 
       const response = await this._getCurrentUser.execute(req.user.userId);
-      return ApiResponse.success(res, HttpStatus.OK, "User authenticated", { user: response });
+      return ApiResponse.success(res, HttpStatus.OK, SuccessMessages.USER_AUTHENTICATED, { user: response });
 
     } catch (error) {
       next(error);
@@ -117,7 +117,7 @@ export class AuthController {
   ) {
     try {
       clearAuthCookies(res);
-      return ApiResponse.success(res, HttpStatus.OK, "Logged out successfully");
+      return ApiResponse.success(res, HttpStatus.OK, SuccessMessages.LOGOUT_SUCCESS);
     } catch (error) {
       next(error);
     }
