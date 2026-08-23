@@ -1,4 +1,5 @@
-import { InvalidEmailError } from "../errors/InvalidEmailError";
+import { AppError } from "../../shared/errors/AppError";
+import { ErrorCodes } from "../../shared/errors/ErrorCodes";
 
 export class Email {
   private constructor(
@@ -7,7 +8,7 @@ export class Email {
 
   public static create(email: string): Email {
     if (!Email.isValid(email)) {
-      throw new InvalidEmailError(email);
+      throw new AppError(ErrorCodes.INVALID_EMAIL)
     }
 
     return new Email(email);

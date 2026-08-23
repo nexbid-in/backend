@@ -1,5 +1,6 @@
 import { Email } from "../value-objects/Email";
-
+import { AppError } from "../../shared/errors/AppError";
+import { ErrorCodes } from "../../shared/errors/ErrorCodes";
 
 export type UserProps = {
   // Core Identity
@@ -26,11 +27,11 @@ export class User {
   private constructor(private readonly props: UserProps) { }
 
   static create(props: UserProps): User {
-    if (!props.id) throw new Error("User id is required");
-    if (!props.email) throw new Error("Email is required");
-    if (!props.firstName) throw new Error("First name is required");
-    if (!props.lastName) throw new Error("Last name is required");
-    if (!props.password) throw new Error("Password is required");
+    if (!props.id) throw new AppError(ErrorCodes.VALIDATION_FAILED);
+    if (!props.email) throw new AppError(ErrorCodes.VALIDATION_FAILED);
+    if (!props.firstName) throw new AppError(ErrorCodes.VALIDATION_FAILED);
+    if (!props.lastName) throw new AppError(ErrorCodes.VALIDATION_FAILED);
+    if (!props.password) throw new AppError(ErrorCodes.VALIDATION_FAILED);
 
     return new User({
       id: props.id,
