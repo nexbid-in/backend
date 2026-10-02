@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.post("/register", authController.register.bind(authController));
 
-router.post("/verify-otp", authController.verifyEmailAndCreateAccount.bind(authController));
+router.post("/verify-email", authController.verifyEmailAndCreateAccount.bind(authController));
 
 router.post("/resend-otp", authController.resendOtp.bind(authController));
     
