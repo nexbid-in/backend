@@ -4,14 +4,6 @@ import { IAuthTokenServiceInput } from "../../../application/interface/services/
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: IAuthTokenServiceInput;
-    }
-  }
-}
-
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   try {
     const token = req.cookies.accessToken;

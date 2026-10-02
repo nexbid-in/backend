@@ -41,6 +41,11 @@ export const HttpErrorMap: Record<
     message: ErrorMessages.UNAUTHORIZED,
   },
 
+  [ErrorCodes.FORBIDDEN]: {
+    status: HttpStatus.FORBIDDEN,
+    message: ErrorMessages.FORBIDDEN,
+  },
+
   [ErrorCodes.NOT_FOUND]: {
     status: HttpStatus.NOT_FOUND,
     message: ErrorMessages.NOT_FOUND,

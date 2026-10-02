@@ -32,6 +32,7 @@ export class LoginUserUseCase implements ILoginUserUseCase {
             throw new AppError(ErrorCodes.INVALID_CREDENTIALS);
         }
 
+
         const isPasswordValid = await this._passwordHashService.compare(input.password, user.password);
         if (!isPasswordValid) {
             throw new AppError(ErrorCodes.INVALID_CREDENTIALS);
@@ -43,7 +44,8 @@ export class LoginUserUseCase implements ILoginUserUseCase {
 
         const token = this._authTokenService.generate({
             userId: user.id,
-            email: user.email.getValue()
+            email: user.email.getValue(),
+            role: user.role,
         });
 
         return {

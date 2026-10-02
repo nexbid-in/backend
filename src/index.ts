@@ -1,3 +1,4 @@
+/// <reference path="./types/express.d.ts" />
 import { logger } from "./infrastructure/logging/logger";
 import { createApp } from "./presentation/http/app";
 import { connectPrisma } from "./infrastructure/database/prisma";

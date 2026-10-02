@@ -7,6 +7,7 @@ export type UserPersistenceDTO = {
   password: string;
 
   // Optional profile
+  role: string;
   mobile: string | null;
   profileImage: string | null;
   googleId: string | null;

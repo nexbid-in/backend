@@ -7,4 +7,5 @@ export interface IAuthTokenService {
 export interface IAuthTokenServiceInput {
     userId: string;
     email: string;
+    role: string;
 }

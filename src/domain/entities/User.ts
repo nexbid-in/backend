@@ -11,6 +11,7 @@ export type UserProps = {
   password: string;
 
   // Optional Profile Info
+  role?: string;
   mobile?: string | null;
   profileImage?: string | null;
   googleId?: string | null;
@@ -39,6 +40,7 @@ export class User {
       firstName: props.firstName,
       lastName: props.lastName,
       password: props.password,
+      role: props.role ?? "USER",
       mobile: props.mobile,
       profileImage: props.profileImage,
       googleId: props.googleId,
@@ -88,4 +90,9 @@ export class User {
   get createdAt() {
     return this.props.createdAt ?? new Date();
   }
+
+  get role() {
+    return this.props.role ?? "USER";
+  }
+
 }

@@ -20,6 +20,7 @@ export enum ErrorCodes {
 
   // Auth
   UNAUTHORIZED = "UNAUTHORIZED",
+  FORBIDDEN = "FORBIDDEN",
 
   NOT_FOUND = "NOT_FOUND",
 
