@@ -1,4 +1,3 @@
-import { InvalidEmailError } from "../../../../domain/errors/InvalidEmailError";
 import { IOtpSessionService } from "../../../interface/services/IOtpSessionService";
 import { Email } from "../../../../domain/value-objects/Email";
 import { AppError } from "../../../../shared/errors/AppError";
@@ -6,7 +5,8 @@ import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 import { IEmailService } from "../../../interface/services/IEmailService";
 import { IOtpService } from "../../../interface/services/IOtpService";
 import { IRateLimiter } from "../../../interface/services/IRateLimiter";
-import { IResendOtpInput, IResendOtpUseCase } from "../../../interface/use-cases/user/IResendOtpUseCase";
+import { IResendOtpUseCase } from "../../../interface/use-cases/user/IResendOtpUseCase";
+import { ResendOtpDTO } from "../../../dto/user/auth/RegisterDTO";
 
 
 export class ResendOtpUseCase implements IResendOtpUseCase {
@@ -17,38 +17,31 @@ export class ResendOtpUseCase implements IResendOtpUseCase {
         private readonly _rateLimiter: IRateLimiter,
     ) { }
 
-    async execute(input: IResendOtpInput): Promise<void> {
-        try {
-            const emailVO = Email.create(input.email);
-            const email = emailVO.getValue();
+    async execute(input: ResendOtpDTO): Promise<void> {
 
-            const RATE_LIMIT_KEY = `rate_limit:otp:${email}`;
-            const isAllowed = await this._rateLimiter.incrementAndCheck(RATE_LIMIT_KEY, 5, 900);
+        const emailVO = Email.create(input.email);
+        const email = emailVO.getValue();
 
-            if (!isAllowed) {
-                throw new AppError(ErrorCodes.OTP_RATE_LIMIT_EXCEEDED);
-            }
+        const RATE_LIMIT_KEY = `rate_limit:otp:${email}`;
+        const isAllowed = await this._rateLimiter.incrementAndCheck(RATE_LIMIT_KEY, 5, 900);
 
-            const existingRecord = await this._otpRepo.get(email);
-
-            if (!existingRecord) {
-                throw new AppError(ErrorCodes.OTP_EXPIRED);
-            }
-
-            const otp = this._otpService.generate();
-            const otpHash = await this._otpService.hash(otp);
-
-            await this._otpRepo.save(email, otpHash, existingRecord.data);
-
-            const subject = "Your nexbid Registration OTP Code (Resent)";
-
-            await this._emailService.sendOtp(email, subject, otp);
-        } catch (err) {
-            if (err instanceof InvalidEmailError) {
-                throw new AppError(ErrorCodes.INVALID_EMAIL);
-            }
-
-            throw err;
+        if (!isAllowed) {
+            throw new AppError(ErrorCodes.OTP_RATE_LIMIT_EXCEEDED);
         }
+
+        const existingRecord = await this._otpRepo.get(email);
+
+        if (!existingRecord) {
+            throw new AppError(ErrorCodes.OTP_EXPIRED);
+        }
+
+        const otp = this._otpService.generate();
+        const otpHash = await this._otpService.hash(otp);
+
+        await this._otpRepo.save(email, otpHash, existingRecord.data);
+
+        const subject = "Your nexbid Registration OTP Code (Resent)";
+
+        await this._emailService.sendOtp(email, subject, otp);
     }
 }

@@ -1,4 +1,4 @@
-import { VerifyEmailDTO } from "../../../dto/request/auth/verify-email.dto";
+import { VerifyEmailDTO } from "../../../dto/user/auth/RegisterDTO";
 import { AuthResponseDTO } from "../../../dto/response/auth/auth-response.dto";
 
 

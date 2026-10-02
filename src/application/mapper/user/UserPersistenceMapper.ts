@@ -1,4 +1,5 @@
 import { User } from "../../../domain/entities/User";
+import { Email } from "../../../domain/value-objects/Email";
 import { UserPersistenceDTO } from "../../dto/internal/user-persistence.dto";
 
 export class UserPersistenceMapper {
@@ -6,10 +7,11 @@ export class UserPersistenceMapper {
   static toPrisma(user: User): UserPersistenceDTO {
     return {
       id: user.id,
-      email: user.email,
+      email: user.email.getValue(),
       firstName: user.firstName,
       lastName: user.lastName,
       password: user.password,
+      role: user.role,
       mobile: user.mobile ?? null,
       profileImage: user.profileImage ?? null,
       googleId: user.googleId ?? null,
@@ -21,10 +23,11 @@ export class UserPersistenceMapper {
   static toDomain(raw: UserPersistenceDTO): User {
     return User.create({
         id: raw.id,
-        email: raw.email,
+        email: Email.create(raw.email),
         firstName: raw.firstName,
         lastName: raw.lastName,
         password: raw.password,
+        role: raw.role,
         mobile: raw.mobile ?? undefined,
         profileImage: raw.profileImage ?? undefined,
         googleId: raw.googleId ?? undefined,

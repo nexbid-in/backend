@@ -1,10 +1,11 @@
 import "dotenv/config";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../generated/prisma/client";
+import { PrismaClient } from "./generated/prisma/client";
 import { logger } from "../logging/logger";
+import { env } from "../config/env";
 
-const connectionString = process.env.DATABASE_URL!;
+const connectionString = env.DATABASE_URL;
 
 // 1. Create a PostgreSQL connection pool
 const pool = new Pool({ connectionString });

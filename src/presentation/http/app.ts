@@ -1,10 +1,13 @@
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 import appRoutes from "./routes/index";
 import { errorHandler } from "./middlewares/errorHandler";
 import { HttpStatus } from "./constants/HttpStatus";
+import { ApiResponse } from "./utils/ApiResponse";
+import { ErrorCodes } from "../../shared/errors/ErrorCodes";
 
 
 
@@ -19,17 +22,12 @@ export const createApp = () => {
 
     app.use(morgan("dev"));
     app.use(express.json());
+    app.use(cookieParser());
 
     app.use("/api", appRoutes);
 
     app.use((req, res) => {
-        res.status(HttpStatus.NOT_FOUND).json({
-            success: false,
-            error: {
-                code: "NOT_FOUND",
-                message: "Route not found",
-            },
-        });
+        return ApiResponse.error(res, HttpStatus.NOT_FOUND, ErrorCodes.NOT_FOUND, "Route not found");
     });
 
     app.use(errorHandler);

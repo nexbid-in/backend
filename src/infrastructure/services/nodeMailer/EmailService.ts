@@ -1,13 +1,14 @@
 import { IEmailService } from "../../../application/interface/services/IEmailService";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
+import { env } from "../../config/env";
 import { logger } from "../../logging/logger";
 import { mailTransporter } from "./NodeMailerTransport";
 
 export class EmailService implements IEmailService {
   async sendOtp(email: string, subject: string, otp: string): Promise<void> {
     const mailOptions = {
-      from: process.env.SMTP_FROM,
+      from: env.SMTP_FROM,
       to: email,
       subject: subject,
       html: `
@@ -37,9 +38,9 @@ export class EmailService implements IEmailService {
     } catch (error: unknown) {
       logger.error(
         { error, email },
-        "Failed to send OTP email"
+        "Failed to send OTP"
       );
-      throw new AppError(ErrorCodes.EMAIL_SEND_FAILED);
+      throw new AppError(ErrorCodes.FAILED_TO_SEND_OTP);
     }
   }
 }

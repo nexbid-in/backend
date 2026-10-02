@@ -1,24 +1,20 @@
 import express, { NextFunction, Request, Response } from "express";
-
-import { resendOtpSchema, userRegisterSchema, verifyOtpSchema } from "../../../../infrastructure/services/validators/UserRegisterSchema";
-import { zodValidate } from "../../../../infrastructure/middlewares/zodValidate";
-
 import { authController } from "../../../../di/user/auth/container";
+import { authMiddleware } from "../../middlewares/authMiddleware";
 
 
 const router = express.Router();
 
-router.post("/register", 
-    zodValidate(userRegisterSchema), (req: Request, res: Response, next: NextFunction) => authController.register(req, res, next)
-);
+router.post("/register", authController.register.bind(authController));
 
-router.post("/verify-otp", 
-    zodValidate(verifyOtpSchema), (req: Request, res: Response, next: NextFunction) => authController.verifyEmailAndCreateAccount(req, res, next)
-);
+router.post("/verify-email", authController.verifyEmailAndCreateAccount.bind(authController));
 
-router.post("/resend-otp",
-    zodValidate(resendOtpSchema), (req: Request, res: Response, next: NextFunction) => authController.resendOtp(req, res, next)
-);
+router.post("/resend-otp", authController.resendOtp.bind(authController));
     
+router.post("/login", authController.login.bind(authController));
+
+router.post("/logout", authController.logout.bind(authController));
+
+router.get("/me", authMiddleware, authController.getCurrentUser.bind(authController));
 
 export default router;

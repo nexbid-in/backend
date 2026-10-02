@@ -26,9 +26,9 @@ export const HttpErrorMap: Record<
     message: ErrorMessages.OTP_EXPIRED,
   },
 
-  [ErrorCodes.EMAIL_SEND_FAILED]: {
+  [ErrorCodes.FAILED_TO_SEND_OTP]: {
     status: HttpStatus.SERVICE_UNAVAILABLE,
-    message: ErrorMessages.EMAIL_SEND_FAILED,
+    message: ErrorMessages.FAILED_TO_SEND_OTP,
   },
 
   [ErrorCodes.VALIDATION_FAILED]: {
@@ -39,6 +39,11 @@ export const HttpErrorMap: Record<
   [ErrorCodes.UNAUTHORIZED]: {
     status: HttpStatus.UNAUTHORIZED,
     message: ErrorMessages.UNAUTHORIZED,
+  },
+
+  [ErrorCodes.FORBIDDEN]: {
+    status: HttpStatus.FORBIDDEN,
+    message: ErrorMessages.FORBIDDEN,
   },
 
   [ErrorCodes.NOT_FOUND]: {
@@ -52,8 +57,8 @@ export const HttpErrorMap: Record<
   },
 
   [ErrorCodes.USER_ID_GENERATION_FAILED]: {
-      status: HttpStatus.SERVICE_UNAVAILABLE,
-      message: ErrorMessages.USER_ID_GENERATION_FAILED,
+    status: HttpStatus.SERVICE_UNAVAILABLE,
+    message: ErrorMessages.USER_ID_GENERATION_FAILED,
   },
 
   [ErrorCodes.INTERNAL_SERVER_ERROR]: {
@@ -69,5 +74,16 @@ export const HttpErrorMap: Record<
   [ErrorCodes.LOGIN_RATE_LIMIT_EXCEEDED]: {
     status: HttpStatus.TOO_MANY_REQUESTS,
     message: ErrorMessages.LOGIN_RATE_LIMIT_EXCEEDED,
-  }
+  },
+
+  [ErrorCodes.INVALID_CREDENTIALS]: {
+    status: HttpStatus.UNAUTHORIZED,
+    message: ErrorMessages.INVALID_CREDENTIALS,
+  },
+  
+  [ErrorCodes.ACCOUNT_BLOCKED]: {
+    status: HttpStatus.FORBIDDEN,
+    message: ErrorMessages.ACCOUNT_BLOCKED,
+  },
+
 };

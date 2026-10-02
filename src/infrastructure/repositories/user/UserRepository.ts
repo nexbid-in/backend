@@ -1,4 +1,4 @@
-import { Prisma } from "../../generated/prisma/client";
+import { Prisma } from "../../database/generated/prisma/client";
 import { prisma } from "../../database/prisma";
 import { IUserRepository } from "../../../domain/repositories/user/IUserRepository";
 import { User } from "../../../domain/entities/User";
@@ -21,6 +21,16 @@ export class UserRepository extends BaseRepository<Prisma.UserDelegate> implemen
     async findAll(): Promise<User[]> {
         const rawUsers = await this._findAll();
         return rawUsers.map((user: UserPersistenceDTO) => UserPersistenceMapper.toDomain(user));
+    }
+
+    async findByEmail(email: string): Promise<User | null> {
+        const rawData = await prisma.user.findUnique({
+            where: { email }
+        });
+
+        if (!rawData) return null;
+
+        return UserPersistenceMapper.toDomain(rawData);
     }
 
     async existsByEmail(email: string): Promise<boolean> {
