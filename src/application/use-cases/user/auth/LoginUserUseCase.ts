@@ -38,6 +38,10 @@ export class LoginUserUseCase implements ILoginUserUseCase {
             throw new AppError(ErrorCodes.INVALID_CREDENTIALS);
         }
 
+        if (input.portal === "ADMIN" && user.role !== "ADMIN" || input.portal === "USER" && user.role !== "USER") {
+            throw new AppError(ErrorCodes.FORBIDDEN)
+        }
+ 
         if (user.isBlocked) {
             throw new AppError(ErrorCodes.ACCOUNT_BLOCKED);
         }

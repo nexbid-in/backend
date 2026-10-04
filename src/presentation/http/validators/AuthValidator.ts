@@ -33,4 +33,5 @@ export const resendOtpSchema: z.ZodType<ResendOtpDTO> = z.object({
 export const loginUserSchema: z.ZodType<LoginUserDTO> = z.object({
     email: emailSchema,
     password: passwordSchema,
+    portal: z.enum(["USER", "ADMIN"]).optional(),
 });
