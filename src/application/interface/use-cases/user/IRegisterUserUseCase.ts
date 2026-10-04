@@ -1,4 +1,4 @@
-import { RegisterUserDTO } from "../../../dto/user/auth/RegisterDTO";
+import { RegisterUserDTO } from "../../../dto/auth/RegisterDTO";
 
 
 export interface IRegisterUserUseCase {

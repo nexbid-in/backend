@@ -1,13 +1,13 @@
-import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
-import { Email } from "../../../../domain/value-objects/Email";
-import { AppError } from "../../../../shared/errors/AppError";
-import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
-import { LoginUserDTO } from "../../../dto/user/auth/LoginDTO";
-import { AuthResponseDTO } from "../../../dto/response/auth/auth-response.dto";
-import { IPasswordHashService } from "../../../interface/services/IPasswordHashService";
-import { IRateLimiter } from "../../../interface/services/IRateLimiter";
-import { IAuthTokenService } from "../../../interface/services/ITokenService";
-import { ILoginUserUseCase } from "../../../interface/use-cases/user/ILoginUserUseCase";
+import { IUserRepository } from "../../../domain/repositories/user/IUserRepository";
+import { Email } from "../../../domain/value-objects/Email";
+import { AppError } from "../../../shared/errors/AppError";
+import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
+import { LoginUserDTO } from "../../dto/auth/LoginDTO";
+import { AuthResponseDTO } from "../../dto/auth/AuthResponseDTO";
+import { IPasswordHashService } from "../../interface/services/IPasswordHashService";
+import { IRateLimiter } from "../../interface/services/IRateLimiter";
+import { IAuthTokenService } from "../../interface/services/ITokenService";
+import { ILoginUserUseCase } from "../../interface/use-cases/user/ILoginUserUseCase";
 
 export class LoginUserUseCase implements ILoginUserUseCase {
     constructor(
@@ -39,7 +39,7 @@ export class LoginUserUseCase implements ILoginUserUseCase {
         }
 
         if (input.portal === "ADMIN" && user.role !== "ADMIN" || input.portal === "USER" && user.role !== "USER") {
-            throw new AppError(ErrorCodes.FORBIDDEN)
+            throw new AppError(ErrorCodes.INVALID_CREDENTIALS);
         }
  
         if (user.isBlocked) {
@@ -58,7 +58,8 @@ export class LoginUserUseCase implements ILoginUserUseCase {
                 id: user.id,
                 email: user.email.getValue(),
                 firstName: user.firstName,
-                lastName: user.lastName
+                lastName: user.lastName,
+                role: user.role
             }
         }
     }

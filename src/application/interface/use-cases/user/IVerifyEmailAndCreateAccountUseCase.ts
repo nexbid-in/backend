@@ -1,5 +1,5 @@
-import { VerifyEmailDTO } from "../../../dto/user/auth/RegisterDTO";
-import { AuthResponseDTO } from "../../../dto/response/auth/auth-response.dto";
+import { VerifyEmailDTO } from "../../../dto/auth/RegisterDTO";
+import { AuthResponseDTO } from "../../../dto/auth/AuthResponseDTO";
 
 
 export interface IVerifyEmailAndCreateAccountUseCase {

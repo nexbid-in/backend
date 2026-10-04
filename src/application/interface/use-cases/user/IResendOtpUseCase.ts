@@ -1,4 +1,4 @@
-import { ResendOtpDTO } from "../../../dto/user/auth/RegisterDTO";
+import { ResendOtpDTO } from "../../../dto/auth/RegisterDTO";
 
 export interface IResendOtpUseCase {
     execute(input: ResendOtpDTO): Promise<void>;

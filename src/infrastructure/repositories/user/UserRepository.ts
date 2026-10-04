@@ -4,7 +4,7 @@ import { IUserRepository } from "../../../domain/repositories/user/IUserReposito
 import { User } from "../../../domain/entities/User";
 import { UserPersistenceMapper } from "../../../application/mapper/user/UserPersistenceMapper";
 import { BaseRepository } from "../BaseRepository";
-import { UserPersistenceDTO } from "../../../application/dto/internal/user-persistence.dto";
+import { UserPersistenceDTO } from "../../../application/dto/internal/UserPersistenceDTO";
 
 
 export class UserRepository extends BaseRepository<Prisma.UserDelegate> implements IUserRepository {

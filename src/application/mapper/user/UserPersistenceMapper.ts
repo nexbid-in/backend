@@ -1,6 +1,6 @@
 import { User } from "../../../domain/entities/User";
 import { Email } from "../../../domain/value-objects/Email";
-import { UserPersistenceDTO } from "../../dto/internal/user-persistence.dto";
+import { UserPersistenceDTO } from "../../dto/internal/UserPersistenceDTO";
 
 export class UserPersistenceMapper {
 

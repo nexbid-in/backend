@@ -1,4 +1,4 @@
-import { GetCurrentUserResponseDTO } from "../../../dto/user/auth/GetCurrentUserResponseDTO";
+import { GetCurrentUserResponseDTO } from "../../../dto/auth/GetCurrentUserResponseDTO";
 
 export interface IGetCurrentUserUseCase {
     execute(id: string): Promise<GetCurrentUserResponseDTO>

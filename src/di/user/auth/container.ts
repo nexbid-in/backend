@@ -9,13 +9,13 @@ import { PasswordHashService } from "../../../infrastructure/services/hashing/Pa
 import { UserIdGenerator } from "../../../infrastructure/services/idGenerator/UserIdGenerator";
 import { UniqueUserIdService } from "../../../infrastructure/services/idGenerator/UniqueUserIdService";
 
-import { RegisterUserUseCase } from "../../../application/use-cases/user/auth/RegisterUserUseCase";
-import { VerifyEmailAndCreateAccountUseCase } from "../../../application/use-cases/user/auth/VerifyEmailAndCreateAccountUseCase";
-import { ResendOtpUseCase } from "../../../application/use-cases/user/auth/ResendOtpUseCase";
-import { LoginUserUseCase } from "../../../application/use-cases/user/auth/LoginUserUseCase";
+import { RegisterUserUseCase } from "../../../application/use-cases/auth/RegisterUserUseCase";
+import { VerifyEmailAndCreateAccountUseCase } from "../../../application/use-cases/auth/VerifyEmailAndCreateAccountUseCase";
+import { ResendOtpUseCase } from "../../../application/use-cases/auth/ResendOtpUseCase";
+import { LoginUserUseCase } from "../../../application/use-cases/auth/LoginUserUseCase";
 
 import { AuthController } from "../../../presentation/http/controllers/user/AuthController";
-import { GetCurrentUserUseCase } from "../../../application/use-cases/user/auth/GetCurrentUserUseCase";
+import { GetCurrentUserUseCase } from "../../../application/use-cases/auth/GetCurrentUserUseCase";
 
 
 const userRepository = new UserRepository();

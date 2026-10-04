@@ -1,18 +1,18 @@
-import { User } from "../../../../domain/entities/User";
-import { Email } from "../../../../domain/value-objects/Email";
+import { User } from "../../../domain/entities/User";
+import { Email } from "../../../domain/value-objects/Email";
 
-import { VerifyEmailDTO } from "../../../dto/user/auth/RegisterDTO";
-import { AuthResponseDTO } from "../../../dto/response/auth/auth-response.dto";
+import { VerifyEmailDTO } from "../../dto/auth/RegisterDTO";
+import { AuthResponseDTO } from "../../dto/auth/AuthResponseDTO";
 
-import { IVerifyEmailAndCreateAccountUseCase } from "../../../interface/use-cases/user/IVerifyEmailAndCreateAccountUseCase";
-import { IOtpSessionService } from "../../../interface/services/IOtpSessionService";
-import { IUserRepository } from "../../../../domain/repositories/user/IUserRepository";
-import { IOtpService } from "../../../interface/services/IOtpService";
-import { IAuthTokenService } from "../../../interface/services/ITokenService";
-import { IUniqueUserIdService } from "../../../interface/services/IUserIdGenerator";
+import { IVerifyEmailAndCreateAccountUseCase } from "../../interface/use-cases/user/IVerifyEmailAndCreateAccountUseCase";
+import { IOtpSessionService } from "../../interface/services/IOtpSessionService";
+import { IUserRepository } from "../../../domain/repositories/user/IUserRepository";
+import { IOtpService } from "../../interface/services/IOtpService";
+import { IAuthTokenService } from "../../interface/services/ITokenService";
+import { IUniqueUserIdService } from "../../interface/services/IUserIdGenerator";
 
-import { AppError } from "../../../../shared/errors/AppError";
-import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
+import { AppError } from "../../../shared/errors/AppError";
+import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 
 
 export class VerifyEmailAndCreateAccountUseCase implements IVerifyEmailAndCreateAccountUseCase {
@@ -73,7 +73,8 @@ export class VerifyEmailAndCreateAccountUseCase implements IVerifyEmailAndCreate
                 id: user.id,
                 email: user.email.getValue(),
                 firstName: user.firstName,
-                lastName: user.lastName
+                lastName: user.lastName,
+                role: user.role
             }
         };
 
