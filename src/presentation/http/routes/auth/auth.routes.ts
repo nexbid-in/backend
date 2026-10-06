@@ -1,5 +1,5 @@
-import express, { NextFunction, Request, Response } from "express";
-import { authController } from "../../../../di/user/auth/container";
+import express from "express";
+import { authController } from "../../../../di/auth/container";
 import { authMiddleware } from "../../middlewares/authMiddleware";
 
 
