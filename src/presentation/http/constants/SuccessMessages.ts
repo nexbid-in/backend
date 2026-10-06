@@ -19,4 +19,9 @@ export const SuccessMessages = {
   // ==========================================
   PROFILE_UPDATED: "Profile updated successfully",
 
+  // ==========================================
+  // Admin & Management
+  // ==========================================
+  USERS_RETRIEVED: "Users retrieved successfully",
+
 } as const;
