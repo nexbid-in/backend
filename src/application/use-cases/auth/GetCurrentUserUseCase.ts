@@ -2,7 +2,7 @@ import { IUserRepository } from "../../../domain/repositories/user/IUserReposito
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 import { GetCurrentUserResponseDTO } from "../../dto/auth/GetCurrentUserResponseDTO";
-import { IGetCurrentUserUseCase } from "../../interface/use-cases/user/IGetCurrentUserUseCase";
+import { IGetCurrentUserUseCase } from "../../interface/use-cases/auth/IGetCurrentUserUseCase";
 
 export class GetCurrentUserUseCase implements IGetCurrentUserUseCase {
     constructor(

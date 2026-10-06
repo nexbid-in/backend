@@ -4,7 +4,7 @@ import { Email } from "../../../domain/value-objects/Email";
 import { VerifyEmailDTO } from "../../dto/auth/RegisterDTO";
 import { AuthResponseDTO } from "../../dto/auth/AuthResponseDTO";
 
-import { IVerifyEmailAndCreateAccountUseCase } from "../../interface/use-cases/user/IVerifyEmailAndCreateAccountUseCase";
+import { IVerifyEmailAndCreateAccountUseCase } from "../../interface/use-cases/auth/IVerifyEmailAndCreateAccountUseCase";
 import { IOtpSessionService } from "../../interface/services/IOtpSessionService";
 import { IUserRepository } from "../../../domain/repositories/user/IUserRepository";
 import { IOtpService } from "../../interface/services/IOtpService";

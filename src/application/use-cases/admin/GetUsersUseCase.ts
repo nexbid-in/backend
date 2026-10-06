@@ -20,7 +20,7 @@ export class GetUsersUseCase implements IGetUsersUseCase {
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email.getValue(),
-            profileImage: user.profileImage ?? null,
+            profileImage: user.profileImage,
             isBlocked: user.isBlocked,
             createdAt: user.createdAt,
         }));

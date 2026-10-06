@@ -5,7 +5,7 @@ import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 import { IEmailService } from "../../interface/services/IEmailService";
 import { IOtpService } from "../../interface/services/IOtpService";
 import { IRateLimiter } from "../../interface/services/IRateLimiter";
-import { IResendOtpUseCase } from "../../interface/use-cases/user/IResendOtpUseCase";
+import { IResendOtpUseCase } from "../../interface/use-cases/auth/IResendOtpUseCase";
 import { ResendOtpDTO } from "../../dto/auth/RegisterDTO";
 
 

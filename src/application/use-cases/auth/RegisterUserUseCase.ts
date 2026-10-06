@@ -3,7 +3,7 @@ import { IUserRepository } from "../../../domain/repositories/user/IUserReposito
 import { IOtpSessionService } from "../../interface/services/IOtpSessionService";
 import { IOtpService } from "../../interface/services/IOtpService";
 import { IEmailService } from "../../interface/services/IEmailService";
-import { IRegisterUserUseCase } from "../../interface/use-cases/user/IRegisterUserUseCase";
+import { IRegisterUserUseCase } from "../../interface/use-cases/auth/IRegisterUserUseCase";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 import { IPasswordHashService } from "../../interface/services/IPasswordHashService";

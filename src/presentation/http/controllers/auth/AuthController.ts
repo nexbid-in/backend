@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 
-import { IRegisterUserUseCase } from "../../../../application/interface/use-cases/user/IRegisterUserUseCase";
-import { IVerifyEmailAndCreateAccountUseCase } from "../../../../application/interface/use-cases/user/IVerifyEmailAndCreateAccountUseCase";
-import { IResendOtpUseCase } from "../../../../application/interface/use-cases/user/IResendOtpUseCase";
-import { ILoginUserUseCase } from "../../../../application/interface/use-cases/user/ILoginUserUseCase";
-import { IGetCurrentUserUseCase } from "../../../../application/interface/use-cases/user/IGetCurrentUserUseCase";
+import { IRegisterUserUseCase } from "../../../../application/interface/use-cases/auth/IRegisterUserUseCase";
+import { IVerifyEmailAndCreateAccountUseCase } from "../../../../application/interface/use-cases/auth/IVerifyEmailAndCreateAccountUseCase";
+import { IResendOtpUseCase } from "../../../../application/interface/use-cases/auth/IResendOtpUseCase";
+import { ILoginUserUseCase } from "../../../../application/interface/use-cases/auth/ILoginUserUseCase";
+import { IGetCurrentUserUseCase } from "../../../../application/interface/use-cases/auth/IGetCurrentUserUseCase";
 
 import { HttpStatus } from "../../constants/HttpStatus";
 import { SuccessMessages } from "../../constants/SuccessMessages";

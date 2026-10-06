@@ -7,7 +7,7 @@ import { AuthResponseDTO } from "../../dto/auth/AuthResponseDTO";
 import { IPasswordHashService } from "../../interface/services/IPasswordHashService";
 import { IRateLimiter } from "../../interface/services/IRateLimiter";
 import { IAuthTokenService } from "../../interface/services/ITokenService";
-import { ILoginUserUseCase } from "../../interface/use-cases/user/ILoginUserUseCase";
+import { ILoginUserUseCase } from "../../interface/use-cases/auth/ILoginUserUseCase";
 
 export class LoginUserUseCase implements ILoginUserUseCase {
     constructor(
