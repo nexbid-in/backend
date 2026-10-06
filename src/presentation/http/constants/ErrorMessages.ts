@@ -25,6 +25,7 @@ export const ErrorMessages = {
   // Validation
   // ==========================================
   VALIDATION_FAILED: "Validation failed",
+  INVALID_JSON: "Invalid JSON payload format",
 
   // ==========================================
   // System & Generic
