@@ -21,6 +21,7 @@ export type UserProps = {
 
   // Metadata
   createdAt?: Date;
+  lastActiveAt?: Date | null;
 };
 
 type UserState = {
@@ -35,6 +36,7 @@ type UserState = {
   googleId: string | null;
   isBlocked: boolean;
   createdAt: Date;
+  lastActiveAt: Date | null;
 };
 
 export class User {
@@ -59,6 +61,7 @@ export class User {
       googleId: props.googleId ?? null,
       isBlocked: props.isBlocked ?? false,
       createdAt: props.createdAt ?? new Date(),
+      lastActiveAt: props.lastActiveAt ?? null,
     });
   }
 
@@ -102,6 +105,14 @@ export class User {
 
   get createdAt(): Date {
     return this.props.createdAt;
+  }
+
+  get lastActiveAt(): Date | null {
+    return this.props.lastActiveAt;
+  }
+
+  public markAsActive(): void {
+    this.props.lastActiveAt = new Date();
   }
 
   get role(): string {

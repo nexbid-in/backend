@@ -33,6 +33,7 @@ model User {
 
   // Metadata
   createdAt    DateTime @default(now())
+  lastActiveAt DateTime?
 }
 
 

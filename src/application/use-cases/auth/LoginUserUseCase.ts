@@ -46,6 +46,9 @@ export class LoginUserUseCase implements ILoginUserUseCase {
             throw new AppError(ErrorCodes.ACCOUNT_BLOCKED);
         }
 
+        user.markAsActive();
+        await this._userRepo.save(user);
+
         const token = this._authTokenService.generate({
             userId: user.id,
             email: user.email.getValue(),

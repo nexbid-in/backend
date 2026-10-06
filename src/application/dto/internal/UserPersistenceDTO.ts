@@ -17,4 +17,5 @@ export type UserPersistenceDTO = {
 
   // Metadata
   createdAt: Date;
+  lastActiveAt: Date | null;
 };

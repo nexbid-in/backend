@@ -23,6 +23,7 @@ export class GetUsersUseCase implements IGetUsersUseCase {
             profileImage: user.profileImage,
             isBlocked: user.isBlocked,
             createdAt: user.createdAt,
+            lastActiveAt: user.lastActiveAt,
         }));
 
         return {

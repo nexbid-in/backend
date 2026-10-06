@@ -17,6 +17,7 @@ export class UserPersistenceMapper {
       googleId: user.googleId,
       isBlocked: user.isBlocked,
       createdAt: user.createdAt,
+      lastActiveAt: user.lastActiveAt,
     };
   }
 
@@ -33,6 +34,7 @@ export class UserPersistenceMapper {
         googleId: raw.googleId,
         isBlocked: raw.isBlocked,
         createdAt: raw.createdAt,
+        lastActiveAt: raw.lastActiveAt,
     });
  }
 

@@ -13,6 +13,7 @@ export type AdminUserListItemDTO = {
     profileImage: string | null;
     isBlocked: boolean;
     createdAt: Date;
+    lastActiveAt: Date | null;
 }
 
 export type PaginatedUsersResponseDTO = {
