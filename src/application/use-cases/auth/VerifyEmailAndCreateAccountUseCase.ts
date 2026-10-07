@@ -47,6 +47,10 @@ export class VerifyEmailAndCreateAccountUseCase implements IVerifyEmailAndCreate
             throw new AppError(ErrorCodes.OTP_INVALID);
         }
 
+        if (!record.data || !record.data.firstName || !record.data.lastName || !record.data.passwordHash) {
+            throw new AppError(ErrorCodes.VALIDATION_FAILED);
+        }
+
         const userId = await this._userIdService.generate(record.data.firstName);
 
         const user = User.create({

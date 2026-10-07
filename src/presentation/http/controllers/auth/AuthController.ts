@@ -5,12 +5,13 @@ import { IVerifyEmailAndCreateAccountUseCase } from "../../../../application/int
 import { IResendOtpUseCase } from "../../../../application/interface/use-cases/auth/IResendOtpUseCase";
 import { ILoginUserUseCase } from "../../../../application/interface/use-cases/auth/ILoginUserUseCase";
 import { IGetCurrentUserUseCase } from "../../../../application/interface/use-cases/auth/IGetCurrentUserUseCase";
+import { ISendPasswordResetOtpUseCase } from "../../../../application/interface/use-cases/auth/ISendPasswordResetOtpUseCase";
 
 import { HttpStatus } from "../../constants/HttpStatus";
 import { SuccessMessages } from "../../constants/SuccessMessages";
 import { clearAuthCookies, setAuthCookies } from "../../utils/cookieUtils";
 import { ApiResponse } from "../../utils/ApiResponse";
-import { registerUserSchema, resendOtpSchema, verifyEmailSchema, loginUserSchema } from "../../validators/AuthValidator";
+import { registerUserSchema, resendOtpSchema, verifyEmailSchema, loginUserSchema, forgotPasswordSchema } from "../../validators/AuthValidator";
 import { AppError } from "../../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 
@@ -21,7 +22,8 @@ export class AuthController {
     private readonly _verifyEmailAndCreateAccount: IVerifyEmailAndCreateAccountUseCase,
     private readonly _resendOtp: IResendOtpUseCase,
     private readonly _loginUser: ILoginUserUseCase,
-    private readonly _getCurrentUser: IGetCurrentUserUseCase
+    private readonly _getCurrentUser: IGetCurrentUserUseCase,
+    private readonly _sendPasswordResetOtp: ISendPasswordResetOtpUseCase
   ) { }
 
   async register(
@@ -123,4 +125,18 @@ export class AuthController {
     }
   }
 
+  async forgotPassword(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const validatedData = forgotPasswordSchema.parse(req.body);
+      await this._sendPasswordResetOtp.execute(validatedData);
+
+      return ApiResponse.success(res, HttpStatus.OK, SuccessMessages.OTP_SENT);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
