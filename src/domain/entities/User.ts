@@ -103,6 +103,14 @@ export class User {
     return this.props.isBlocked;
   }
 
+  public block(): void {
+    this.props.isBlocked = true;
+  }
+
+  public unblock(): void {
+    this.props.isBlocked = false;
+  }
+
   get createdAt(): Date {
     return this.props.createdAt;
   }

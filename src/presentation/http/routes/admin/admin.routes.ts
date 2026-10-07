@@ -12,4 +12,11 @@ router.get(
   adminUserController.getUsers.bind(adminUserController)
 );
 
+router.patch(
+    "/users/:userId/update-status",
+    authMiddleware,
+    requireRole(["ADMIN"]),
+    adminUserController.updateUserStatus.bind(adminUserController)
+)
+
 export default router;

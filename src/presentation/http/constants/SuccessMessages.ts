@@ -23,5 +23,6 @@ export const SuccessMessages = {
   // Admin & Management
   // ==========================================
   USERS_RETRIEVED: "Users retrieved successfully",
+  USER_STATUS_UPDATED: "User status updated successfully",
 
 } as const;
