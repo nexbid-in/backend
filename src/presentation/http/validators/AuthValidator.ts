@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { RegisterUserDTO, ResendOtpDTO, VerifyEmailDTO } from "../../../application/dto/user/auth/RegisterDTO";
-import { LoginUserDTO } from "../../../application/dto/user/auth/LoginDTO";
+import { RegisterUserDTO, ResendOtpDTO, VerifyEmailDTO } from "../../../application/dto/auth/RegisterDTO";
+import { LoginUserDTO } from "../../../application/dto/auth/LoginDTO";
 
 const emailSchema = z.string().email("Please enter a valid email address");
 
@@ -33,4 +33,5 @@ export const resendOtpSchema: z.ZodType<ResendOtpDTO> = z.object({
 export const loginUserSchema: z.ZodType<LoginUserDTO> = z.object({
     email: emailSchema,
     password: passwordSchema,
+    portal: z.enum(["USER", "ADMIN"]).optional(),
 });

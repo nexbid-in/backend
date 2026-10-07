@@ -17,6 +17,7 @@ export enum ErrorCodes {
 
   // Validation
   VALIDATION_FAILED = "VALIDATION_FAILED",
+  INVALID_JSON = "INVALID_JSON",
 
   // Auth
   UNAUTHORIZED = "UNAUTHORIZED",

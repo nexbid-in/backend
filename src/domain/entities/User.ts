@@ -21,11 +21,26 @@ export type UserProps = {
 
   // Metadata
   createdAt?: Date;
+  lastActiveAt?: Date | null;
 };
 
+type UserState = {
+  id: string;
+  email: Email;
+  firstName: string;
+  lastName: string;
+  password: string;
+  role: string;
+  mobile: string | null;
+  profileImage: string | null;
+  googleId: string | null;
+  isBlocked: boolean;
+  createdAt: Date;
+  lastActiveAt: Date | null;
+};
 
 export class User {
-  private constructor(private readonly props: UserProps) { }
+  private constructor(private readonly props: UserState) { }
 
   static create(props: UserProps): User {
     if (!props.id) throw new AppError(ErrorCodes.VALIDATION_FAILED);
@@ -41,58 +56,75 @@ export class User {
       lastName: props.lastName,
       password: props.password,
       role: props.role ?? "USER",
-      mobile: props.mobile,
-      profileImage: props.profileImage,
-      googleId: props.googleId,
+      mobile: props.mobile ?? null,
+      profileImage: props.profileImage ?? null,
+      googleId: props.googleId ?? null,
       isBlocked: props.isBlocked ?? false,
       createdAt: props.createdAt ?? new Date(),
+      lastActiveAt: props.lastActiveAt ?? null,
     });
   }
 
 
 
-  get id() {
+  get id(): string {
     return this.props.id;
   }
 
-  get email() {
+  get email(): Email {
     return this.props.email;
   }
 
-  get mobile() {
+  get mobile(): string | null {
     return this.props.mobile;
   }
 
-  get firstName() {
+  get firstName(): string {
     return this.props.firstName;
   }
 
-  get lastName() {
+  get lastName(): string {
     return this.props.lastName;
   }
 
-  get googleId() {
+  get googleId(): string | null {
     return this.props.googleId;
   }
 
-  get password() {
+  get password(): string {
     return this.props.password;
   }
 
-  get profileImage() {
+  get profileImage(): string | null {
     return this.props.profileImage;
   }
 
-  get isBlocked() {
-    return this.props.isBlocked ?? false;
+  get isBlocked(): boolean {
+    return this.props.isBlocked;
   }
 
-  get createdAt() {
-    return this.props.createdAt ?? new Date();
+  public block(): void {
+    this.props.isBlocked = true;
   }
 
-  get role() {
-    return this.props.role ?? "USER";
+  public unblock(): void {
+    this.props.isBlocked = false;
+  }
+
+  get createdAt(): Date {
+    return this.props.createdAt;
+  }
+
+  get lastActiveAt(): Date | null {
+    return this.props.lastActiveAt;
+  }
+
+  public markAsActive(): void {
+    this.props.lastActiveAt = new Date();
+  }
+
+  get role(): string {
+    return this.props.role;
   }
 
 }

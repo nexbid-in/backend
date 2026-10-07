@@ -31,8 +31,18 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
+
+  // 1. Catch Malformed JSON Payload Errors
+  if (err instanceof SyntaxError && "status" in err && err.status === 400 && "body" in err) {
+    return ApiResponse.error(
+      res, 
+      HttpStatus.BAD_REQUEST, 
+      ErrorCodes.INVALID_JSON, 
+      ErrorMessages.INVALID_JSON
+    );
+  }
   
-  // 1. Zod Validation Errors
+  // 2. Zod Validation Errors
   if (err instanceof ZodError) {
     const details = err.issues.map((issue) => ({
       path: issue.path.join("."),
@@ -41,13 +51,13 @@ export const errorHandler = (
     return ApiResponse.error(res, HttpStatus.BAD_REQUEST, ErrorCodes.VALIDATION_FAILED, ErrorMessages.VALIDATION_FAILED, details);
   }
 
-  // 2. Custom App Errors
+  // 3. Custom App Errors
   if (err instanceof AppError) {
     const mapping = HttpErrorMap[err.code];
     return ApiResponse.error(res, mapping.status, err.code, mapping.message);
   }
 
-  // 3. Prisma Database Errors
+  // 4. Prisma Database Errors
   if (isPrismaKnownError(err)) {
     if (err.code === "P2002") {
       return ApiResponse.error(res, HttpStatus.CONFLICT, ErrorCodes.EMAIL_ALREADY_EXISTS, ErrorMessages.EMAIL_ALREADY_EXISTS);
@@ -60,7 +70,7 @@ export const errorHandler = (
     logger.error({ err, prismaCode: err.code }, "Prisma known error");
   }
 
-  // 4. JWT Errors
+  // 5. JWT Errors
   if (err instanceof TokenExpiredError) {
     return ApiResponse.error(res, HttpStatus.UNAUTHORIZED, ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED);
   }
@@ -69,7 +79,7 @@ export const errorHandler = (
     return ApiResponse.error(res, HttpStatus.UNAUTHORIZED, ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED);
   }
 
-  // 5. Fallback for Unhandled Errors
+  // 6. Fallback for Unhandled Errors
   if (!isPrismaKnownError(err)) {
       logger.error({ err }, "Unhandled error");
   }

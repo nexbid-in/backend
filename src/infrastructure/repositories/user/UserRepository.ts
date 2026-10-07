@@ -1,10 +1,10 @@
 import { Prisma } from "../../database/generated/prisma/client";
 import { prisma } from "../../database/prisma";
-import { IUserRepository } from "../../../domain/repositories/user/IUserRepository";
+import { IUserRepository, PaginatedResult, UserQueryOptions } from "../../../domain/repositories/user/IUserRepository";
 import { User } from "../../../domain/entities/User";
 import { UserPersistenceMapper } from "../../../application/mapper/user/UserPersistenceMapper";
 import { BaseRepository } from "../BaseRepository";
-import { UserPersistenceDTO } from "../../../application/dto/internal/user-persistence.dto";
+import { UserPersistenceDTO } from "../../../application/dto/internal/UserPersistenceDTO";
 
 
 export class UserRepository extends BaseRepository<Prisma.UserDelegate> implements IUserRepository {
@@ -41,7 +41,7 @@ export class UserRepository extends BaseRepository<Prisma.UserDelegate> implemen
 
         return !!user;
     }
-    
+
     async save(user: User): Promise<void> {
         const data = UserPersistenceMapper.toPrisma(user);
         const exists = await this.existsById(data.id);
@@ -51,5 +51,42 @@ export class UserRepository extends BaseRepository<Prisma.UserDelegate> implemen
         } else {
             await this._create(data);
         }
+    }
+
+    async findManyWithFilters(options: UserQueryOptions): Promise<PaginatedResult<User>> {
+        const { page, limit, search, status } = options;
+        const skip = (page - 1) * limit;
+
+        const where: Prisma.UserWhereInput = {
+            role: "USER",
+        }
+
+        if (status === "ACTIVE") {
+            where.isBlocked = false;
+        } else if (status === "BLOCKED") {
+            where.isBlocked = true;
+        }
+
+        if (search && search.trim() !== "") {
+            where.OR = [
+                { firstName: { contains: search, mode: "insensitive" } },
+                { lastName: { contains: search, mode: "insensitive" } },
+                { email: { contains: search, mode: "insensitive" } },
+                { id: { contains: search, mode: "insensitive" } },
+            ];
+        }
+
+        const [rawUser, total] = await Promise.all([
+            prisma.user.findMany({
+                where,
+                skip,
+                take: limit,
+            }),
+            prisma.user.count({ where }),
+        ]);
+
+        const users = rawUser.map((user: UserPersistenceDTO) => UserPersistenceMapper.toDomain(user));
+
+        return { data: users, total };
     }
 }

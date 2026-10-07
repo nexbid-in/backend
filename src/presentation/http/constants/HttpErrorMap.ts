@@ -36,6 +36,11 @@ export const HttpErrorMap: Record<
     message: ErrorMessages.VALIDATION_FAILED,
   },
 
+  [ErrorCodes.INVALID_JSON]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.INVALID_JSON,
+  },
+
   [ErrorCodes.UNAUTHORIZED]: {
     status: HttpStatus.UNAUTHORIZED,
     message: ErrorMessages.UNAUTHORIZED,
