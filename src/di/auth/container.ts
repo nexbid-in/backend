@@ -15,6 +15,7 @@ import { ResendOtpUseCase } from "../../application/use-cases/auth/ResendOtpUseC
 import { LoginUserUseCase } from "../../application/use-cases/auth/LoginUserUseCase";
 import { GetCurrentUserUseCase } from "../../application/use-cases/auth/GetCurrentUserUseCase";
 import { SendPasswordResetOtpUseCase } from "../../application/use-cases/auth/SendPasswordResetOtpUseCase";
+import { VerifyOtpAndResetPasswordUseCase } from "../../application/use-cases/auth/VerifyOtpAndResetPasswordUseCase";
 
 import { AuthController } from "../../presentation/http/controllers/auth/AuthController";
 
@@ -35,5 +36,6 @@ const resendOtpUseCase = new ResendOtpUseCase(redisOtpSessionService, otpService
 const loginUserUseCase = new LoginUserUseCase(userRepository, passwordHashService, authTokenService, redisRateLimiter);
 const getCurrentUserUseCase = new GetCurrentUserUseCase(userRepository);
 const sendPasswordResetOtpUseCase = new SendPasswordResetOtpUseCase(userRepository, redisOtpSessionService, otpService, emailService, redisRateLimiter);
+const verifyOtpAndResetPasswordUseCase = new VerifyOtpAndResetPasswordUseCase(redisOtpSessionService, otpService, userRepository, passwordHashService);
 
-export const authController = new AuthController(registerUserUseCase, verifyEmailAndCreateAccountUseCase, resendOtpUseCase, loginUserUseCase, getCurrentUserUseCase, sendPasswordResetOtpUseCase);
+export const authController = new AuthController(registerUserUseCase, verifyEmailAndCreateAccountUseCase, resendOtpUseCase, loginUserUseCase, getCurrentUserUseCase, sendPasswordResetOtpUseCase, verifyOtpAndResetPasswordUseCase);

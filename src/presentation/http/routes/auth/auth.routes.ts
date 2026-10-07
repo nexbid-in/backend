@@ -19,4 +19,6 @@ router.get("/me", authMiddleware, authController.getCurrentUser.bind(authControl
 
 router.post("/forgot-password", authController.forgotPassword.bind(authController));
 
+router.post("/reset-password", authController.resetPassword.bind(authController));
+
 export default router;

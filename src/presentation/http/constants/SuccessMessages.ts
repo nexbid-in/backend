@@ -13,6 +13,7 @@ export const SuccessMessages = {
   OTP_SENT: "OTP sent successfully",
   OTP_VERIFIED: "OTP verified successfully",
   REGISTRATION_COMPLETED: "User registration completed successfully",
+  PASSWORD_RESET_SUCCESS: "Password reset successfully",
 
   // ==========================================
   // User & Profile

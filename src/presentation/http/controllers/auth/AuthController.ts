@@ -6,12 +6,13 @@ import { IResendOtpUseCase } from "../../../../application/interface/use-cases/a
 import { ILoginUserUseCase } from "../../../../application/interface/use-cases/auth/ILoginUserUseCase";
 import { IGetCurrentUserUseCase } from "../../../../application/interface/use-cases/auth/IGetCurrentUserUseCase";
 import { ISendPasswordResetOtpUseCase } from "../../../../application/interface/use-cases/auth/ISendPasswordResetOtpUseCase";
+import { IVerifyOtpAndResetPasswordUseCase } from "../../../../application/interface/use-cases/auth/IVerifyOtpAndResetPasswordUseCase";
 
 import { HttpStatus } from "../../constants/HttpStatus";
 import { SuccessMessages } from "../../constants/SuccessMessages";
 import { clearAuthCookies, setAuthCookies } from "../../utils/cookieUtils";
 import { ApiResponse } from "../../utils/ApiResponse";
-import { registerUserSchema, resendOtpSchema, verifyEmailSchema, loginUserSchema, forgotPasswordSchema } from "../../validators/AuthValidator";
+import { registerUserSchema, resendOtpSchema, verifyEmailSchema, loginUserSchema, forgotPasswordSchema, resetPasswordSchema } from "../../validators/AuthValidator";
 import { AppError } from "../../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 
@@ -23,7 +24,8 @@ export class AuthController {
     private readonly _resendOtp: IResendOtpUseCase,
     private readonly _loginUser: ILoginUserUseCase,
     private readonly _getCurrentUser: IGetCurrentUserUseCase,
-    private readonly _sendPasswordResetOtp: ISendPasswordResetOtpUseCase
+    private readonly _sendPasswordResetOtp: ISendPasswordResetOtpUseCase,
+    private readonly _verifyOtpAndResetPassword: IVerifyOtpAndResetPasswordUseCase
   ) { }
 
   async register(
@@ -135,6 +137,21 @@ export class AuthController {
       await this._sendPasswordResetOtp.execute(validatedData);
 
       return ApiResponse.success(res, HttpStatus.OK, SuccessMessages.OTP_SENT);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async resetPassword(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const validatedData = resetPasswordSchema.parse(req.body);
+      await this._verifyOtpAndResetPassword.execute(validatedData);
+
+      return ApiResponse.success(res, HttpStatus.OK, SuccessMessages.PASSWORD_RESET_SUCCESS);
     } catch (err) {
       next(err);
     }

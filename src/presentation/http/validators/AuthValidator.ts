@@ -2,6 +2,7 @@ import { z } from "zod";
 import { RegisterUserDTO, ResendOtpDTO, VerifyEmailDTO } from "../../../application/dto/auth/RegisterDTO";
 import { LoginUserDTO } from "../../../application/dto/auth/LoginDTO";
 import { ForgotPasswordDTO } from "../../../application/dto/auth/ForgotPasswordDTO";
+import { ResetPasswordDTO } from "../../../application/dto/auth/ResetPasswordDTO";
 
 const emailSchema = z.string().email("Please enter a valid email address");
 
@@ -33,6 +34,12 @@ export const resendOtpSchema: z.ZodType<ResendOtpDTO> = z.object({
 
 export const forgotPasswordSchema: z.ZodType<ForgotPasswordDTO> = z.object({
     email: emailSchema,
+});
+
+export const resetPasswordSchema: z.ZodType<ResetPasswordDTO> = z.object({
+    email: emailSchema,
+    otp: z.string().length(6, "OTP must be exactly 6 digits").regex(/^\d+$/, "OTP must contain only numbers"),
+    password: passwordSchema,
 });
 
 export const loginUserSchema: z.ZodType<LoginUserDTO> = z.object({
