@@ -15,14 +15,14 @@ export class LoginUserUseCase implements ILoginUserUseCase {
         private readonly _passwordHashService: IPasswordHashService,
         private readonly _authTokenService: IAuthTokenService,
         private readonly _rateLimiter: IRateLimiter
-    ) {}
+    ) { }
 
     async execute(input: LoginUserDTO): Promise<AuthResponseDTO> {
         const emailVO = Email.create(input.email);
 
         const RATE_LIMIT_KEY = `rate_limit:login:${emailVO.getValue()}`;
         const isAllowed = await this._rateLimiter.incrementAndCheck(RATE_LIMIT_KEY, 5, 300);
-        
+
         if (!isAllowed) {
             throw new AppError(ErrorCodes.LOGIN_RATE_LIMIT_EXCEEDED);
         }
@@ -41,7 +41,7 @@ export class LoginUserUseCase implements ILoginUserUseCase {
         if (input.portal === "ADMIN" && user.role !== "ADMIN" || input.portal === "USER" && user.role !== "USER") {
             throw new AppError(ErrorCodes.INVALID_CREDENTIALS);
         }
- 
+
         if (user.isBlocked) {
             throw new AppError(ErrorCodes.ACCOUNT_BLOCKED);
         }
@@ -49,14 +49,19 @@ export class LoginUserUseCase implements ILoginUserUseCase {
         user.markAsActive();
         await this._userRepo.save(user);
 
-        const token = this._authTokenService.generate({
+        const payload = {
             userId: user.id,
             email: user.email.getValue(),
             role: user.role,
-        });
+        };
+
+
+        const accessToken = this._authTokenService.generateAccessToken(payload);
+        const refreshToken = this._authTokenService.generateRefreshToken(payload);
 
         return {
-            accessToken: token,
+            accessToken,
+            refreshToken,
             user: {
                 id: user.id,
                 email: user.email.getValue(),

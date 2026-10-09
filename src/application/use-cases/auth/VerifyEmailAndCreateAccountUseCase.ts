@@ -63,16 +63,21 @@ export class VerifyEmailAndCreateAccountUseCase implements IVerifyEmailAndCreate
 
         await this._userRepo.save(user);
 
-        const accessToken = this._authTokenService.generate({
+        const payload = {
             userId: user.id,
             email: user.email.getValue(),
             role: user.role,
-        });
+        };
+
+
+        const accessToken = this._authTokenService.generateAccessToken(payload);
+        const refreshToken = this._authTokenService.generateRefreshToken(payload);
 
         await this._otpRepo.delete(input.email);
 
         return {
             accessToken,
+            refreshToken,
             user: {
                 id: user.id,
                 email: user.email.getValue(),

@@ -1,11 +1,8 @@
+import { AuthTokenServiceDTO } from "../../dto/internal/AuthTokenServiceDTO";
 
 export interface IAuthTokenService {
-    generate(payload: IAuthTokenServiceInput): string;
-    verify(token: string): IAuthTokenServiceInput;
-}
-
-export interface IAuthTokenServiceInput {
-    userId: string;
-    email: string;
-    role: string;
+    generateAccessToken(payload: AuthTokenServiceDTO): string;
+    generateRefreshToken(payload: AuthTokenServiceDTO): string;
+    verifyAccessToken(token: string): AuthTokenServiceDTO;
+    verifyRefreshToken(token: string): AuthTokenServiceDTO;
 }
