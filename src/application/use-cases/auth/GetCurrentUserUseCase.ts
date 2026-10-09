@@ -16,6 +16,10 @@ export class GetCurrentUserUseCase implements IGetCurrentUserUseCase {
             throw new AppError(ErrorCodes.NOT_FOUND);
         }
 
+        if (user.isBlocked) {
+            throw new AppError(ErrorCodes.ACCOUNT_BLOCKED);
+        }
+
         return {
             id: user.id,
             email: user.email.getValue(),
