@@ -14,8 +14,11 @@ import { VerifyEmailAndCreateAccountUseCase } from "../../application/use-cases/
 import { ResendOtpUseCase } from "../../application/use-cases/auth/ResendOtpUseCase";
 import { LoginUserUseCase } from "../../application/use-cases/auth/LoginUserUseCase";
 import { GetCurrentUserUseCase } from "../../application/use-cases/auth/GetCurrentUserUseCase";
+import { SendPasswordResetOtpUseCase } from "../../application/use-cases/auth/SendPasswordResetOtpUseCase";
+import { VerifyOtpAndResetPasswordUseCase } from "../../application/use-cases/auth/VerifyOtpAndResetPasswordUseCase";
 
 import { AuthController } from "../../presentation/http/controllers/auth/AuthController";
+import { RefreshTokenUseCase } from "../../application/use-cases/auth/RefreshTokenUseCase";
 
 
 const userRepository = new UserRepository();
@@ -33,5 +36,8 @@ const verifyEmailAndCreateAccountUseCase = new VerifyEmailAndCreateAccountUseCas
 const resendOtpUseCase = new ResendOtpUseCase(redisOtpSessionService, otpService, emailService, redisRateLimiter);
 const loginUserUseCase = new LoginUserUseCase(userRepository, passwordHashService, authTokenService, redisRateLimiter);
 const getCurrentUserUseCase = new GetCurrentUserUseCase(userRepository);
+const sendPasswordResetOtpUseCase = new SendPasswordResetOtpUseCase(userRepository, redisOtpSessionService, otpService, emailService, redisRateLimiter);
+const verifyOtpAndResetPasswordUseCase = new VerifyOtpAndResetPasswordUseCase(redisOtpSessionService, otpService, userRepository, passwordHashService);
+const refreshTokenUseCase = new RefreshTokenUseCase(userRepository, authTokenService);
 
-export const authController = new AuthController(registerUserUseCase, verifyEmailAndCreateAccountUseCase, resendOtpUseCase, loginUserUseCase, getCurrentUserUseCase);
+export const authController = new AuthController(registerUserUseCase, verifyEmailAndCreateAccountUseCase, resendOtpUseCase, loginUserUseCase, getCurrentUserUseCase, sendPasswordResetOtpUseCase, verifyOtpAndResetPasswordUseCase, refreshTokenUseCase);

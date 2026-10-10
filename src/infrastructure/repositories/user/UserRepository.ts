@@ -7,7 +7,7 @@ import { BaseRepository } from "../BaseRepository";
 import { UserPersistenceDTO } from "../../../application/dto/internal/UserPersistenceDTO";
 
 
-export class UserRepository extends BaseRepository<Prisma.UserDelegate> implements IUserRepository {
+export class UserRepository extends BaseRepository<UserPersistenceDTO, Prisma.UserDelegate> implements IUserRepository {
     constructor() {
         super(prisma.user);
     }

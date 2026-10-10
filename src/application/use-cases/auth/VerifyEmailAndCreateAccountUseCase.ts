@@ -47,6 +47,10 @@ export class VerifyEmailAndCreateAccountUseCase implements IVerifyEmailAndCreate
             throw new AppError(ErrorCodes.OTP_INVALID);
         }
 
+        if (!record.data || !record.data.firstName || !record.data.lastName || !record.data.passwordHash) {
+            throw new AppError(ErrorCodes.VALIDATION_FAILED);
+        }
+
         const userId = await this._userIdService.generate(record.data.firstName);
 
         const user = User.create({
@@ -59,16 +63,21 @@ export class VerifyEmailAndCreateAccountUseCase implements IVerifyEmailAndCreate
 
         await this._userRepo.save(user);
 
-        const accessToken = this._authTokenService.generate({
+        const payload = {
             userId: user.id,
             email: user.email.getValue(),
             role: user.role,
-        });
+        };
+
+
+        const accessToken = this._authTokenService.generateAccessToken(payload);
+        const refreshToken = this._authTokenService.generateRefreshToken(payload);
 
         await this._otpRepo.delete(input.email);
 
         return {
             accessToken,
+            refreshToken,
             user: {
                 id: user.id,
                 email: user.email.getValue(),

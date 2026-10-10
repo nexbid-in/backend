@@ -1,7 +1,7 @@
 import { IUserRepository } from "../../../domain/repositories/user/IUserRepository";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
-import { GetCurrentUserResponseDTO } from "../../dto/auth/GetCurrentUserResponseDTO";
+import { GetCurrentUserResponseDTO, GetCurrentUserRequestDTO } from "../../dto/auth/GetCurrentUserDTO";
 import { IGetCurrentUserUseCase } from "../../interface/use-cases/auth/IGetCurrentUserUseCase";
 
 export class GetCurrentUserUseCase implements IGetCurrentUserUseCase {
@@ -9,11 +9,15 @@ export class GetCurrentUserUseCase implements IGetCurrentUserUseCase {
         private readonly _userRepo: IUserRepository 
     ) {}
 
-    async execute(id: string): Promise<GetCurrentUserResponseDTO> {
-        const user = await this._userRepo.findById(id);
+    async execute(data: GetCurrentUserRequestDTO): Promise<GetCurrentUserResponseDTO> {
+        const user = await this._userRepo.findById(data.userId);
 
         if (!user) {
             throw new AppError(ErrorCodes.NOT_FOUND);
+        }
+
+        if (user.isBlocked) {
+            throw new AppError(ErrorCodes.ACCOUNT_BLOCKED);
         }
 
         return {

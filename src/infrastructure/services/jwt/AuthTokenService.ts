@@ -1,10 +1,11 @@
 import jwt from "jsonwebtoken";
-import { IAuthTokenService, IAuthTokenServiceInput } from "../../../application/interface/services/ITokenService";
+import { IAuthTokenService } from "../../../application/interface/services/ITokenService";
+import { AuthTokenServiceDTO } from "../../../application/dto/internal/AuthTokenServiceDTO";
 import { env } from "../../config/env";
 
 
 export class AuthTokenService implements IAuthTokenService {
-    generate(payload: IAuthTokenServiceInput): string {
+    generateAccessToken(payload: AuthTokenServiceDTO): string {
         return jwt.sign(
             payload,
             env.JWT_SECRET,
@@ -13,7 +14,19 @@ export class AuthTokenService implements IAuthTokenService {
         );
     }
 
-    verify(token: string): IAuthTokenServiceInput {
-        return jwt.verify(token, env.JWT_SECRET) as IAuthTokenServiceInput;
+    generateRefreshToken(payload: AuthTokenServiceDTO): string {
+        return jwt.sign(
+            payload,
+            env.JWT_REFRESH_SECRET,
+            { expiresIn: env.JWT_REFRESH_EXPIRES_IN as jwt.SignOptions["expiresIn"] },
+        );
+    }
+
+    verifyAccessToken(token: string): AuthTokenServiceDTO {
+        return jwt.verify(token, env.JWT_SECRET) as AuthTokenServiceDTO;
+    }
+
+    verifyRefreshToken(token: string): AuthTokenServiceDTO {
+        return jwt.verify(token, env.JWT_REFRESH_SECRET) as AuthTokenServiceDTO;
     }
 }

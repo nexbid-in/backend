@@ -95,6 +95,10 @@ export class User {
     return this.props.password;
   }
 
+  public updatePassword(newPasswordHash: string): void {
+    this.props.password = newPasswordHash;
+  }
+
   get profileImage(): string | null {
     return this.props.profileImage;
   }

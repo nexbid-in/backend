@@ -1,4 +1,4 @@
-import { IOtpSessionService, UnverifiedUser } from "../../application/interface/services/IOtpSessionService";
+import { IOtpSessionService, OtpSessionData } from "../../application/interface/services/IOtpSessionService";
 import redis from "../config/redis";
 
 
@@ -9,7 +9,7 @@ export class RedisOtpSessionService implements IOtpSessionService {
         return `email_otp: ${email}`;
     }
 
-    async save(email: string, otpHash: string, data: UnverifiedUser): Promise<void> {
+    async save(email: string, otpHash: string, data?: OtpSessionData): Promise<void> {
         await redis.set(
             this.key(email),
             JSON.stringify({ otpHash, attempts: 0, data }),
@@ -18,7 +18,7 @@ export class RedisOtpSessionService implements IOtpSessionService {
         );
     }
 
-    async get(email: string): Promise<{ otpHash: string; attempts: number; data: UnverifiedUser } | null> {
+    async get(email: string): Promise<{ otpHash: string; attempts: number; data?: OtpSessionData } | null> {
         const rawData = await redis.get(this.key(email));
         return rawData ? JSON.parse(rawData) : null;
     }

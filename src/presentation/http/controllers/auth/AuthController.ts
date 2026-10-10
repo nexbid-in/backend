@@ -5,12 +5,15 @@ import { IVerifyEmailAndCreateAccountUseCase } from "../../../../application/int
 import { IResendOtpUseCase } from "../../../../application/interface/use-cases/auth/IResendOtpUseCase";
 import { ILoginUserUseCase } from "../../../../application/interface/use-cases/auth/ILoginUserUseCase";
 import { IGetCurrentUserUseCase } from "../../../../application/interface/use-cases/auth/IGetCurrentUserUseCase";
+import { ISendPasswordResetOtpUseCase } from "../../../../application/interface/use-cases/auth/ISendPasswordResetOtpUseCase";
+import { IVerifyOtpAndResetPasswordUseCase } from "../../../../application/interface/use-cases/auth/IVerifyOtpAndResetPasswordUseCase";
+import { IRefreshTokenUseCase } from "../../../../application/interface/use-cases/auth/IRefreshTokenUseCase";
 
 import { HttpStatus } from "../../constants/HttpStatus";
 import { SuccessMessages } from "../../constants/SuccessMessages";
 import { clearAuthCookies, setAuthCookies } from "../../utils/cookieUtils";
 import { ApiResponse } from "../../utils/ApiResponse";
-import { registerUserSchema, resendOtpSchema, verifyEmailSchema, loginUserSchema } from "../../validators/AuthValidator";
+import { registerUserSchema, resendOtpSchema, verifyEmailSchema, loginUserSchema, forgotPasswordSchema, resetPasswordSchema, refreshTokenSchema, getCurrentUserSchema } from "../../validators/AuthValidator";
 import { AppError } from "../../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 
@@ -21,7 +24,10 @@ export class AuthController {
     private readonly _verifyEmailAndCreateAccount: IVerifyEmailAndCreateAccountUseCase,
     private readonly _resendOtp: IResendOtpUseCase,
     private readonly _loginUser: ILoginUserUseCase,
-    private readonly _getCurrentUser: IGetCurrentUserUseCase
+    private readonly _getCurrentUser: IGetCurrentUserUseCase,
+    private readonly _sendPasswordResetOtp: ISendPasswordResetOtpUseCase,
+    private readonly _verifyOtpAndResetPassword: IVerifyOtpAndResetPasswordUseCase,
+    private readonly _refreshToken: IRefreshTokenUseCase,
   ) { }
 
   async register(
@@ -49,7 +55,7 @@ export class AuthController {
       const validatedData = verifyEmailSchema.parse(req.body);
       const response = await this._verifyEmailAndCreateAccount.execute(validatedData);
 
-      setAuthCookies(res, response.accessToken);
+      setAuthCookies(res, response.accessToken, response.refreshToken);
 
       return ApiResponse.success(res, HttpStatus.CREATED, SuccessMessages.REGISTRATION_COMPLETED, { user: response.user });
 
@@ -83,7 +89,7 @@ export class AuthController {
       const validatedData = loginUserSchema.parse(req.body);
       const response = await this._loginUser.execute(validatedData);
 
-      setAuthCookies(res, response.accessToken);
+      setAuthCookies(res, response.accessToken, response.refreshToken);
 
       return ApiResponse.success(res, HttpStatus.OK, SuccessMessages.LOGIN_SUCCESS, { user: response.user });
 
@@ -102,7 +108,8 @@ export class AuthController {
         throw new AppError(ErrorCodes.UNAUTHORIZED);
       }
 
-      const response = await this._getCurrentUser.execute(req.user.userId);
+      const validatedData = getCurrentUserSchema.parse(req.user);
+      const response = await this._getCurrentUser.execute(validatedData);
       return ApiResponse.success(res, HttpStatus.OK, SuccessMessages.USER_AUTHENTICATED, { user: response });
 
     } catch (error) {
@@ -123,4 +130,51 @@ export class AuthController {
     }
   }
 
+  async forgotPassword(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const validatedData = forgotPasswordSchema.parse(req.body);
+      await this._sendPasswordResetOtp.execute(validatedData);
+
+      return ApiResponse.success(res, HttpStatus.OK, SuccessMessages.OTP_SENT);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async resetPassword(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const validatedData = resetPasswordSchema.parse(req.body);
+      await this._verifyOtpAndResetPassword.execute(validatedData);
+
+      return ApiResponse.success(res, HttpStatus.OK, SuccessMessages.PASSWORD_RESET_SUCCESS);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async refreshToken(
+    req: Request,
+    res: Response, 
+    next: NextFunction
+  ) {
+    try {
+      const validatedData = refreshTokenSchema.parse(req.cookies);
+
+      const response = await this._refreshToken.execute(validatedData);
+
+      setAuthCookies(res, response.accessToken, response.refreshToken);
+
+      return ApiResponse.success(res, HttpStatus.OK, "Token refreshed successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
 }
