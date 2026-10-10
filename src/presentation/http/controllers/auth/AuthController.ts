@@ -13,7 +13,7 @@ import { HttpStatus } from "../../constants/HttpStatus";
 import { SuccessMessages } from "../../constants/SuccessMessages";
 import { clearAuthCookies, setAuthCookies } from "../../utils/cookieUtils";
 import { ApiResponse } from "../../utils/ApiResponse";
-import { registerUserSchema, resendOtpSchema, verifyEmailSchema, loginUserSchema, forgotPasswordSchema, resetPasswordSchema } from "../../validators/AuthValidator";
+import { registerUserSchema, resendOtpSchema, verifyEmailSchema, loginUserSchema, forgotPasswordSchema, resetPasswordSchema, refreshTokenSchema, getCurrentUserSchema } from "../../validators/AuthValidator";
 import { AppError } from "../../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 
@@ -108,7 +108,8 @@ export class AuthController {
         throw new AppError(ErrorCodes.UNAUTHORIZED);
       }
 
-      const response = await this._getCurrentUser.execute(req.user.userId);
+      const validatedData = getCurrentUserSchema.parse(req.user);
+      const response = await this._getCurrentUser.execute(validatedData);
       return ApiResponse.success(res, HttpStatus.OK, SuccessMessages.USER_AUTHENTICATED, { user: response });
 
     } catch (error) {
@@ -165,12 +166,9 @@ export class AuthController {
     next: NextFunction
   ) {
     try {
-      const token = req.cookies.refreshToken;
-      if (!token) {
-        throw new AppError(ErrorCodes.UNAUTHORIZED);
-      }
+      const validatedData = refreshTokenSchema.parse(req.cookies);
 
-      const response = await this._refreshToken.execute({ refreshToken: token });
+      const response = await this._refreshToken.execute(validatedData);
 
       setAuthCookies(res, response.accessToken, response.refreshToken);
 

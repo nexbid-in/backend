@@ -3,6 +3,8 @@ import { RegisterUserDTO, ResendOtpDTO, VerifyEmailDTO } from "../../../applicat
 import { LoginUserDTO } from "../../../application/dto/auth/LoginDTO";
 import { ForgotPasswordDTO } from "../../../application/dto/auth/ForgotPasswordDTO";
 import { ResetPasswordDTO } from "../../../application/dto/auth/ResetPasswordDTO";
+import { RefreshTokenDTO } from "../../../application/dto/auth/RefreshTokenDTO";
+import { GetCurrentUserRequestDTO } from "../../../application/dto/auth/GetCurrentUserDTO";
 
 const emailSchema = z.string().email("Please enter a valid email address");
 
@@ -46,4 +48,12 @@ export const loginUserSchema: z.ZodType<LoginUserDTO> = z.object({
     email: emailSchema,
     password: passwordSchema,
     portal: z.enum(["USER", "ADMIN"]).optional(),
+});
+
+export const refreshTokenSchema: z.ZodType<RefreshTokenDTO> = z.object({
+    refreshToken: z.string().min(1, "Refresh token cannot be empty")
+});
+
+export const getCurrentUserSchema: z.ZodType<GetCurrentUserRequestDTO> = z.object({
+    userId: z.string().uuid("Invalid user ID format").or(z.string().min(1, "User ID is required"))
 });

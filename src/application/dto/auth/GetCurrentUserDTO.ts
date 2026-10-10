@@ -1,3 +1,6 @@
+export type GetCurrentUserRequestDTO = {
+    userId: string;
+}
 
 export type GetCurrentUserResponseDTO = {
     id: string;
