@@ -5,6 +5,9 @@ import { User } from "../../../domain/entities/User";
 import { UserPersistenceMapper } from "../../../application/mapper/user/UserPersistenceMapper";
 import { BaseRepository } from "../BaseRepository";
 import { UserPersistenceDTO } from "../../../application/dto/internal/UserPersistenceDTO";
+import { AppError } from "../../../shared/errors/AppError";
+import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
+import { handlePrismaError } from "../../database/handlePrismaError";
 
 
 export class UserRepository extends BaseRepository<UserPersistenceDTO, Prisma.UserDelegate> implements IUserRepository {
@@ -43,13 +46,19 @@ export class UserRepository extends BaseRepository<UserPersistenceDTO, Prisma.Us
     }
 
     async save(user: User): Promise<void> {
-        const data = UserPersistenceMapper.toPrisma(user);
-        const exists = await this.existsById(data.id);
-
-        if (exists) {
-            await this._update(data.id, data);
-        } else {
-            await this._create(data);
+        try {
+            const data = UserPersistenceMapper.toPrisma(user);
+            const exists = await this.existsById(data.id);
+            if (exists) {
+                await this._update(data.id, data);
+            } else {
+                await this._create(data);
+            }
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+                throw new AppError(ErrorCodes.EMAIL_ALREADY_EXISTS);
+            }
+            handlePrismaError(error);
         }
     }
 

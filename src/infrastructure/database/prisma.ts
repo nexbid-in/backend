@@ -15,10 +15,10 @@ const adapter = new PrismaPg(pool);
 
 export const prisma = new PrismaClient({
   adapter,
-  log: ["info", "warn", "error"], 
+  log: ["warn"],
 });
 
-export async function connectPrisma() {
+export async function connectPrisma(): Promise<void> {
   try {
     // 3. Connect and verify with a simple query to ensure the DB is reachable
     await prisma.$connect();
@@ -26,6 +26,6 @@ export async function connectPrisma() {
     logger.info("Prisma connected");
   } catch (error: unknown) {
     logger.error({ error }, "Prisma failed to connect to DB");
-    process.exit(1); 
+    throw error;
   }
 }

@@ -3,6 +3,7 @@ import morgan from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
+import { ApiRoutes } from "./constants/ApiRoutes";
 import appRoutes from "./routes/index";
 import { errorHandler } from "./middlewares/errorHandler";
 import { HttpStatus } from "./constants/HttpStatus";
@@ -24,7 +25,7 @@ export const createApp = () => {
     app.use(express.json());
     app.use(cookieParser());
 
-    app.use("/api", appRoutes);
+    app.use(ApiRoutes.BASE, appRoutes);
 
     app.use((req, res) => {
         return ApiResponse.error(res, HttpStatus.NOT_FOUND, ErrorCodes.NOT_FOUND, "Route not found");

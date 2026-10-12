@@ -6,26 +6,30 @@ const redis = new IORedis({
   host: env.REDIS_HOST,
   port: env.REDIS_PORT,
   maxRetriesPerRequest: null,
-  enableReadyCheck: true, 
+  enableReadyCheck: true,
+  lazyConnect: true,
 });
 
-export function connectRedis(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (redis.status === "ready") {
-      logger.info('Redis connected');
-      return resolve();
-    }
-    
-    redis.once("ready", () => {
-      logger.info("Redis connected");
-      resolve();
-    });
+// Attach a listener to prevent EventEmitter unhandled error event crashes
+redis.on("error", (err: Error) => {
+  if (redis.status !== "connecting") {
+    logger.error({ err }, "Redis error");
+  }
+});
 
-    redis.once("error", (err: any) => {
-      logger.error("Redis connection failed", err);
-      reject(err);
-    });
-  });
+export async function connectRedis(): Promise<void> {
+  if (redis.status === "ready") {
+    logger.info("Redis connected");
+    return;
+  }
+
+  try {
+    await redis.connect();
+    logger.info("Redis connected");
+  } catch (err: unknown) {
+    logger.error({ err }, "Redis connection failed");
+    throw err;
+  }
 }
 
 process.on("SIGINT", async () => {
