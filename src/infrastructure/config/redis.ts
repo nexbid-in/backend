@@ -21,8 +21,8 @@ export function connectRedis(): Promise<void> {
       resolve();
     });
 
-    redis.once("error", (err: any) => {
-      logger.error("Redis connection failed", err);
+    redis.once("error", (err: Error) => {
+      logger.error({ err }, "Redis connection failed");
       reject(err);
     });
   });

@@ -16,12 +16,12 @@ import { ErrorMessages } from "../constants/ErrorMessages";
 
 function isPrismaKnownError(
   err: unknown
-): err is { code: string; meta?: any } {
+): err is { code: string; meta?: Record<string, unknown> } {
   return (
     typeof err === "object" &&
     err !== null &&
     "code" in err &&
-    typeof (err as any).code === "string"
+    typeof (err as Record<string, unknown>).code === "string"
   );
 }
 
