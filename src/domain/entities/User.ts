@@ -8,9 +8,9 @@ export type UserProps = {
   email: Email;
   firstName: string;
   lastName: string;
-  password: string;
-
+  
   // Optional Profile Info
+  password?: string | null;
   role?: string;
   mobile?: string | null;
   profileImage?: string | null;
@@ -29,7 +29,7 @@ type UserState = {
   email: Email;
   firstName: string;
   lastName: string;
-  password: string;
+  password: string | null;
   role: string;
   mobile: string | null;
   profileImage: string | null;
@@ -47,14 +47,13 @@ export class User {
     if (!props.email) throw new AppError(ErrorCodes.VALIDATION_FAILED);
     if (!props.firstName) throw new AppError(ErrorCodes.VALIDATION_FAILED);
     if (!props.lastName) throw new AppError(ErrorCodes.VALIDATION_FAILED);
-    if (!props.password) throw new AppError(ErrorCodes.VALIDATION_FAILED);
 
     return new User({
       id: props.id,
       email: props.email,
       firstName: props.firstName,
       lastName: props.lastName,
-      password: props.password,
+      password: props.password ?? null,
       role: props.role ?? "USER",
       mobile: props.mobile ?? null,
       profileImage: props.profileImage ?? null,
@@ -91,7 +90,7 @@ export class User {
     return this.props.googleId;
   }
 
-  get password(): string {
+  get password(): string | null {
     return this.props.password;
   }
 
