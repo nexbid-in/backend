@@ -16,9 +16,10 @@ import { LoginUserUseCase } from "../../application/use-cases/auth/LoginUserUseC
 import { GetCurrentUserUseCase } from "../../application/use-cases/auth/GetCurrentUserUseCase";
 import { SendPasswordResetOtpUseCase } from "../../application/use-cases/auth/SendPasswordResetOtpUseCase";
 import { VerifyOtpAndResetPasswordUseCase } from "../../application/use-cases/auth/VerifyOtpAndResetPasswordUseCase";
+import { RefreshTokenUseCase } from "../../application/use-cases/auth/RefreshTokenUseCase";
 
 import { AuthController } from "../../presentation/http/controllers/auth/AuthController";
-import { RefreshTokenUseCase } from "../../application/use-cases/auth/RefreshTokenUseCase";
+import { createAuthMiddleware } from "../../presentation/http/middlewares/authMiddleware";
 
 
 const userRepository = new UserRepository();
@@ -40,4 +41,5 @@ const sendPasswordResetOtpUseCase = new SendPasswordResetOtpUseCase(userReposito
 const verifyOtpAndResetPasswordUseCase = new VerifyOtpAndResetPasswordUseCase(redisOtpSessionService, otpService, userRepository, passwordHashService);
 const refreshTokenUseCase = new RefreshTokenUseCase(userRepository, authTokenService);
 
+export const authMiddleware = createAuthMiddleware(authTokenService);
 export const authController = new AuthController(registerUserUseCase, verifyEmailAndCreateAccountUseCase, resendOtpUseCase, loginUserUseCase, getCurrentUserUseCase, sendPasswordResetOtpUseCase, verifyOtpAndResetPasswordUseCase, refreshTokenUseCase);

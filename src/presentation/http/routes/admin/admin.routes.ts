@@ -1,7 +1,7 @@
 import express from "express";
 import { adminUserController } from "../../../../di/admin/container";
-import { authMiddleware } from "../../middlewares/authMiddleware";
 import { requireRole } from "../../middlewares/roleMiddleware";
+import { authMiddleware } from "../../../../di/auth/container";
 
 const router = express.Router();
 

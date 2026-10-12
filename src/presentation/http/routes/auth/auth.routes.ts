@@ -1,6 +1,5 @@
 import express from "express";
-import { authController } from "../../../../di/auth/container";
-import { authMiddleware } from "../../middlewares/authMiddleware";
+import { authController, authMiddleware } from "../../../../di/auth/container";
 
 
 const router = express.Router();
@@ -15,12 +14,12 @@ router.post("/login", authController.login.bind(authController));
 
 router.post("/logout", authController.logout.bind(authController));
 
-router.get("/me", authMiddleware, authController.getCurrentUser.bind(authController));
-
 router.post("/forgot-password", authController.forgotPassword.bind(authController));
 
 router.post("/reset-password", authController.resetPassword.bind(authController));
 
 router.post("/refresh", authController.refreshToken.bind(authController));
+
+router.get("/me", authMiddleware, authController.getCurrentUser.bind(authController));
 
 export default router;
