@@ -1,10 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
-import {
-  JsonWebTokenError,
-  TokenExpiredError,
-} from "jsonwebtoken";
-
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 import { HttpErrorMap } from "../constants/HttpErrorMap";
@@ -43,15 +38,6 @@ export const errorHandler = (
   if (err instanceof AppError) {
     const mapping = HttpErrorMap[err.code];
     return ApiResponse.error(res, mapping.status, err.code, mapping.message);
-  }
-
-  // 5. JWT Errors
-  if (err instanceof TokenExpiredError) {
-    return ApiResponse.error(res, HttpStatus.UNAUTHORIZED, ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED);
-  }
-
-  if (err instanceof JsonWebTokenError) {
-    return ApiResponse.error(res, HttpStatus.UNAUTHORIZED, ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED);
   }
 
   // 6. Fallback for Unhandled Errors
