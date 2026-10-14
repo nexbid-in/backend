@@ -5,6 +5,7 @@ import { ForgotPasswordDTO } from "../../../application/dto/auth/ForgotPasswordD
 import { ResetPasswordDTO } from "../../../application/dto/auth/ResetPasswordDTO";
 import { RefreshTokenDTO } from "../../../application/dto/auth/RefreshTokenDTO";
 import { GetCurrentUserRequestDTO } from "../../../application/dto/auth/GetCurrentUserDTO";
+import { GoogleAuthDTO } from "../../../application/interface/use-cases/auth/IGoogleAuthUseCase";
 
 const emailSchema = z.string().email("Please enter a valid email address");
 
@@ -56,4 +57,8 @@ export const refreshTokenSchema: z.ZodType<RefreshTokenDTO> = z.object({
 
 export const getCurrentUserSchema: z.ZodType<GetCurrentUserRequestDTO> = z.object({
     userId: z.string().uuid("Invalid user ID format").or(z.string().min(1, "User ID is required"))
+});
+
+export const googleAuthSchema: z.ZodType<GoogleAuthDTO> = z.object({
+  credential: z.string().min(1, "Google credential token is required"),
 });

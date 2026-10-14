@@ -2,6 +2,7 @@
 export type AuthResponseDTO = {
   accessToken: string;
   refreshToken: string;
+  isNewUser?: boolean;
   user: {
     id: string;
     email: string;

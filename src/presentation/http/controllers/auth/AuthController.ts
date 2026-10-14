@@ -8,12 +8,13 @@ import { IGetCurrentUserUseCase } from "../../../../application/interface/use-ca
 import { ISendPasswordResetOtpUseCase } from "../../../../application/interface/use-cases/auth/ISendPasswordResetOtpUseCase";
 import { IVerifyOtpAndResetPasswordUseCase } from "../../../../application/interface/use-cases/auth/IVerifyOtpAndResetPasswordUseCase";
 import { IRefreshTokenUseCase } from "../../../../application/interface/use-cases/auth/IRefreshTokenUseCase";
+import { IGoogleAuthUseCase } from "../../../../application/interface/use-cases/auth/IGoogleAuthUseCase";
 
 import { HttpStatus } from "../../constants/HttpStatus";
 import { SuccessMessages } from "../../constants/SuccessMessages";
 import { clearAuthCookies, setAuthCookies } from "../../utils/cookieUtils";
 import { ApiResponse } from "../../utils/ApiResponse";
-import { registerUserSchema, resendOtpSchema, verifyEmailSchema, loginUserSchema, forgotPasswordSchema, resetPasswordSchema, refreshTokenSchema, getCurrentUserSchema } from "../../validators/AuthValidator";
+import { registerUserSchema, resendOtpSchema, verifyEmailSchema, loginUserSchema, forgotPasswordSchema, resetPasswordSchema, refreshTokenSchema, getCurrentUserSchema, googleAuthSchema } from "../../validators/AuthValidator";
 import { AppError } from "../../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 
@@ -28,6 +29,7 @@ export class AuthController {
     private readonly _sendPasswordResetOtp: ISendPasswordResetOtpUseCase,
     private readonly _verifyOtpAndResetPassword: IVerifyOtpAndResetPasswordUseCase,
     private readonly _refreshToken: IRefreshTokenUseCase,
+    private readonly _googleAuth: IGoogleAuthUseCase,
   ) { }
 
   async register(
@@ -162,7 +164,7 @@ export class AuthController {
 
   async refreshToken(
     req: Request,
-    res: Response, 
+    res: Response,
     next: NextFunction
   ) {
     try {
@@ -177,4 +179,30 @@ export class AuthController {
       next(error);
     }
   }
+
+  async googleAuth(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const validatedData = googleAuthSchema.parse(req.body);
+      const response = await this._googleAuth.execute(validatedData);
+
+      setAuthCookies(res, response.accessToken, response.refreshToken);
+
+      const status = response.isNewUser ? HttpStatus.CREATED : HttpStatus.OK;
+      const message = response.isNewUser
+        ? SuccessMessages.REGISTRATION_COMPLETED
+        : SuccessMessages.LOGIN_SUCCESS;
+
+      return ApiResponse.success(res, status, message, {
+        user: response.user,
+        isNewUser: response.isNewUser,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
 }

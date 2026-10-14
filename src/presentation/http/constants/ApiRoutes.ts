@@ -12,6 +12,7 @@ export const ApiRoutes = {
     RESET_PASSWORD: "/reset-password",
     REFRESH: "/refresh",
     ME: "/me",
+    GOOGLE: "/google",
   },
 
   ADMIN: {

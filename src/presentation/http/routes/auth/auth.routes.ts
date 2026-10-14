@@ -23,4 +23,6 @@ router.post(ApiRoutes.AUTH.REFRESH, authController.refreshToken.bind(authControl
 
 router.get(ApiRoutes.AUTH.ME, authMiddleware, authController.getCurrentUser.bind(authController));
 
+router.post(ApiRoutes.AUTH.GOOGLE, authController.googleAuth.bind(authController));
+
 export default router;

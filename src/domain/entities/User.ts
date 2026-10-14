@@ -8,7 +8,7 @@ export type UserProps = {
   email: Email;
   firstName: string;
   lastName: string;
-  
+
   // Optional Profile Info
   password?: string | null;
   role?: string;
@@ -88,6 +88,16 @@ export class User {
 
   get googleId(): string | null {
     return this.props.googleId;
+  }
+
+  public linkGoogleAccount(googleId: string, profileImage?: string | null): void {
+    if (!this.props.googleId) {
+      this.props.googleId = googleId;
+    }
+    
+    if (!this.props.profileImage && profileImage) {
+      this.props.profileImage = profileImage;
+    }
   }
 
   get password(): string | null {
