@@ -7,7 +7,7 @@ export type UserProps = {
   id: string;
   email: Email;
   firstName: string;
-  lastName: string;
+  lastName?: string | null;
 
   // Optional Profile Info
   password?: string | null;
@@ -46,13 +46,12 @@ export class User {
     if (!props.id) throw new AppError(ErrorCodes.VALIDATION_FAILED);
     if (!props.email) throw new AppError(ErrorCodes.VALIDATION_FAILED);
     if (!props.firstName) throw new AppError(ErrorCodes.VALIDATION_FAILED);
-    if (!props.lastName) throw new AppError(ErrorCodes.VALIDATION_FAILED);
 
     return new User({
       id: props.id,
       email: props.email,
       firstName: props.firstName,
-      lastName: props.lastName,
+      lastName: props.lastName ?? "",
       password: props.password ?? null,
       role: props.role ?? "USER",
       mobile: props.mobile ?? null,

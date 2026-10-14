@@ -27,7 +27,7 @@ export class GoogleAuthService implements IGoogleAuthService {
       return {
         googleId: payload.sub,
         email: payload.email,
-        firstName: payload.given_name || "User",
+        firstName: payload.given_name || payload.name || "User",
         lastName: payload.family_name || "",
         profileImage: payload.picture || null,
       };
