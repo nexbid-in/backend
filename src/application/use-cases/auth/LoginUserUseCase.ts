@@ -67,7 +67,8 @@ export class LoginUserUseCase implements ILoginUserUseCase {
                 email: user.email.getValue(),
                 firstName: user.firstName,
                 lastName: user.lastName,
-                role: user.role
+                role: user.role,
+                profileImage: user.profileImage,
             }
         }
     }

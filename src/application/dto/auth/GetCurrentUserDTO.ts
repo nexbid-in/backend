@@ -8,4 +8,5 @@ export type GetCurrentUserResponseDTO = {
     firstName: string;
     lastName: string;
     role: string;
+    profileImage: string | null;
 }

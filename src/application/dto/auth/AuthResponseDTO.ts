@@ -9,5 +9,6 @@ export type AuthResponseDTO = {
     firstName: string;
     lastName: string;
     role: string;
+    profileImage: string | null;
   };
 };

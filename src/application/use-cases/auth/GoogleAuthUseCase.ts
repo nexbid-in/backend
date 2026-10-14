@@ -70,6 +70,7 @@ export class GoogleAuthUseCase implements IGoogleAuthUseCase {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        profileImage: user.profileImage,
       },
     };
   }
