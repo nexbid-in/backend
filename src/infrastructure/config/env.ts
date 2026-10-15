@@ -24,6 +24,8 @@ const envSchema = z.object({
     SMTP_USER: z.string().email(),
     SMTP_PASS: z.string(),
     SMTP_FROM: z.string(),
+
+    GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is required"),
 });
 
 // Validate the process.env against the schema

@@ -4,9 +4,9 @@ export type UserPersistenceDTO = {
   email: string;
   firstName: string;
   lastName: string;
-  password: string;
-
+  
   // Optional profile
+  password: string | null;
   role: string;
   mobile: string | null;
   profileImage: string | null;

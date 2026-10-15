@@ -28,7 +28,7 @@ export class LoginUserUseCase implements ILoginUserUseCase {
         }
 
         const user = await this._userRepo.findByEmail(emailVO.getValue());
-        if (!user) {
+        if (!user || !user.password) {
             throw new AppError(ErrorCodes.INVALID_CREDENTIALS);
         }
 
@@ -67,7 +67,8 @@ export class LoginUserUseCase implements ILoginUserUseCase {
                 email: user.email.getValue(),
                 firstName: user.firstName,
                 lastName: user.lastName,
-                role: user.role
+                role: user.role,
+                profileImage: user.profileImage,
             }
         }
     }

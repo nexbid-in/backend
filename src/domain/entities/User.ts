@@ -7,10 +7,10 @@ export type UserProps = {
   id: string;
   email: Email;
   firstName: string;
-  lastName: string;
-  password: string;
+  lastName?: string | null;
 
   // Optional Profile Info
+  password?: string | null;
   role?: string;
   mobile?: string | null;
   profileImage?: string | null;
@@ -29,7 +29,7 @@ type UserState = {
   email: Email;
   firstName: string;
   lastName: string;
-  password: string;
+  password: string | null;
   role: string;
   mobile: string | null;
   profileImage: string | null;
@@ -46,15 +46,13 @@ export class User {
     if (!props.id) throw new AppError(ErrorCodes.VALIDATION_FAILED);
     if (!props.email) throw new AppError(ErrorCodes.VALIDATION_FAILED);
     if (!props.firstName) throw new AppError(ErrorCodes.VALIDATION_FAILED);
-    if (!props.lastName) throw new AppError(ErrorCodes.VALIDATION_FAILED);
-    if (!props.password) throw new AppError(ErrorCodes.VALIDATION_FAILED);
 
     return new User({
       id: props.id,
       email: props.email,
       firstName: props.firstName,
-      lastName: props.lastName,
-      password: props.password,
+      lastName: props.lastName ?? "",
+      password: props.password ?? null,
       role: props.role ?? "USER",
       mobile: props.mobile ?? null,
       profileImage: props.profileImage ?? null,
@@ -91,7 +89,17 @@ export class User {
     return this.props.googleId;
   }
 
-  get password(): string {
+  public linkGoogleAccount(googleId: string, profileImage?: string | null): void {
+    if (!this.props.googleId) {
+      this.props.googleId = googleId;
+    }
+    
+    if (!this.props.profileImage && profileImage) {
+      this.props.profileImage = profileImage;
+    }
+  }
+
+  get password(): string | null {
     return this.props.password;
   }
 
