@@ -15,6 +15,11 @@ export const ApiRoutes = {
     GOOGLE: "/google",
   },
 
+  USER: {
+    BASE: "/users",
+    PROFILE: "/profile"
+  },
+
   ADMIN: {
     BASE: "/admin",
     USERS: "/users",
