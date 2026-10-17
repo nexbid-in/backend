@@ -99,6 +99,26 @@ export class User {
     }
   }
 
+  public updateProfile(params: {
+    firstName?: string;
+    lastName?: string;
+    mobile?: string | null;
+    profileImage?: string | null;
+  }): void {
+    if (params.firstName !== undefined && params.firstName.trim() !== "") {
+      this.props.firstName = params.firstName.trim();
+    }
+    if (params.lastName !== undefined) {
+      this.props.lastName = params.lastName.trim();
+    }
+    if (params.mobile !== undefined) {
+      this.props.mobile = params.mobile ? params.mobile.trim() : null;
+    }
+    if (params.profileImage !== undefined) {
+      this.props.profileImage = params.profileImage;
+    }
+  }
+
   get password(): string | null {
     return this.props.password;
   }

@@ -11,4 +11,16 @@ router.get(
   userController.getProfile.bind(userController),
 );
 
+router.get(
+  ApiRoutes.USER.UPLOAD_SIGNATURE,
+  authMiddleware,
+  userController.getUploadSignature.bind(userController),
+);
+
+router.patch(
+  ApiRoutes.USER.PROFILE,
+  authMiddleware,
+  userController.updateProfile.bind(userController),
+);
+
 export default router;
