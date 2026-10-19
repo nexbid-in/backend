@@ -18,4 +18,5 @@ export interface IUserRepository extends IBaseRepository<User> {
     existsByEmail(email: string): Promise<boolean>;
     save(user: User): Promise<void>;
     findManyWithFilters(options: UserQueryOptions): Promise<PaginatedResult<User>>;
+    updateLastActive(id: string): Promise<void>;
 }

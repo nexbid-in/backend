@@ -98,4 +98,15 @@ export class UserRepository extends BaseRepository<UserPersistenceDTO, Prisma.Us
 
         return { data: users, total };
     }
+
+    async updateLastActive(id: string): Promise<void> {
+        try {
+            await prisma.user.update({
+                where: { id },
+                data: { lastActiveAt: new Date() },
+            });
+        } catch (error) {
+            handlePrismaError(error);
+        }
+    }
 }

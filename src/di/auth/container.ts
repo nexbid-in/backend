@@ -22,6 +22,7 @@ import { GoogleAuthUseCase } from "../../application/use-cases/auth/GoogleAuthUs
 
 import { AuthController } from "../../presentation/http/controllers/auth/AuthController";
 import { createAuthMiddleware } from "../../presentation/http/middlewares/authMiddleware";
+import { RedisUserActivityService } from "../../infrastructure/redis/RedisUserActivityService";
 
 
 const userRepository = new UserRepository();
@@ -34,6 +35,7 @@ const userIdGenerator = new UserIdGenerator();
 const uniqueUserIdService = new UniqueUserIdService(userRepository, userIdGenerator);
 const redisRateLimiter = new RedisRateLimiter();
 const googleAuthService = new GoogleAuthService();
+const redisUserActivityService = new RedisUserActivityService(userRepository);
 
 const registerUserUseCase = new RegisterUserUseCase(userRepository, redisOtpSessionService, otpService, emailService, passwordHashService, redisRateLimiter);
 const verifyEmailAndCreateAccountUseCase = new VerifyEmailAndCreateAccountUseCase(redisOtpSessionService, otpService, userRepository, uniqueUserIdService, authTokenService);
@@ -45,5 +47,5 @@ const verifyOtpAndResetPasswordUseCase = new VerifyOtpAndResetPasswordUseCase(re
 const refreshTokenUseCase = new RefreshTokenUseCase(userRepository, authTokenService);
 const googleAuthUseCase = new GoogleAuthUseCase(googleAuthService, userRepository, uniqueUserIdService, authTokenService);
 
-export const authMiddleware = createAuthMiddleware(authTokenService);
+export const authMiddleware = createAuthMiddleware(authTokenService, redisUserActivityService);
 export const authController = new AuthController(registerUserUseCase, verifyEmailAndCreateAccountUseCase, resendOtpUseCase, loginUserUseCase, getCurrentUserUseCase, sendPasswordResetOtpUseCase, verifyOtpAndResetPasswordUseCase, refreshTokenUseCase, googleAuthUseCase);
