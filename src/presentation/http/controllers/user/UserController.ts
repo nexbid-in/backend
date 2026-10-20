@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { IGetUserProfileUseCase } from "../../../../application/interface/use-cases/user/IGetUserProfileUseCase";
 import { IUpdateUserProfileUseCase } from "../../../../application/interface/use-cases/user/IUpdateUserProfileUseCase";
-import { IUploadSignatureService } from "../../../../application/interface/services/IUploadSignatureService";
+import { IGetUploadSignatureUseCase } from "../../../../application/interface/use-cases/user/IGetUploadSignatureUseCase";
 import { HttpStatus } from "../../constants/HttpStatus";
 import { SuccessMessages } from "../../constants/SuccessMessages";
 import { ApiResponse } from "../../utils/ApiResponse";
@@ -13,7 +13,7 @@ export class UserController {
   constructor(
     private readonly _getUserProfile: IGetUserProfileUseCase,
     private readonly _updateUserProfile: IUpdateUserProfileUseCase,
-    private readonly _signatureService: IUploadSignatureService
+    private readonly _getUploadSignature: IGetUploadSignatureUseCase
   ) { }
 
   async getProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -32,7 +32,7 @@ export class UserController {
 
   async getUploadSignature(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const signatureData = this._signatureService.generateSignature();
+      const signatureData = await this._getUploadSignature.execute();
 
       ApiResponse.success(res, HttpStatus.OK, "Signature generated successfully", signatureData);
     } catch (error) {
