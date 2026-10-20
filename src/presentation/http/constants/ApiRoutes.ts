@@ -15,6 +15,12 @@ export const ApiRoutes = {
     GOOGLE: "/google",
   },
 
+  USER: {
+    BASE: "/users",
+    PROFILE: "/profile",
+    UPLOAD_SIGNATURE: "/profile/upload-signature",
+  },
+
   ADMIN: {
     BASE: "/admin",
     USERS: "/users",

@@ -19,6 +19,13 @@ export const setAuthCookies = (res: Response, accessToken: string, refreshToken?
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
   }
+
+  res.cookie("has_session", "true", {
+    httpOnly: false,
+    secure: IS_PROD,
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
 };
 
 export const clearAuthCookies = (res: Response) => {
@@ -31,5 +38,10 @@ export const clearAuthCookies = (res: Response) => {
     httpOnly: true,
     secure: IS_PROD,
     sameSite: "strict",
-  })
+  });
+  res.clearCookie("has_session", {
+    httpOnly: false,
+    secure: IS_PROD,
+    sameSite: "strict",
+  });
 };

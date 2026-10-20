@@ -7,6 +7,7 @@ import { HttpStatus } from "../constants/HttpStatus";
 import { logger } from "../../../infrastructure/logging/logger";
 import { ApiResponse } from "../utils/ApiResponse";
 import { ErrorMessages } from "../constants/ErrorMessages";
+import { clearAuthCookies } from "../utils/cookieUtils";
 
 export const errorHandler = (
   err: unknown,
@@ -36,6 +37,10 @@ export const errorHandler = (
 
   // 3. Custom App Errors
   if (err instanceof AppError) {
+    if (err.code === ErrorCodes.ACCOUNT_BLOCKED) {
+      clearAuthCookies(res);
+    }
+    
     const mapping = HttpErrorMap[err.code];
     return ApiResponse.error(res, mapping.status, err.code, mapping.message);
   }

@@ -1,7 +1,7 @@
-import { IAuthTokenServiceInput } from "../application/interface/services/ITokenService";
+import { AuthTokenServiceDTO } from "../application/dto/internal/AuthTokenServiceDTO";
 
 declare module "express-serve-static-core" {
   export interface Request {
-    user?: IAuthTokenServiceInput;
+    user?: AuthTokenServiceDTO;
   }
 }
