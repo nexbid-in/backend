@@ -8,21 +8,101 @@ datasource db {
 }
 
 model User {
-  id           String    @id
-  email        String    @unique
-  mobile       String?
-  profileImage String?
-  isBlocked    Boolean   @default(false)
-  createdAt    DateTime  @default(now())
-  firstName    String
-  googleId     String?   @unique
-  lastName     String
-  password     String?
-  role         Role      @default(USER)
-  lastActiveAt DateTime?
+  id               String            @id
+  email            String            @unique
+  mobile           String?
+  profileImage     String?
+  isBlocked        Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  firstName        String
+  googleId         String?           @unique
+  lastName         String
+  password         String?
+  role             Role              @default(USER)
+  lastActiveAt     DateTime?
+  wallet           Wallet?
+  fundTransactions FundTransaction[]
+  paymentOrders    PaymentOrder[]
 }
 
 enum Role {
   USER
   ADMIN
 }
+
+enum WalletStatus {
+  ACTIVE
+  FROZEN
+  SUSPENDED
+}
+
+model Wallet {
+  id                 String            @id @default(uuid())
+  userId             String            @unique
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Margins & Balances (Decimal for exact financial precision)
+  balance            Decimal           @default(0.00) @db.Decimal(15, 2)
+  usedMargin         Decimal           @default(0.00) @db.Decimal(15, 2)
+  totalVirtualBought Decimal           @default(0.00) @db.Decimal(15, 2)
+  totalRealSpent     Decimal           @default(0.00) @db.Decimal(15, 2)
+
+  status             WalletStatus      @default(ACTIVE)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  transactions       FundTransaction[]
+  paymentOrders      PaymentOrder[]
+}
+
+enum FundTransactionType {
+  TOPUP
+  BUY
+  SELL
+}
+
+model FundTransaction {
+  id           String              @id @default(uuid())
+  walletId     String
+  wallet       Wallet              @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  referenceId  String              @unique
+  type         FundTransactionType
+  amount       Decimal             @db.Decimal(15, 2)
+  balanceAfter Decimal             @db.Decimal(15, 2)
+  description  String
+  metadata     Json?
+
+  createdAt    DateTime            @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([walletId, createdAt(sort: Desc)])
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model PaymentOrder {
+  id            String        @id @default(uuid())
+  walletId      String
+  wallet        Wallet        @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  orderId       String        @unique
+  paymentId     String?
+  realAmount    Decimal       @db.Decimal(12, 2)
+  virtualAmount Decimal       @db.Decimal(15, 2)
+  status        PaymentStatus @default(PENDING)
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([userId])
+}
+
