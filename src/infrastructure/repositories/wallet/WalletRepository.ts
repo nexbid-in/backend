@@ -69,7 +69,7 @@ export class WalletRepository implements IWalletRepository {
             usedMargin: Number(walletData.usedMargin),
             totalVirtualBought: Number(walletData.totalVirtualBought),
             totalRealSpent: Number(walletData.totalRealSpent),
-            status: walletData.status as any,
+            status: walletData.status,
             updatedAt: walletData.updatedAt,
           },
         });
@@ -81,7 +81,7 @@ export class WalletRepository implements IWalletRepository {
             walletId: txData.walletId,
             userId: txData.userId,
             referenceId: txData.referenceId,
-            type: txData.type as any,
+            type: txData.type,
             amount: Number(txData.amount),
             balanceAfter: Number(txData.balanceAfter),
             description: txData.description,

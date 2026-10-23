@@ -1,3 +1,5 @@
+import { WalletStatus } from "../../../domain/entities/Wallet";
+
 export type DecimalLike = number | string | { toNumber(): number };
 
 export type WalletPersistenceDTO = {
@@ -7,7 +9,7 @@ export type WalletPersistenceDTO = {
   usedMargin: DecimalLike;
   totalVirtualBought: DecimalLike;
   totalRealSpent: DecimalLike;
-  status: string;
+  status: WalletStatus;
   createdAt: Date;
   updatedAt: Date;
 };

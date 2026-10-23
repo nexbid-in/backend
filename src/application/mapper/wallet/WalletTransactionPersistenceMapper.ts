@@ -30,7 +30,7 @@ export class WalletTransactionPersistenceMapper {
       walletId: raw.walletId,
       userId: raw.userId,
       referenceId: raw.referenceId,
-      type: raw.type as WalletTransactionType,
+      type: raw.type,
       amount: toNum(raw.amount),
       balanceAfter: toNum(raw.balanceAfter),
       description: raw.description,

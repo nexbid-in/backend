@@ -30,7 +30,7 @@ export class WalletPersistenceMapper {
       usedMargin: toNum(raw.usedMargin),
       totalVirtualBought: toNum(raw.totalVirtualBought),
       totalRealSpent: toNum(raw.totalRealSpent),
-      status: raw.status as WalletStatus,
+      status: raw.status,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     });

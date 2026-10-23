@@ -31,7 +31,7 @@ export class WalletTransactionRepository
         where: { referenceId },
       });
       if (!raw) return null;
-      return WalletTransactionPersistenceMapper.toDomain(raw as any);
+      return WalletTransactionPersistenceMapper.toDomain(raw);
     } catch (error) {
       handlePrismaError(error);
     }
@@ -76,7 +76,7 @@ export class WalletTransactionRepository
       ]);
 
       const data = rawRecords.map((record) =>
-        WalletTransactionPersistenceMapper.toDomain(record as any)
+        WalletTransactionPersistenceMapper.toDomain(record)
       );
       return { data, total };
     } catch (error) {
