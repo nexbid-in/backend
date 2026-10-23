@@ -91,4 +91,25 @@ export const HttpErrorMap: Record<
     message: ErrorMessages.ACCOUNT_BLOCKED,
   },
 
+  // Wallet
+  [ErrorCodes.WALLET_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: ErrorMessages.WALLET_NOT_FOUND,
+  },
+
+  [ErrorCodes.WALLET_FROZEN]: {
+    status: HttpStatus.FORBIDDEN,
+    message: ErrorMessages.WALLET_FROZEN,
+  },
+
+  [ErrorCodes.INSUFFICIENT_FUNDS]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.INSUFFICIENT_FUNDS,
+  },
+
+  [ErrorCodes.INVALID_AMOUNT]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.INVALID_AMOUNT,
+  },
 };
+

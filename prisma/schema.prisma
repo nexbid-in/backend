@@ -21,7 +21,7 @@ model User {
   role             Role              @default(USER)
   lastActiveAt     DateTime?
   wallet           Wallet?
-  fundTransactions FundTransaction[]
+  walletTransactions WalletTransaction[]
   paymentOrders    PaymentOrder[]
 }
 
@@ -51,31 +51,31 @@ model Wallet {
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
 
-  transactions       FundTransaction[]
-  paymentOrders      PaymentOrder[]
+  transactions       WalletTransaction[]
 }
 
-enum FundTransactionType {
+enum WalletTransactionType {
   TOPUP
   BUY
   SELL
+  BONUS
 }
 
-model FundTransaction {
-  id           String              @id @default(uuid())
+model WalletTransaction {
+  id           String                @id @default(uuid())
   walletId     String
-  wallet       Wallet              @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  wallet       Wallet                @relation(fields: [walletId], references: [id], onDelete: Cascade)
   userId       String
-  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  referenceId  String              @unique
-  type         FundTransactionType
-  amount       Decimal             @db.Decimal(15, 2)
-  balanceAfter Decimal             @db.Decimal(15, 2)
+  referenceId  String                @unique
+  type         WalletTransactionType
+  amount       Decimal               @db.Decimal(15, 2)
+  balanceAfter Decimal               @db.Decimal(15, 2)
   description  String
   metadata     Json?
 
-  createdAt    DateTime            @default(now())
+  createdAt    DateTime              @default(now())
 
   @@index([userId, createdAt(sort: Desc)])
   @@index([walletId, createdAt(sort: Desc)])
@@ -88,9 +88,7 @@ enum PaymentStatus {
 }
 
 model PaymentOrder {
-  id            String        @id @default(uuid())
-  walletId      String
-  wallet        Wallet        @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  id            String        @id
   userId        String
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 

@@ -26,4 +26,10 @@ export const ApiRoutes = {
     USERS: "/users",
     UPDATE_USER_STATUS: "/users/:userId/status",
   },
+
+  WALLET: {
+    BASE: "/wallet",
+    OVERVIEW: "/overview",
+    STATEMENT: "/statement",
+  },
 } as const;

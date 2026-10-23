@@ -34,4 +34,11 @@ export const ErrorMessages = {
   INTERNAL_SERVER_ERROR: "Internal server error",
   USER_ID_GENERATION_FAILED: "Failed to generate a unique user ID. Please try again.",
 
+  // ==========================================
+  // Wallet
+  // ==========================================
+  WALLET_NOT_FOUND: "Wallet not found for this user.",
+  WALLET_FROZEN: "Wallet is frozen or suspended.",
+  INSUFFICIENT_FUNDS: "Insufficient funds / available margin.",
+  INVALID_AMOUNT: "Invalid transaction amount.",
 } as const;

@@ -27,4 +27,9 @@ export const SuccessMessages = {
   USERS_RETRIEVED: "Users retrieved successfully",
   USER_STATUS_UPDATED: "User status updated successfully",
 
+  // ==========================================
+  // Wallet
+  // ==========================================
+  WALLET_OVERVIEW_RETRIEVED: "Wallet overview retrieved successfully",
+  WALLET_STATEMENT_RETRIEVED: "Wallet statement retrieved successfully",
 } as const;
