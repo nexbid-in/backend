@@ -17,4 +17,16 @@ router.get(
   walletController.getStatement.bind(walletController)
 );
 
+router.post(
+  ApiRoutes.WALLET.CREATE_ORDER,
+  authMiddleware,
+  walletController.createTopupOrder.bind(walletController)
+);
+
+router.post(
+  ApiRoutes.WALLET.VERIFY_PAYMENT,
+  authMiddleware,
+  walletController.verifyTopupPayment.bind(walletController)
+);
+
 export default router;

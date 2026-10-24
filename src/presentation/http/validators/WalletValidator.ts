@@ -18,3 +18,17 @@ export const getWalletStatementQuerySchema: z.ZodType<GetWalletStatementQueryPar
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
 });
+
+export const createTopupOrderSchema = z.object({
+  realAmount: z.coerce
+    .number()
+    .int("Amount must be a whole number")
+    .min(10, "Minimum top-up is ₹10")
+    .max(100000, "Maximum top-up is ₹1,00,000"),
+});
+
+export const verifyTopupPaymentSchema = z.object({
+  orderId: z.string().min(1, "Order ID is required"),
+  paymentId: z.string().min(1, "Payment ID is required"),
+  signature: z.string().min(1, "Signature is required"),
+});

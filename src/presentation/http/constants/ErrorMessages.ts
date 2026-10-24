@@ -35,10 +35,12 @@ export const ErrorMessages = {
   USER_ID_GENERATION_FAILED: "Failed to generate a unique user ID. Please try again.",
 
   // ==========================================
-  // Wallet
+  // Wallet & Payment
   // ==========================================
   WALLET_NOT_FOUND: "Wallet not found for this user.",
   WALLET_FROZEN: "Wallet is frozen or suspended.",
   INSUFFICIENT_FUNDS: "Insufficient funds / available margin.",
   INVALID_AMOUNT: "Invalid transaction amount.",
+  PAYMENT_VERIFICATION_FAILED: "Payment verification failed. Invalid signature.",
+  ORDER_NOT_FOUND: "Payment order not found.",
 } as const;

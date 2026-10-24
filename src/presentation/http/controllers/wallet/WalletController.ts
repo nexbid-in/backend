@@ -1,17 +1,25 @@
 import { Request, Response, NextFunction } from "express";
 import { IGetWalletOverviewUseCase } from "../../../../application/interface/use-cases/wallet/IGetWalletOverviewUseCase";
 import { IGetWalletStatementUseCase } from "../../../../application/interface/use-cases/wallet/IGetWalletStatementUseCase";
+import { ICreateTopupOrderUseCase } from "../../../../application/interface/use-cases/wallet/ICreateTopupOrderUseCase";
+import { IVerifyTopupPaymentUseCase } from "../../../../application/interface/use-cases/wallet/IVerifyTopupPaymentUseCase";
 import { HttpStatus } from "../../constants/HttpStatus";
 import { SuccessMessages } from "../../constants/SuccessMessages";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { AppError } from "../../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
-import { getWalletStatementQuerySchema } from "../../validators/WalletValidator";
+import {
+  getWalletStatementQuerySchema,
+  createTopupOrderSchema,
+  verifyTopupPaymentSchema,
+} from "../../validators/WalletValidator";
 
 export class WalletController {
   constructor(
     private readonly _getWalletOverview: IGetWalletOverviewUseCase,
-    private readonly _getWalletStatement: IGetWalletStatementUseCase
+    private readonly _getWalletStatement: IGetWalletStatementUseCase,
+    private readonly _createTopupOrder: ICreateTopupOrderUseCase,
+    private readonly _verifyTopupPayment: IVerifyTopupPaymentUseCase
   ) {}
 
   async getOverview(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -53,6 +61,56 @@ export class WalletController {
         HttpStatus.OK,
         SuccessMessages.WALLET_STATEMENT_RETRIEVED,
         statement
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async createTopupOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new AppError(ErrorCodes.UNAUTHORIZED);
+      }
+
+      const validated = createTopupOrderSchema.parse(req.body);
+
+      const result = await this._createTopupOrder.execute({
+        userId,
+        realAmount: validated.realAmount,
+      });
+
+      ApiResponse.success(
+        res,
+        HttpStatus.CREATED,
+        SuccessMessages.ORDER_CREATED,
+        result
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async verifyTopupPayment(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new AppError(ErrorCodes.UNAUTHORIZED);
+      }
+
+      const validated = verifyTopupPaymentSchema.parse(req.body);
+
+      const result = await this._verifyTopupPayment.execute({
+        userId,
+        ...validated,
+      });
+
+      ApiResponse.success(
+        res,
+        HttpStatus.OK,
+        SuccessMessages.PAYMENT_VERIFIED,
+        result
       );
     } catch (error) {
       next(error);

@@ -28,8 +28,10 @@ export const SuccessMessages = {
   USER_STATUS_UPDATED: "User status updated successfully",
 
   // ==========================================
-  // Wallet
+  // Wallet & Payment
   // ==========================================
   WALLET_OVERVIEW_RETRIEVED: "Wallet overview retrieved successfully",
   WALLET_STATEMENT_RETRIEVED: "Wallet statement retrieved successfully",
+  ORDER_CREATED: "Payment order created successfully",
+  PAYMENT_VERIFIED: "Payment verified and wallet credited successfully",
 } as const;

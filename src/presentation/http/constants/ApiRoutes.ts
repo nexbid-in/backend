@@ -31,5 +31,7 @@ export const ApiRoutes = {
     BASE: "/wallet",
     OVERVIEW: "/overview",
     STATEMENT: "/statement",
+    CREATE_ORDER: "/create-order",
+    VERIFY_PAYMENT: "/verify-payment",
   },
 } as const;

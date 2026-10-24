@@ -3,8 +3,10 @@ import { prisma } from "../../database/prisma";
 import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
 import { Wallet } from "../../../domain/entities/Wallet";
 import { WalletTransaction } from "../../../domain/entities/WalletTransaction";
+import { PaymentOrder } from "../../../domain/entities/PaymentOrder";
 import { WalletPersistenceMapper } from "../../../application/mapper/wallet/WalletPersistenceMapper";
 import { WalletTransactionPersistenceMapper } from "../../../application/mapper/wallet/WalletTransactionPersistenceMapper";
+import { PaymentOrderPersistenceMapper } from "../../../application/mapper/payment/PaymentOrderPersistenceMapper";
 import { handlePrismaError } from "../../database/handlePrismaError";
 
 export class WalletRepository implements IWalletRepository {
@@ -75,6 +77,59 @@ export class WalletRepository implements IWalletRepository {
         });
 
         // 2. Insert ledger transaction
+        await tx.walletTransaction.create({
+          data: {
+            id: txData.id,
+            walletId: txData.walletId,
+            userId: txData.userId,
+            referenceId: txData.referenceId,
+            type: txData.type,
+            amount: Number(txData.amount),
+            balanceAfter: Number(txData.balanceAfter),
+            description: txData.description,
+            metadata: (txData.metadata as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+            createdAt: txData.createdAt,
+          },
+        });
+      });
+    } catch (error) {
+      handlePrismaError(error);
+    }
+  }
+
+  async saveTopupWithTransaction(
+    wallet: Wallet,
+    transaction: WalletTransaction,
+    paymentOrder: PaymentOrder
+  ): Promise<void> {
+    try {
+      const walletData = WalletPersistenceMapper.toPrisma(wallet);
+      const txData = WalletTransactionPersistenceMapper.toPrisma(transaction);
+      const orderData = PaymentOrderPersistenceMapper.toPrisma(paymentOrder);
+
+      await prisma.$transaction(async (tx) => {
+        // 1. Update PaymentOrder status & paymentId
+        await tx.paymentOrder.update({
+          where: { id: orderData.id },
+          data: {
+            paymentId: orderData.paymentId,
+            status: orderData.status,
+            updatedAt: orderData.updatedAt,
+          },
+        });
+
+        // 2. Update Wallet balance & metrics
+        await tx.wallet.update({
+          where: { id: walletData.id },
+          data: {
+            balance: Number(walletData.balance),
+            totalVirtualBought: Number(walletData.totalVirtualBought),
+            totalRealSpent: Number(walletData.totalRealSpent),
+            updatedAt: walletData.updatedAt,
+          },
+        });
+
+        // 3. Write immutable ledger record
         await tx.walletTransaction.create({
           data: {
             id: txData.id,

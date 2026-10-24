@@ -1,5 +1,6 @@
 import { Wallet } from "../../entities/Wallet";
 import { WalletTransaction } from "../../entities/WalletTransaction";
+import { PaymentOrder } from "../../entities/PaymentOrder";
 
 export interface IWalletRepository {
   findById(id: string): Promise<Wallet | null>;
@@ -8,5 +9,10 @@ export interface IWalletRepository {
   saveWithTransaction(
     wallet: Wallet,
     transaction: WalletTransaction
+  ): Promise<void>;
+  saveTopupWithTransaction(
+    wallet: Wallet,
+    transaction: WalletTransaction,
+    paymentOrder: PaymentOrder
   ): Promise<void>;
 }

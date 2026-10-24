@@ -111,5 +111,15 @@ export const HttpErrorMap: Record<
     status: HttpStatus.BAD_REQUEST,
     message: ErrorMessages.INVALID_AMOUNT,
   },
+
+  [ErrorCodes.PAYMENT_VERIFICATION_FAILED]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.PAYMENT_VERIFICATION_FAILED,
+  },
+
+  [ErrorCodes.ORDER_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: ErrorMessages.ORDER_NOT_FOUND,
+  },
 };
 
