@@ -16,5 +16,7 @@ export interface IPaymentOrderRepository {
   findByOrderId(orderId: string): Promise<PaymentOrder | null>;
   save(order: PaymentOrder): Promise<void>;
   findHistory(options: PaymentOrderQueryOptions): Promise<PaginatedResult<PaymentOrder>>;
+  findStalePendingOrders(olderThan: Date, limit?: number): Promise<PaymentOrder[]>;
 }
+
 

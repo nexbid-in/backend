@@ -3,9 +3,22 @@ import crypto from "crypto";
 import {
   IPaymentGatewayService,
   GatewayOrderResult,
+  GatewayPaymentItem,
 } from "../../../application/interface/services/IPaymentGatewayService";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
+
+interface RazorpayPaymentResponseItem {
+  id: string;
+  status: string;
+  amount: number | string;
+}
+
+interface RazorpayOrderPaymentsResponse {
+  entity?: string;
+  count?: number;
+  items?: RazorpayPaymentResponseItem[];
+}
 
 export class RazorpayService implements IPaymentGatewayService {
   private readonly _razorpay: Razorpay;
@@ -62,4 +75,21 @@ export class RazorpayService implements IPaymentGatewayService {
       return false;
     }
   }
+
+  async getOrderPayments(orderId: string): Promise<GatewayPaymentItem[]> {
+    try {
+      const response = (await this._razorpay.orders.fetchPayments(
+        orderId
+      )) as RazorpayOrderPaymentsResponse;
+      const items = response?.items ?? [];
+      return items.map((item: RazorpayPaymentResponseItem) => ({
+        id: String(item.id),
+        status: String(item.status),
+        amount: Number(item.amount),
+      }));
+    } catch {
+      return [];
+    }
+  }
 }
+

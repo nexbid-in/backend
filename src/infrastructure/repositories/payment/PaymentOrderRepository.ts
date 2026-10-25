@@ -114,5 +114,23 @@ export class PaymentOrderRepository
       handlePrismaError(error);
     }
   }
+
+  async findStalePendingOrders(olderThan: Date, limit = 50): Promise<PaymentOrder[]> {
+    try {
+      const rawRecords = await prisma.paymentOrder.findMany({
+        where: {
+          status: "PENDING",
+          createdAt: { lte: olderThan },
+        },
+        orderBy: { createdAt: "asc" },
+        take: limit,
+      });
+
+      return rawRecords.map((r) => PaymentOrderPersistenceMapper.toDomain(r));
+    } catch (error) {
+      handlePrismaError(error);
+    }
+  }
 }
+
 

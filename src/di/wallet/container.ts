@@ -11,6 +11,8 @@ import { CreateTopupOrderUseCase } from "../../application/use-cases/wallet/Crea
 import { VerifyTopupPaymentUseCase } from "../../application/use-cases/wallet/VerifyTopupPaymentUseCase";
 import { FailTopupPaymentUseCase } from "../../application/use-cases/wallet/FailTopupPaymentUseCase";
 import { GetTopupHistoryUseCase } from "../../application/use-cases/wallet/GetTopupHistoryUseCase";
+import { ReconcilePendingOrdersUseCase } from "../../application/use-cases/wallet/ReconcilePendingOrdersUseCase";
+import { PaymentReconciliationCron } from "../../infrastructure/cron/PaymentReconciliationCron";
 import { WalletController } from "../../presentation/http/controllers/wallet/WalletController";
 
 // Repositories & Services
@@ -58,6 +60,16 @@ const getTopupHistoryUseCase = new GetTopupHistoryUseCase(
   userRepository
 );
 
+const reconcilePendingOrdersUseCase = new ReconcilePendingOrdersUseCase(
+  paymentOrderRepository,
+  walletRepository,
+  paymentGatewayService
+);
+
+export const paymentReconciliationCron = new PaymentReconciliationCron(
+  reconcilePendingOrdersUseCase
+);
+
 export const walletController = new WalletController(
   getWalletOverviewUseCase,
   getWalletStatementUseCase,
@@ -66,5 +78,6 @@ export const walletController = new WalletController(
   failTopupPaymentUseCase,
   getTopupHistoryUseCase
 );
+
 
 
