@@ -20,7 +20,7 @@ export class RedisOtpSessionService implements IOtpSessionService {
 
     async get(email: string): Promise<{ otpHash: string; attempts: number; data?: OtpSessionData } | null> {
         const rawData = await redis.get(this.key(email));
-        return rawData ? JSON.parse(rawData) : null;
+        return rawData ? (JSON.parse(rawData) as { otpHash: string; attempts: number; data?: OtpSessionData }) : null;
     }
 
     async incrementAttempts(email: string): Promise<void> {

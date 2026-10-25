@@ -1,4 +1,4 @@
-/// <reference path="./types/express.d.ts" />
+import "./types/express";
 import { logger } from "./infrastructure/logging/logger";
 import { createApp } from "./presentation/http/app";
 import { connectPrisma } from "./infrastructure/database/prisma";
@@ -27,4 +27,5 @@ const startServer = async () => {
 }
 
 
-startServer();
+void startServer();
+

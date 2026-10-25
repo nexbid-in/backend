@@ -1,4 +1,4 @@
-import { WalletTransaction, WalletTransactionType } from "../../../domain/entities/WalletTransaction";
+import { WalletTransaction } from "../../../domain/entities/WalletTransaction";
 import { WalletTransactionPersistenceDTO } from "../../dto/internal/WalletTransactionPersistenceDTO";
 import { DecimalLike } from "../../dto/internal/WalletPersistenceDTO";
 

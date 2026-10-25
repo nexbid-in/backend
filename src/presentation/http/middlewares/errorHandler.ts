@@ -11,9 +11,9 @@ import { clearAuthCookies } from "../utils/cookieUtils";
 
 export const errorHandler = (
   err: unknown,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
 
   // 1. Catch Malformed JSON Payload Errors

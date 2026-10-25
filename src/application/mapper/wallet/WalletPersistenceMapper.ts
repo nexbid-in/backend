@@ -1,4 +1,4 @@
-import { Wallet, WalletStatus } from "../../../domain/entities/Wallet";
+import { Wallet } from "../../../domain/entities/Wallet";
 import { WalletPersistenceDTO, DecimalLike } from "../../dto/internal/WalletPersistenceDTO";
 
 function toNum(val: DecimalLike): number {

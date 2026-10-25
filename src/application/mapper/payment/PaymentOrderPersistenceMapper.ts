@@ -1,4 +1,4 @@
-import { PaymentOrder, PaymentStatus } from "../../../domain/entities/PaymentOrder";
+import { PaymentOrder } from "../../../domain/entities/PaymentOrder";
 import { PaymentOrderPersistenceDTO } from "../../dto/internal/PaymentOrderPersistenceDTO";
 import { DecimalLike } from "../../dto/internal/WalletPersistenceDTO";
 
