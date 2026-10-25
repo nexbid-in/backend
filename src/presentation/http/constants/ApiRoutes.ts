@@ -34,5 +34,6 @@ export const ApiRoutes = {
     CREATE_ORDER: "/create-order",
     VERIFY_PAYMENT: "/verify-payment",
     FAIL_PAYMENT: "/fail-payment",
+    TOPUP_HISTORY: "/topup-history",
   },
 } as const;

@@ -4,6 +4,7 @@ import { IGetWalletStatementUseCase } from "../../../../application/interface/us
 import { ICreateTopupOrderUseCase } from "../../../../application/interface/use-cases/wallet/ICreateTopupOrderUseCase";
 import { IVerifyTopupPaymentUseCase } from "../../../../application/interface/use-cases/wallet/IVerifyTopupPaymentUseCase";
 import { IFailTopupPaymentUseCase } from "../../../../application/interface/use-cases/wallet/IFailTopupPaymentUseCase";
+import { IGetTopupHistoryUseCase } from "../../../../application/interface/use-cases/wallet/IGetTopupHistoryUseCase";
 import { HttpStatus } from "../../constants/HttpStatus";
 import { SuccessMessages } from "../../constants/SuccessMessages";
 import { ApiResponse } from "../../utils/ApiResponse";
@@ -14,6 +15,7 @@ import {
   createTopupOrderSchema,
   verifyTopupPaymentSchema,
   failTopupPaymentSchema,
+  getTopupHistoryQuerySchema,
 } from "../../validators/WalletValidator";
 
 export class WalletController {
@@ -22,7 +24,8 @@ export class WalletController {
     private readonly _getWalletStatement: IGetWalletStatementUseCase,
     private readonly _createTopupOrder: ICreateTopupOrderUseCase,
     private readonly _verifyTopupPayment: IVerifyTopupPaymentUseCase,
-    private readonly _failTopupPayment: IFailTopupPaymentUseCase
+    private readonly _failTopupPayment: IFailTopupPaymentUseCase,
+    private readonly _getTopupHistory: IGetTopupHistoryUseCase
   ) {}
 
   async getOverview(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -144,5 +147,31 @@ export class WalletController {
       next(error);
     }
   }
+
+  async getTopupHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new AppError(ErrorCodes.UNAUTHORIZED);
+      }
+
+      const validatedQuery = getTopupHistoryQuerySchema.parse(req.query);
+
+      const history = await this._getTopupHistory.execute({
+        userId,
+        ...validatedQuery,
+      });
+
+      ApiResponse.success(
+        res,
+        HttpStatus.OK,
+        SuccessMessages.TOPUP_HISTORY_RETRIEVED,
+        history
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 }
+
 

@@ -10,6 +10,7 @@ import { GetWalletStatementUseCase } from "../../application/use-cases/wallet/Ge
 import { CreateTopupOrderUseCase } from "../../application/use-cases/wallet/CreateTopupOrderUseCase";
 import { VerifyTopupPaymentUseCase } from "../../application/use-cases/wallet/VerifyTopupPaymentUseCase";
 import { FailTopupPaymentUseCase } from "../../application/use-cases/wallet/FailTopupPaymentUseCase";
+import { GetTopupHistoryUseCase } from "../../application/use-cases/wallet/GetTopupHistoryUseCase";
 import { WalletController } from "../../presentation/http/controllers/wallet/WalletController";
 
 // Repositories & Services
@@ -52,11 +53,18 @@ const failTopupPaymentUseCase = new FailTopupPaymentUseCase(
   paymentOrderRepository
 );
 
+const getTopupHistoryUseCase = new GetTopupHistoryUseCase(
+  paymentOrderRepository,
+  userRepository
+);
+
 export const walletController = new WalletController(
   getWalletOverviewUseCase,
   getWalletStatementUseCase,
   createTopupOrderUseCase,
   verifyTopupPaymentUseCase,
-  failTopupPaymentUseCase
+  failTopupPaymentUseCase,
+  getTopupHistoryUseCase
 );
+
 

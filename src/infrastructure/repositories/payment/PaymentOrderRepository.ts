@@ -1,10 +1,14 @@
 import { Prisma } from "../../database/generated/prisma/client";
 import { prisma } from "../../database/prisma";
 import { BaseRepository } from "../BaseRepository";
-import { IPaymentOrderRepository } from "../../../domain/repositories/payment/IPaymentOrderRepository";
+import {
+  IPaymentOrderRepository,
+  PaymentOrderQueryOptions,
+} from "../../../domain/repositories/payment/IPaymentOrderRepository";
 import { PaymentOrder } from "../../../domain/entities/PaymentOrder";
 import { PaymentOrderPersistenceDTO } from "../../../application/dto/internal/PaymentOrderPersistenceDTO";
 import { PaymentOrderPersistenceMapper } from "../../../application/mapper/payment/PaymentOrderPersistenceMapper";
+import { PaginatedResult } from "../../../domain/repositories/user/IUserRepository";
 import { handlePrismaError } from "../../database/handlePrismaError";
 
 export class PaymentOrderRepository
@@ -61,4 +65,54 @@ export class PaymentOrderRepository
       handlePrismaError(error);
     }
   }
+
+  async findHistory(
+    options: PaymentOrderQueryOptions
+  ): Promise<PaginatedResult<PaymentOrder>> {
+    try {
+      const { userId, page, limit, status, search, startDate, endDate } = options;
+      const skip = (page - 1) * limit;
+
+      const where: Prisma.PaymentOrderWhereInput = {
+        userId,
+      };
+
+      if (status && status !== "ALL") {
+        where.status = status;
+      }
+
+      if (search && search.trim() !== "") {
+        where.OR = [
+          { id: { contains: search, mode: "insensitive" } },
+          { orderId: { contains: search, mode: "insensitive" } },
+          { paymentId: { contains: search, mode: "insensitive" } },
+        ];
+      }
+
+      if (startDate || endDate) {
+        where.createdAt = {};
+        if (startDate) where.createdAt.gte = startDate;
+        if (endDate) where.createdAt.lte = endDate;
+      }
+
+      const [rawRecords, total] = await Promise.all([
+        prisma.paymentOrder.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { createdAt: "desc" },
+        }),
+        prisma.paymentOrder.count({ where }),
+      ]);
+
+      const data = rawRecords.map((record) =>
+        PaymentOrderPersistenceMapper.toDomain(record)
+      );
+
+      return { data, total };
+    } catch (error) {
+      handlePrismaError(error);
+    }
+  }
 }
+

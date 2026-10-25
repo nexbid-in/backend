@@ -35,4 +35,5 @@ export const SuccessMessages = {
   ORDER_CREATED: "Payment order created successfully",
   PAYMENT_VERIFIED: "Payment verified and wallet credited successfully",
   PAYMENT_FAILED: "Payment marked as failed successfully",
+  TOPUP_HISTORY_RETRIEVED: "Top-up history retrieved successfully",
 } as const;

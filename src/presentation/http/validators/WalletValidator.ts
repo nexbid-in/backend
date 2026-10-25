@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { WalletTransactionType } from "../../../domain/entities/WalletTransaction";
+import { PaymentStatus } from "../../../domain/entities/PaymentOrder";
 
 export type GetWalletStatementQueryParams = {
   page: number;
@@ -38,4 +39,23 @@ export const failTopupPaymentSchema = z.object({
   paymentId: z.string().optional().nullable(),
   reason: z.string().optional().nullable(),
 });
+
+export type GetTopupHistoryQueryParams = {
+  page: number;
+  limit: number;
+  status?: PaymentStatus | "ALL";
+  search?: string;
+  startDate?: Date;
+  endDate?: Date;
+};
+
+export const getTopupHistoryQuerySchema: z.ZodType<GetTopupHistoryQueryParams> = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+  status: z.enum(["ALL", "PENDING", "SUCCESS", "FAILED"] as const).optional(),
+  search: z.string().trim().optional(),
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
+});
+
 

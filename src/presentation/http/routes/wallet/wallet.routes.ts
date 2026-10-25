@@ -35,5 +35,12 @@ router.post(
   walletController.failPayment.bind(walletController)
 );
 
+router.get(
+  ApiRoutes.WALLET.TOPUP_HISTORY,
+  authMiddleware,
+  walletController.getTopupHistory.bind(walletController)
+);
+
 export default router;
+
 
