@@ -37,6 +37,7 @@ export default defineConfig([
       }
     },
     rules: {
+      "@typescript-eslint/triple-slash-reference": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
