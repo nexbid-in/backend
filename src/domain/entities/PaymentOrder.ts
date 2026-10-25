@@ -70,8 +70,14 @@ export class PaymentOrder {
     this.props.updatedAt = new Date();
   }
 
-  public markAsFailed(): void {
+  public markAsFailed(paymentId?: string | null): void {
+    if (this.props.status === "SUCCESS") {
+      throw new AppError(ErrorCodes.VALIDATION_FAILED);
+    }
     this.props.status = "FAILED";
+    if (paymentId) {
+      this.props.paymentId = paymentId;
+    }
     this.props.updatedAt = new Date();
   }
 }

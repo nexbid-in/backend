@@ -29,4 +29,11 @@ router.post(
   walletController.verifyTopupPayment.bind(walletController)
 );
 
+router.post(
+  ApiRoutes.WALLET.FAIL_PAYMENT,
+  authMiddleware,
+  walletController.failPayment.bind(walletController)
+);
+
 export default router;
+

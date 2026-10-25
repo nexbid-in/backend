@@ -3,6 +3,7 @@ import { IGetWalletOverviewUseCase } from "../../../../application/interface/use
 import { IGetWalletStatementUseCase } from "../../../../application/interface/use-cases/wallet/IGetWalletStatementUseCase";
 import { ICreateTopupOrderUseCase } from "../../../../application/interface/use-cases/wallet/ICreateTopupOrderUseCase";
 import { IVerifyTopupPaymentUseCase } from "../../../../application/interface/use-cases/wallet/IVerifyTopupPaymentUseCase";
+import { IFailTopupPaymentUseCase } from "../../../../application/interface/use-cases/wallet/IFailTopupPaymentUseCase";
 import { HttpStatus } from "../../constants/HttpStatus";
 import { SuccessMessages } from "../../constants/SuccessMessages";
 import { ApiResponse } from "../../utils/ApiResponse";
@@ -12,6 +13,7 @@ import {
   getWalletStatementQuerySchema,
   createTopupOrderSchema,
   verifyTopupPaymentSchema,
+  failTopupPaymentSchema,
 } from "../../validators/WalletValidator";
 
 export class WalletController {
@@ -19,7 +21,8 @@ export class WalletController {
     private readonly _getWalletOverview: IGetWalletOverviewUseCase,
     private readonly _getWalletStatement: IGetWalletStatementUseCase,
     private readonly _createTopupOrder: ICreateTopupOrderUseCase,
-    private readonly _verifyTopupPayment: IVerifyTopupPaymentUseCase
+    private readonly _verifyTopupPayment: IVerifyTopupPaymentUseCase,
+    private readonly _failTopupPayment: IFailTopupPaymentUseCase
   ) {}
 
   async getOverview(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -116,4 +119,30 @@ export class WalletController {
       next(error);
     }
   }
+
+  async failPayment(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new AppError(ErrorCodes.UNAUTHORIZED);
+      }
+
+      const validated = failTopupPaymentSchema.parse(req.body);
+
+      const result = await this._failTopupPayment.execute({
+        userId,
+        ...validated,
+      });
+
+      ApiResponse.success(
+        res,
+        HttpStatus.OK,
+        SuccessMessages.PAYMENT_FAILED,
+        result
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 }
+
