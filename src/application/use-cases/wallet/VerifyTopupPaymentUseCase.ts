@@ -33,7 +33,6 @@ export class VerifyTopupPaymentUseCase implements IVerifyTopupPaymentUseCase {
       throw new AppError(ErrorCodes.WALLET_NOT_FOUND);
     }
 
-    // Idempotency: if already processed, return current wallet state without re-crediting
     if (paymentOrder.status === "SUCCESS") {
       return {
         success: true,

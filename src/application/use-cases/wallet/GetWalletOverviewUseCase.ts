@@ -26,7 +26,6 @@ export class GetWalletOverviewUseCase implements IGetWalletOverviewUseCase {
       throw new AppError(ErrorCodes.ACCOUNT_BLOCKED);
     }
 
-    // Automatically provisions a wallet on first visit if none exists
     const wallet = await this._walletRepo.findOrCreateByUserId(data.userId);
 
     return {
