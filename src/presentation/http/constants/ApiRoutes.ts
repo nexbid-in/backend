@@ -19,6 +19,7 @@ export const ApiRoutes = {
     BASE: "/users",
     PROFILE: "/profile",
     UPLOAD_SIGNATURE: "/profile/upload-signature",
+    CHANGE_PASSWORD: "/profile/change-password",
   },
 
   ADMIN: {

@@ -9,6 +9,9 @@ export const ErrorMessages = {
   INVALID_CREDENTIALS: "Invalid email or password.",
   LOGIN_RATE_LIMIT_EXCEEDED : "Too many login attempts. Please try again in 5 minutes.",
   ACCOUNT_BLOCKED: "This account has been blocked.",
+  PASSWORD_NOT_SET: "Password has not been set for this account.",
+  INVALID_CURRENT_PASSWORD: "Current password is incorrect.",
+  NEW_PASSWORD_SAME_AS_CURRENT: "New password cannot be the same as current password.",
 
   // ==========================================
   // Registration & OTP

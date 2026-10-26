@@ -91,6 +91,21 @@ export const HttpErrorMap: Record<
     message: ErrorMessages.ACCOUNT_BLOCKED,
   },
 
+  [ErrorCodes.PASSWORD_NOT_SET]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.PASSWORD_NOT_SET,
+  },
+
+  [ErrorCodes.INVALID_CURRENT_PASSWORD]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.INVALID_CURRENT_PASSWORD,
+  },
+
+  [ErrorCodes.NEW_PASSWORD_SAME_AS_CURRENT]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.NEW_PASSWORD_SAME_AS_CURRENT,
+  },
+
   // Wallet
   [ErrorCodes.WALLET_NOT_FOUND]: {
     status: HttpStatus.NOT_FOUND,

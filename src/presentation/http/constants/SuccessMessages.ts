@@ -20,6 +20,7 @@ export const SuccessMessages = {
   // ==========================================
   PROFILE_RETRIEVED: "Profile retrieved successfully",
   PROFILE_UPDATED: "Profile updated successfully",
+  PASSWORD_CHANGED: "Password changed successfully",
 
   // ==========================================
   // Admin & Management
