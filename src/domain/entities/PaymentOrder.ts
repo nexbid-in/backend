@@ -1,7 +1,13 @@
 import { AppError } from "../../shared/errors/AppError";
 import { ErrorCodes } from "../../shared/errors/ErrorCodes";
 
-export type PaymentStatus = "PENDING" | "SUCCESS" | "FAILED";
+export const PaymentStatus = {
+  PENDING: "PENDING",
+  SUCCESS: "SUCCESS",
+  FAILED: "FAILED",
+} as const;
+
+export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
 
 export interface PaymentOrderProps {
   id: string;
@@ -43,7 +49,7 @@ export class PaymentOrder {
       paymentId: props.paymentId ?? null,
       realAmount: props.realAmount,
       virtualAmount: props.virtualAmount,
-      status: props.status ?? "PENDING",
+      status: props.status ?? PaymentStatus.PENDING,
       createdAt: props.createdAt ?? new Date(),
       updatedAt: props.updatedAt ?? new Date(),
     });
@@ -62,19 +68,19 @@ export class PaymentOrder {
 
   // State Transitions
   public markAsSuccess(paymentId: string): void {
-    if (this.props.status === "SUCCESS") {
+    if (this.props.status === PaymentStatus.SUCCESS) {
       throw new AppError(ErrorCodes.VALIDATION_FAILED); 
     }
-    this.props.status = "SUCCESS";
+    this.props.status = PaymentStatus.SUCCESS;
     this.props.paymentId = paymentId;
     this.props.updatedAt = new Date();
   }
 
   public markAsFailed(paymentId?: string | null): void {
-    if (this.props.status === "SUCCESS") {
+    if (this.props.status === PaymentStatus.SUCCESS) {
       throw new AppError(ErrorCodes.VALIDATION_FAILED);
     }
-    this.props.status = "FAILED";
+    this.props.status = PaymentStatus.FAILED;
     if (paymentId) {
       this.props.paymentId = paymentId;
     }

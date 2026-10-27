@@ -5,7 +5,7 @@ import {
   IPaymentOrderRepository,
   PaymentOrderQueryOptions,
 } from "../../../domain/repositories/payment/IPaymentOrderRepository";
-import { PaymentOrder } from "../../../domain/entities/PaymentOrder";
+import { PaymentOrder, PaymentStatus } from "../../../domain/entities/PaymentOrder";
 import { PaymentOrderPersistenceDTO } from "../../../application/dto/internal/PaymentOrderPersistenceDTO";
 import { PaymentOrderPersistenceMapper } from "../../../application/mapper/payment/PaymentOrderPersistenceMapper";
 import { PaginatedResult } from "../../../domain/repositories/user/IUserRepository";
@@ -119,7 +119,7 @@ export class PaymentOrderRepository
     try {
       const rawRecords = await prisma.paymentOrder.findMany({
         where: {
-          status: "PENDING",
+          status: PaymentStatus.PENDING,
           createdAt: { lte: olderThan },
         },
         orderBy: { createdAt: "asc" },

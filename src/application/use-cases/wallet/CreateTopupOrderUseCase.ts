@@ -7,7 +7,7 @@ import { IUserRepository } from "../../../domain/repositories/user/IUserReposito
 import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
 import { IPaymentOrderRepository } from "../../../domain/repositories/payment/IPaymentOrderRepository";
 import { IPaymentGatewayService } from "../../interface/services/IPaymentGatewayService";
-import { PaymentOrder } from "../../../domain/entities/PaymentOrder";
+import { PaymentOrder, PaymentStatus } from "../../../domain/entities/PaymentOrder";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 
@@ -52,7 +52,7 @@ export class CreateTopupOrderUseCase implements ICreateTopupOrderUseCase {
       orderId: gatewayOrder.orderId,
       realAmount: data.realAmount,
       virtualAmount,
-      status: "PENDING",
+      status: PaymentStatus.PENDING,
     });
 
     await this._paymentOrderRepo.save(paymentOrder);

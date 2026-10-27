@@ -8,6 +8,7 @@ import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRe
 import { IPaymentOrderRepository } from "../../../domain/repositories/payment/IPaymentOrderRepository";
 import { IPaymentGatewayService } from "../../interface/services/IPaymentGatewayService";
 import { WalletTransaction } from "../../../domain/entities/WalletTransaction";
+import { PaymentStatus } from "../../../domain/entities/PaymentOrder";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 
@@ -33,7 +34,7 @@ export class VerifyTopupPaymentUseCase implements IVerifyTopupPaymentUseCase {
       throw new AppError(ErrorCodes.WALLET_NOT_FOUND);
     }
 
-    if (paymentOrder.status === "SUCCESS") {
+    if (paymentOrder.status === PaymentStatus.SUCCESS) {
       return {
         success: true,
         balance: wallet.balance,

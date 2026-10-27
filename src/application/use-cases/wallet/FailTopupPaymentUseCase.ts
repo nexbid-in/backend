@@ -4,6 +4,7 @@ import {
   FailTopupPaymentResponseDTO,
 } from "../../dto/wallet/FailTopupPaymentDTO";
 import { IPaymentOrderRepository } from "../../../domain/repositories/payment/IPaymentOrderRepository";
+import { PaymentStatus } from "../../../domain/entities/PaymentOrder";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 
@@ -22,15 +23,19 @@ export class FailTopupPaymentUseCase implements IFailTopupPaymentUseCase {
       throw new AppError(ErrorCodes.UNAUTHORIZED);
     }
 
-    if (paymentOrder.status === "SUCCESS") {
-      throw new AppError(ErrorCodes.VALIDATION_FAILED);
-    }
-
-    if (paymentOrder.status === "FAILED") {
+    if (paymentOrder.status === PaymentStatus.SUCCESS) {
       return {
         success: true,
         orderId: paymentOrder.orderId,
-        status: "FAILED",
+        status: PaymentStatus.SUCCESS,
+      };
+    }
+
+    if (paymentOrder.status === PaymentStatus.FAILED) {
+      return {
+        success: true,
+        orderId: paymentOrder.orderId,
+        status: PaymentStatus.FAILED,
       };
     }
 
@@ -40,7 +45,7 @@ export class FailTopupPaymentUseCase implements IFailTopupPaymentUseCase {
     return {
       success: true,
       orderId: paymentOrder.orderId,
-      status: "FAILED",
+      status: PaymentStatus.FAILED,
     };
   }
 }

@@ -1,3 +1,5 @@
+import { PaymentStatus } from "../../../domain/entities/PaymentOrder";
+
 export type FailTopupPaymentRequestDTO = {
   userId: string;
   orderId: string;
@@ -8,5 +10,6 @@ export type FailTopupPaymentRequestDTO = {
 export type FailTopupPaymentResponseDTO = {
   success: boolean;
   orderId: string;
-  status: "FAILED";
+  status: PaymentStatus;
 };
+
