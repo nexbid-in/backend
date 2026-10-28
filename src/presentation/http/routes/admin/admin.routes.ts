@@ -14,10 +14,10 @@ router.get(
 );
 
 router.patch(
-    ApiRoutes.ADMIN.UPDATE_USER_STATUS,
-    authMiddleware,
-    requireRole(["ADMIN"]),
-    adminUserController.updateUserStatus.bind(adminUserController)
+  ApiRoutes.ADMIN.UPDATE_USER_STATUS,
+  authMiddleware,
+  requireRole(["ADMIN"]),
+  adminUserController.updateUserStatus.bind(adminUserController)
 )
 
 export default router;

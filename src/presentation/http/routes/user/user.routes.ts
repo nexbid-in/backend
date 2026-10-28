@@ -23,4 +23,10 @@ router.patch(
   userController.updateProfile.bind(userController),
 );
 
+router.patch(
+  ApiRoutes.USER.CHANGE_PASSWORD,
+  authMiddleware,
+  userController.changePassword.bind(userController),
+);
+
 export default router;

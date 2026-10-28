@@ -7,7 +7,7 @@ import {
 export class GetUploadSignatureUseCase implements IGetUploadSignatureUseCase {
   constructor(private readonly _signatureService: IUploadSignatureService) {}
 
-  async execute(folder?: string): Promise<UploadSignatureResponseDTO> {
-    return this._signatureService.generateSignature(folder);
+  execute(folder?: string): Promise<UploadSignatureResponseDTO> {
+    return Promise.resolve(this._signatureService.generateSignature(folder));
   }
 }

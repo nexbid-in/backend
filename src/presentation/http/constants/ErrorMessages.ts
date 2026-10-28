@@ -9,6 +9,9 @@ export const ErrorMessages = {
   INVALID_CREDENTIALS: "Invalid email or password.",
   LOGIN_RATE_LIMIT_EXCEEDED : "Too many login attempts. Please try again in 5 minutes.",
   ACCOUNT_BLOCKED: "This account has been blocked.",
+  PASSWORD_NOT_SET: "Password has not been set for this account.",
+  INVALID_CURRENT_PASSWORD: "Current password is incorrect.",
+  NEW_PASSWORD_SAME_AS_CURRENT: "New password cannot be the same as current password.",
 
   // ==========================================
   // Registration & OTP
@@ -34,4 +37,13 @@ export const ErrorMessages = {
   INTERNAL_SERVER_ERROR: "Internal server error",
   USER_ID_GENERATION_FAILED: "Failed to generate a unique user ID. Please try again.",
 
+  // ==========================================
+  // Wallet & Payment
+  // ==========================================
+  WALLET_NOT_FOUND: "Wallet not found for this user.",
+  WALLET_FROZEN: "Wallet is frozen or suspended.",
+  INSUFFICIENT_FUNDS: "Insufficient funds / available margin.",
+  INVALID_AMOUNT: "Invalid transaction amount.",
+  PAYMENT_VERIFICATION_FAILED: "Payment verification failed. Invalid signature.",
+  ORDER_NOT_FOUND: "Payment order not found.",
 } as const;

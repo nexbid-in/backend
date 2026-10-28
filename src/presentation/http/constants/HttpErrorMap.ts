@@ -91,4 +91,50 @@ export const HttpErrorMap: Record<
     message: ErrorMessages.ACCOUNT_BLOCKED,
   },
 
+  [ErrorCodes.PASSWORD_NOT_SET]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.PASSWORD_NOT_SET,
+  },
+
+  [ErrorCodes.INVALID_CURRENT_PASSWORD]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.INVALID_CURRENT_PASSWORD,
+  },
+
+  [ErrorCodes.NEW_PASSWORD_SAME_AS_CURRENT]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.NEW_PASSWORD_SAME_AS_CURRENT,
+  },
+
+  // Wallet
+  [ErrorCodes.WALLET_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: ErrorMessages.WALLET_NOT_FOUND,
+  },
+
+  [ErrorCodes.WALLET_FROZEN]: {
+    status: HttpStatus.FORBIDDEN,
+    message: ErrorMessages.WALLET_FROZEN,
+  },
+
+  [ErrorCodes.INSUFFICIENT_FUNDS]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.INSUFFICIENT_FUNDS,
+  },
+
+  [ErrorCodes.INVALID_AMOUNT]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.INVALID_AMOUNT,
+  },
+
+  [ErrorCodes.PAYMENT_VERIFICATION_FAILED]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.PAYMENT_VERIFICATION_FAILED,
+  },
+
+  [ErrorCodes.ORDER_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: ErrorMessages.ORDER_NOT_FOUND,
+  },
 };
+

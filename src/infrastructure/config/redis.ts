@@ -32,10 +32,15 @@ export async function connectRedis(): Promise<void> {
   }
 }
 
-process.on("SIGINT", async () => {
-  logger.info("Closing redis");
-  await redis.quit();
-  process.exit(0);
+process.on("SIGINT", () => {
+  void (async () => {
+    logger.info("Closing redis");
+    try {
+      await redis.quit();
+    } finally {
+      process.exit(0);
+    }
+  })();
 });
 
 export default redis;

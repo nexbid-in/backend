@@ -7,4 +7,7 @@ const userRepository = new UserRepository();
 const getUsersUseCase = new GetUsersUseCase(userRepository);
 const updateUserStatusUseCase = new UpdateUserStatusUseCase(userRepository);
 
-export const adminUserController = new AdminUserController(getUsersUseCase, updateUserStatusUseCase);
+export const adminUserController = new AdminUserController(
+    getUsersUseCase, 
+    updateUserStatusUseCase
+);

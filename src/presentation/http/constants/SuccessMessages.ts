@@ -20,6 +20,7 @@ export const SuccessMessages = {
   // ==========================================
   PROFILE_RETRIEVED: "Profile retrieved successfully",
   PROFILE_UPDATED: "Profile updated successfully",
+  PASSWORD_CHANGED: "Password changed successfully",
 
   // ==========================================
   // Admin & Management
@@ -27,4 +28,13 @@ export const SuccessMessages = {
   USERS_RETRIEVED: "Users retrieved successfully",
   USER_STATUS_UPDATED: "User status updated successfully",
 
+  // ==========================================
+  // Wallet & Payment
+  // ==========================================
+  WALLET_OVERVIEW_RETRIEVED: "Wallet overview retrieved successfully",
+  WALLET_STATEMENT_RETRIEVED: "Wallet statement retrieved successfully",
+  ORDER_CREATED: "Payment order created successfully",
+  PAYMENT_VERIFIED: "Payment verified and wallet credited successfully",
+  PAYMENT_FAILED: "Payment marked as failed successfully",
+  TOPUP_HISTORY_RETRIEVED: "Top-up history retrieved successfully",
 } as const;

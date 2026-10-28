@@ -19,11 +19,22 @@ export const ApiRoutes = {
     BASE: "/users",
     PROFILE: "/profile",
     UPLOAD_SIGNATURE: "/profile/upload-signature",
+    CHANGE_PASSWORD: "/profile/change-password",
   },
 
   ADMIN: {
     BASE: "/admin",
     USERS: "/users",
     UPDATE_USER_STATUS: "/users/:userId/status",
+  },
+
+  WALLET: {
+    BASE: "/wallet",
+    OVERVIEW: "/overview",
+    STATEMENT: "/statement",
+    CREATE_ORDER: "/create-order",
+    VERIFY_PAYMENT: "/verify-payment",
+    FAIL_PAYMENT: "/fail-payment",
+    TOPUP_HISTORY: "/topup-history",
   },
 } as const;
