@@ -37,4 +37,13 @@ export const SuccessMessages = {
   PAYMENT_VERIFIED: "Payment verified and wallet credited successfully",
   PAYMENT_FAILED: "Payment marked as failed successfully",
   TOPUP_HISTORY_RETRIEVED: "Top-up history retrieved successfully",
+
+  // ==========================================
+  // Watchlist & Stock
+  // ==========================================
+  STOCKS_RETRIEVED: "Stocks retrieved successfully",
+  WATCHLIST_RETRIEVED: "Watchlist retrieved successfully",
+  WATCHLIST_ITEM_ADDED: "Stock added to watchlist successfully",
+  WATCHLIST_ITEM_REMOVED: "Stock removed from watchlist successfully",
+
 } as const;

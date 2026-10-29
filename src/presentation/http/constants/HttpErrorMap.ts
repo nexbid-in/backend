@@ -85,7 +85,7 @@ export const HttpErrorMap: Record<
     status: HttpStatus.UNAUTHORIZED,
     message: ErrorMessages.INVALID_CREDENTIALS,
   },
-  
+
   [ErrorCodes.ACCOUNT_BLOCKED]: {
     status: HttpStatus.FORBIDDEN,
     message: ErrorMessages.ACCOUNT_BLOCKED,
@@ -136,5 +136,26 @@ export const HttpErrorMap: Record<
     status: HttpStatus.NOT_FOUND,
     message: ErrorMessages.ORDER_NOT_FOUND,
   },
+
+  [ErrorCodes.STOCK_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: ErrorMessages.STOCK_NOT_FOUND,
+  },
+
+  [ErrorCodes.STOCK_ALREADY_IN_WATCHLIST]: {
+    status: HttpStatus.CONFLICT,
+    message: ErrorMessages.STOCK_ALREADY_IN_WATCHLIST,
+  },
+
+  [ErrorCodes.WATCHLIST_ITEM_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: ErrorMessages.WATCHLIST_ITEM_NOT_FOUND,
+  },
+  
+  [ErrorCodes.WATCHLIST_LIMIT_EXCEEDED]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.WATCHLIST_LIMIT_EXCEEDED,
+  },
+
 };
 
