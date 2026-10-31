@@ -8,6 +8,8 @@ const envSchema = z.object({
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
     PORT: z.string().default("7000").transform(Number),
 
+    CLIENT_URL: z.string().url("CLIENT_URL must be a valid URL"),
+
     DATABASE_URL: z.string().url(),
 
     REDIS_HOST: z.string().default("localhost"),
