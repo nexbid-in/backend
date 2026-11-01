@@ -7,7 +7,7 @@ export const ErrorMessages = {
   FORBIDDEN: "You do not have permission to perform this action.",
   INVALID_AUTH_HEADER: "Invalid authorization header",
   INVALID_CREDENTIALS: "Invalid email or password.",
-  LOGIN_RATE_LIMIT_EXCEEDED : "Too many login attempts. Please try again in 5 minutes.",
+  LOGIN_RATE_LIMIT_EXCEEDED: "Too many login attempts. Please try again in 5 minutes.",
   ACCOUNT_BLOCKED: "This account has been blocked.",
   PASSWORD_NOT_SET: "Password has not been set for this account.",
   INVALID_CURRENT_PASSWORD: "Current password is incorrect.",
@@ -46,4 +46,12 @@ export const ErrorMessages = {
   INVALID_AMOUNT: "Invalid transaction amount.",
   PAYMENT_VERIFICATION_FAILED: "Payment verification failed. Invalid signature.",
   ORDER_NOT_FOUND: "Payment order not found.",
+
+  // ==========================================
+  // Stock & Watchlist
+  // ==========================================
+  STOCK_NOT_FOUND: "Stock not found or is currently inactive.",
+  STOCK_ALREADY_IN_WATCHLIST: "Stock is already in your watchlist.",
+  WATCHLIST_ITEM_NOT_FOUND: "Watchlist item not found.",
+  WATCHLIST_LIMIT_EXCEEDED: "Watchlist limit reached. Maximum 100 stocks allowed per user.",
 } as const;

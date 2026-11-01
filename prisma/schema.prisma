@@ -1,3 +1,7 @@
+// =============================================================
+// 1. DATABASE CONFIGURATION & CLIENT GENERATOR
+// =============================================================
+
 generator client {
   provider = "prisma-client"
   output   = "../src/infrastructure/database/generated/prisma"
@@ -7,28 +11,39 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id               String            @id
-  email            String            @unique
-  mobile           String?
-  profileImage     String?
-  isBlocked        Boolean           @default(false)
-  createdAt        DateTime          @default(now())
-  firstName        String
-  googleId         String?           @unique
-  lastName         String
-  password         String?
-  role             Role              @default(USER)
-  lastActiveAt     DateTime?
-  wallet           Wallet?
-  walletTransactions WalletTransaction[]
-  paymentOrders    PaymentOrder[]
-}
+// =============================================================
+// 2. USER & AUTHENTICATION MANAGEMENT
+// =============================================================
 
 enum Role {
   USER
   ADMIN
 }
+
+model User {
+  id                 String              @id
+  email              String              @unique
+  mobile             String?
+  profileImage       String?
+  isBlocked          Boolean             @default(false)
+  createdAt          DateTime            @default(now())
+  firstName          String
+  googleId           String?             @unique
+  lastName           String
+  password           String?
+  role               Role                @default(USER)
+  lastActiveAt       DateTime?
+
+  // Relations
+  wallet             Wallet?
+  walletTransactions WalletTransaction[]
+  paymentOrders      PaymentOrder[]
+  watchlistItems     WatchlistItem[]
+}
+
+// =============================================================
+// 3. WALLET & FUNDS MANAGEMENT
+// =============================================================
 
 enum WalletStatus {
   ACTIVE
@@ -37,22 +52,26 @@ enum WalletStatus {
 }
 
 model Wallet {
-  id                 String            @id @default(uuid())
-  userId             String            @unique
-  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                 String              @id @default(uuid())
+  userId             String              @unique
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Margins & Balances (Decimal for exact financial precision)
-  balance            Decimal           @default(0.00) @db.Decimal(15, 2)
-  usedMargin         Decimal           @default(0.00) @db.Decimal(15, 2)
-  totalVirtualBought Decimal           @default(0.00) @db.Decimal(15, 2)
-  totalRealSpent     Decimal           @default(0.00) @db.Decimal(15, 2)
+  balance            Decimal             @default(0.00) @db.Decimal(15, 2)
+  usedMargin         Decimal             @default(0.00) @db.Decimal(15, 2)
+  totalVirtualBought Decimal             @default(0.00) @db.Decimal(15, 2)
+  totalRealSpent     Decimal             @default(0.00) @db.Decimal(15, 2)
 
-  status             WalletStatus      @default(ACTIVE)
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
+  status             WalletStatus        @default(ACTIVE)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
   transactions       WalletTransaction[]
 }
+
+// =============================================================
+// 4. WALLET TRANSACTIONS LEDGER
+// =============================================================
 
 enum WalletTransactionType {
   TOPUP
@@ -81,6 +100,10 @@ model WalletTransaction {
   @@index([walletId, createdAt(sort: Desc)])
 }
 
+// =============================================================
+// 5. PAYMENT ORDERS & GATEWAY LIFECYCLE
+// =============================================================
+
 enum PaymentStatus {
   PENDING
   SUCCESS
@@ -104,3 +127,53 @@ model PaymentOrder {
   @@index([userId])
 }
 
+// =============================================================
+// 6. STOCK MASTER (APPROVED INSTRUMENTS DIRECTORY)
+// =============================================================
+
+enum InstrumentType {
+  EQUITY
+  INDEX
+}
+
+model Stock {
+  id             String          @id @default(uuid())
+  symbol         String          @unique
+  name           String
+  exchange       String          @default("NSE")
+  sector         String?
+  type           InstrumentType  @default(EQUITY)
+
+  // Status & Trading Permissions
+  isActive       Boolean         @default(true) // false = hidden from search & watchlists
+  isTradable     Boolean         @default(true) // false = view/chart only, buy/sell disabled (always false for INDEX)
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  watchlistItems WatchlistItem[]
+
+  @@index([symbol])
+  @@index([name])
+  @@index([type])
+  @@index([isActive])
+}
+
+// =============================================================
+// 7. USER WATCHLIST MANAGEMENT
+// =============================================================
+
+model WatchlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  stockId   String
+  stock     Stock    @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  order     Int      @default(0) // Position for custom list drag-and-drop reordering
+  createdAt DateTime @default(now())
+
+  @@unique([userId, stockId])
+  @@index([userId])
+}

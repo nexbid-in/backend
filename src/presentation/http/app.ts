@@ -3,6 +3,7 @@ import morgan from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
+import { env } from "../../infrastructure/config/env";
 import { ApiRoutes } from "./constants/ApiRoutes";
 import appRoutes from "./routes/index";
 import { errorHandler } from "./middlewares/errorHandler";
@@ -16,7 +17,7 @@ export const createApp = () => {
     const app = express();
 
     app.use(cors({
-        origin: 'http://localhost:5173',
+        origin: env.CLIENT_URL,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
         credentials: true,
     }))

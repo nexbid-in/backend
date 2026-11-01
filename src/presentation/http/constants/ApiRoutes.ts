@@ -37,4 +37,16 @@ export const ApiRoutes = {
     FAIL_PAYMENT: "/fail-payment",
     TOPUP_HISTORY: "/topup-history",
   },
+
+  STOCKS: {
+    BASE: "/stocks",
+    SEARCH: "/search",
+  },
+
+  WATCHLIST: {
+    BASE: "/watchlist",
+    ROOT: "/",
+    ITEM: "/:stockId",
+  },
+
 } as const;
