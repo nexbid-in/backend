@@ -1,22 +1,27 @@
 /// <reference path="./types/express.d.ts" />
-import { logger } from "./infrastructure/logging/logger";
+import http from "http";
 import { createApp } from "./presentation/http/app";
 import { connectPrisma } from "./infrastructure/database/prisma";
 import { connectRedis } from "./infrastructure/config/redis";
 import { env } from "./infrastructure/config/env";
+import { logger } from "./infrastructure/logging/logger";
 import { paymentReconciliationCron } from "./di/wallet/container";
+import { marketDataService } from "./di/market/container";
+import { MarketWebSocketGateway } from "./infrastructure/websocket/MarketWebSocketGateway";
 
 const startServer = async () => {
     try {
         const app = createApp();
-        
-        await connectPrisma();
+        const server = http.createServer(app);
 
+        await connectPrisma();
         await connectRedis();
 
-        const PORT = env.PORT;
+        // Attach Market WebSocket Server
+        new MarketWebSocketGateway(server, marketDataService);
 
-        app.listen(PORT, () => {
+        const PORT = env.PORT;
+        server.listen(PORT, () => {
             logger.info(`Server is running at http://localhost:${PORT}`);
             paymentReconciliationCron.start();
         });
@@ -24,8 +29,7 @@ const startServer = async () => {
         logger.error({ error }, "Failed to start server");
         process.exit(1);
     }
-}
-
+};
 
 void startServer();
 
