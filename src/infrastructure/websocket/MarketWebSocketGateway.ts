@@ -73,7 +73,20 @@ export class MarketWebSocketGateway {
             });
 
             for (const [ws, symbols] of this.subscriptions.entries()) {
-                if (ws.readyState === WebSocket.OPEN && symbols.has(tick.symbol)) {
+                const spaceless = tick.symbol.replace(/\s+/g, "");
+                const isSubscribed =
+                    symbols.has(tick.symbol) ||
+                    symbols.has(spaceless) ||
+                    (tick.symbol === "TATAMOTORS" && symbols.has("TMCV")) ||
+                    (tick.symbol === "TMPV" && symbols.has("TATAMOTORSPASSENGER")) ||
+                    (tick.symbol === "ZOMATO" && symbols.has("ETERNAL")) ||
+                    (tick.symbol === "ETERNAL" && symbols.has("ZOMATO")) ||
+                    (tick.symbol === "ICICIPRULI" && symbols.has("ICICILIFE")) ||
+                    (tick.symbol === "ICICILIFE" && symbols.has("ICICIPRULI")) ||
+                    (tick.symbol === "LTIM" && symbols.has("LTM")) ||
+                    (tick.symbol === "LTM" && symbols.has("LTIM"));
+
+                if (ws.readyState === WebSocket.OPEN && isSubscribed) {
                     ws.send(payload);
                 }
             }
