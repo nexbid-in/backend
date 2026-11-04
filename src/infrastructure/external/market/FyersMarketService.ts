@@ -13,7 +13,7 @@ import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 
 interface IFyersDataSocket {
   on(event: string, callback: (data?: unknown) => void): void;
-  subscribe(symbols: string[], flag: boolean | string): void;
+  subscribe(symbols: string[], flag?: boolean | string): void;
   unsubscribe(symbols: string[]): void;
   connect(): void;
   autoreconnect(): void;
@@ -34,96 +34,15 @@ interface FyersHistoryResponse {
 export class FyersMarketService implements IMarketDataService {
   private tickCallbacks: Array<(tick: MarketTick) => void> = [];
   private activeSubscriptions = new Set<string>();
+  private subscribedToBroker = new Set<string>();
+  private latestTicks = new Map<string, MarketTick>();
   private socket: IFyersDataSocket | null = null;
+  private currentSocketToken: string | null = null;
   private isSocketConnected = false;
+  private isConnecting = false;
 
   constructor() {
-    this.initFyersSocket();
-  }
-
-  private initFyersSocket(): void {
-    const token = env.FYERS_ACCESS_TOKEN;
-    if (!token) {
-      logger.warn("FYERS_ACCESS_TOKEN not configured; Fyers live WebSocket feed inactive");
-      return;
-    }
-
-    try {
-      this.socket = new FyersDataSocketClass(token);
-
-      this.socket.on("connect", () => {
-        this.isSocketConnected = true;
-        logger.info("Connected to Fyers Live Exchange WebSocket feed");
-
-        if (this.activeSubscriptions.size > 0) {
-          const fyersSymbols = Array.from(this.activeSubscriptions).map((sym) =>
-            MarketSymbolMapper.toFyersSymbol(sym)
-          );
-          this.socket?.subscribe(fyersSymbols, false);
-        }
-      });
-
-      this.socket.on("message", (msg: unknown) => {
-        if (typeof msg === "object" && msg !== null) {
-          const raw = msg as Record<string, unknown>;
-          if (
-            (raw.type === "sf" || raw.type === "if") &&
-            typeof raw.symbol === "string" &&
-            typeof raw.ltp === "number"
-          ) {
-            const cleanSymbol = MarketSymbolMapper.fromFyersSymbol(raw.symbol);
-            const ltp = raw.ltp;
-            const open = typeof raw.open_price === "number" ? raw.open_price : ltp;
-            const high = typeof raw.high_price === "number" ? raw.high_price : ltp;
-            const low = typeof raw.low_price === "number" ? raw.low_price : ltp;
-            const close = typeof raw.prev_close_price === "number" ? raw.prev_close_price : ltp;
-            const change = typeof raw.ch === "number" ? raw.ch : +(ltp - close).toFixed(2);
-            const changePercent =
-              typeof raw.chp === "number"
-                ? raw.chp
-                : close > 0
-                ? +(((ltp - close) / close) * 100).toFixed(2)
-                : 0;
-            const volume = typeof raw.vol_traded_today === "number" ? raw.vol_traded_today : 0;
-            const timestamp =
-              typeof raw.last_traded_time === "number"
-                ? raw.last_traded_time * 1000
-                : typeof raw.exch_feed_time === "number"
-                ? raw.exch_feed_time * 1000
-                : Date.now();
-
-            const tick: MarketTick = {
-              symbol: cleanSymbol,
-              ltp,
-              open,
-              high,
-              low,
-              close,
-              change,
-              changePercent,
-              volume,
-              timestamp,
-            };
-
-            this.tickCallbacks.forEach((cb) => cb(tick));
-          }
-        }
-      });
-
-      this.socket.on("error", (err: unknown) => {
-        logger.error({ err }, "Fyers Live WebSocket error");
-      });
-
-      this.socket.on("close", () => {
-        this.isSocketConnected = false;
-        logger.warn("Fyers Live WebSocket closed");
-      });
-
-      this.socket.connect();
-      this.socket.autoreconnect();
-    } catch (err: unknown) {
-      logger.error({ err }, "Failed to start Fyers Data Socket");
-    }
+    void this.ensureSocketConnected();
   }
 
   private async getAccessToken(): Promise<string> {
@@ -132,6 +51,127 @@ export class FyersMarketService implements IMarketDataService {
       throw new Error("Active Fyers access token not found in Redis or .env");
     }
     return token;
+  }
+
+  private async ensureSocketConnected(): Promise<void> {
+    let token: string;
+    try {
+      token = await this.getAccessToken();
+    } catch (tokenErr) {
+      logger.warn({ tokenErr }, "Fyers live WebSocket inactive: Access token unavailable");
+      return;
+    }
+
+    if (this.socket && this.isSocketConnected && this.currentSocketToken === token) {
+      return;
+    }
+
+    if (this.socket && this.currentSocketToken !== token) {
+      logger.info("Fyers access token refreshed; re-establishing WebSocket feed");
+      try {
+        this.socket.close();
+      } catch {
+        // ignore close error
+      }
+      this.socket = null;
+      this.isSocketConnected = false;
+      this.subscribedToBroker.clear();
+    }
+
+    if (!this.socket) {
+      if (this.isConnecting) return;
+      this.isConnecting = true;
+
+      try {
+        this.currentSocketToken = token;
+        this.socket = new FyersDataSocketClass(token);
+
+        this.socket.on("connect", () => {
+          this.isSocketConnected = true;
+          this.isConnecting = false;
+          logger.info("Connected to Fyers Live Exchange WebSocket feed");
+
+          if (this.activeSubscriptions.size > 0) {
+            const fyersSymbols = Array.from(this.activeSubscriptions).map((sym) =>
+              MarketSymbolMapper.toFyersSymbol(sym)
+            );
+            logger.info({ fyersSymbols }, "Subscribing active symbols to Fyers Live feed");
+            this.socket?.subscribe(fyersSymbols);
+            this.activeSubscriptions.forEach((sym) => this.subscribedToBroker.add(sym));
+          }
+        });
+
+        this.socket.on("message", (msg: unknown) => {
+          if (typeof msg === "object" && msg !== null) {
+            const raw = msg as Record<string, unknown>;
+            if (typeof raw.symbol === "string" && typeof raw.ltp === "number") {
+              const cleanSymbol = MarketSymbolMapper.fromFyersSymbol(raw.symbol);
+              const ltp = raw.ltp;
+              const open = typeof raw.open_price === "number" ? raw.open_price : ltp;
+              const high = typeof raw.high_price === "number" ? raw.high_price : ltp;
+              const low = typeof raw.low_price === "number" ? raw.low_price : ltp;
+              const close = typeof raw.prev_close_price === "number" ? raw.prev_close_price : ltp;
+              const change = typeof raw.ch === "number" ? raw.ch : +(ltp - close).toFixed(2);
+              const changePercent =
+                typeof raw.chp === "number"
+                  ? raw.chp
+                  : close > 0
+                  ? +(((ltp - close) / close) * 100).toFixed(2)
+                  : 0;
+              const volume = typeof raw.vol_traded_today === "number" ? raw.vol_traded_today : 0;
+              const timestamp =
+                typeof raw.last_traded_time === "number"
+                  ? raw.last_traded_time * 1000
+                  : typeof raw.exch_feed_time === "number"
+                  ? raw.exch_feed_time * 1000
+                  : Date.now();
+
+              const tick: MarketTick = {
+                symbol: cleanSymbol,
+                ltp,
+                open,
+                high,
+                low,
+                close,
+                change,
+                changePercent,
+                volume,
+                timestamp,
+              };
+
+              this.latestTicks.set(cleanSymbol, tick);
+              this.tickCallbacks.forEach((cb) => cb(tick));
+            }
+          }
+        });
+
+        this.socket.on("error", (err: unknown) => {
+          this.isConnecting = false;
+          logger.error({ err }, "Fyers Live WebSocket error");
+        });
+
+        this.socket.on("close", () => {
+          this.isSocketConnected = false;
+          this.isConnecting = false;
+          this.subscribedToBroker.clear();
+          logger.warn("Fyers Live WebSocket closed");
+        });
+
+        this.socket.connect();
+        this.socket.autoreconnect();
+      } catch (err: unknown) {
+        this.isConnecting = false;
+        logger.error({ err }, "Failed to start Fyers Data Socket");
+        this.socket = null;
+        this.isSocketConnected = false;
+      }
+    } else if (!this.isSocketConnected) {
+      try {
+        this.socket.connect();
+      } catch (err) {
+        logger.error({ err }, "Failed to connect Fyers Data Socket");
+      }
+    }
   }
 
   async getHistoricalCandles(
@@ -262,6 +302,28 @@ export class FyersMarketService implements IMarketDataService {
       // Resilient Stale-While-Revalidate fallback cache (7 days) for outage survival
       await redis.setex(staleCacheKey, 7 * 86400, JSON.stringify(candles));
 
+      // Seed latest tick if not present
+      const cleanSymbol = MarketSymbolMapper.fromFyersSymbol(symbol);
+      const lastCandle = candles[candles.length - 1];
+      if (lastCandle && !this.latestTicks.has(cleanSymbol)) {
+        const firstCandle = candles[0];
+        const change = +(lastCandle.close - firstCandle.open).toFixed(2);
+        const changePercent =
+          firstCandle.open > 0 ? +(((lastCandle.close - firstCandle.open) / firstCandle.open) * 100).toFixed(2) : 0;
+        this.latestTicks.set(cleanSymbol, {
+          symbol: cleanSymbol,
+          ltp: lastCandle.close,
+          open: lastCandle.open,
+          high: lastCandle.high,
+          low: lastCandle.low,
+          close: lastCandle.close,
+          change,
+          changePercent,
+          volume: lastCandle.volume,
+          timestamp: lastCandle.timestamp,
+        });
+      }
+
       return candles;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -297,35 +359,40 @@ export class FyersMarketService implements IMarketDataService {
     }
   }
 
-  async getQuote(_symbol: string): Promise<MarketTick | null> {
-    return Promise.resolve(null);
+  async getQuote(symbol: string): Promise<MarketTick | null> {
+    const clean = MarketSymbolMapper.fromFyersSymbol(symbol.toUpperCase().trim());
+    return Promise.resolve(this.latestTicks.get(clean) ?? null);
   }
 
   async subscribe(symbols: string[]): Promise<void> {
-    const toAdd: string[] = [];
+    const newlyAdded: string[] = [];
 
     symbols.forEach((sym) => {
-      const clean = sym.toUpperCase().trim();
-      if (!this.activeSubscriptions.has(clean)) {
-        this.activeSubscriptions.add(clean);
-        toAdd.push(MarketSymbolMapper.toFyersSymbol(clean));
+      const clean = MarketSymbolMapper.fromFyersSymbol(sym.toUpperCase().trim());
+      this.activeSubscriptions.add(clean);
+      if (!this.subscribedToBroker.has(clean)) {
+        newlyAdded.push(clean);
       }
     });
 
-    if (this.socket && this.isSocketConnected && toAdd.length > 0) {
-      this.socket.subscribe(toAdd, false);
-    }
+    await this.ensureSocketConnected();
 
-    return Promise.resolve();
+    if (this.socket && this.isSocketConnected && newlyAdded.length > 0) {
+      const fyersSymbols = newlyAdded.map((s) => MarketSymbolMapper.toFyersSymbol(s));
+      logger.info({ fyersSymbols }, "Subscribing newly added symbols to Fyers Data Socket");
+      this.socket.subscribe(fyersSymbols);
+      newlyAdded.forEach((s) => this.subscribedToBroker.add(s));
+    }
   }
 
-  async unsubscribe(symbols: string[]): Promise<void> {
+  unsubscribe(symbols: string[]): Promise<void> {
     const toRemove: string[] = [];
 
     symbols.forEach((sym) => {
-      const clean = sym.toUpperCase().trim();
-      if (this.activeSubscriptions.has(clean)) {
-        this.activeSubscriptions.delete(clean);
+      const clean = MarketSymbolMapper.fromFyersSymbol(sym.toUpperCase().trim());
+      this.activeSubscriptions.delete(clean);
+      if (this.subscribedToBroker.has(clean)) {
+        this.subscribedToBroker.delete(clean);
         toRemove.push(MarketSymbolMapper.toFyersSymbol(clean));
       }
     });
