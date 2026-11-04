@@ -8,6 +8,8 @@ import { IMarketDataService } from "../../../application/interface/services/IMar
 import { Candle } from "../../../domain/entities/market/Candle";
 import { MarketTick } from "../../../domain/entities/market/MarketTick";
 import { MarketSymbolMapper } from "./MarketSymbolMapper";
+import { AppError } from "../../../shared/errors/AppError";
+import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 
 interface IFyersDataSocket {
   on(event: string, callback: (data?: unknown) => void): void;
@@ -139,13 +141,33 @@ export class FyersMarketService implements IMarketDataService {
     to: number
   ): Promise<Candle[]> {
     const cacheKey = `market:candles:${symbol}:${resolution}:${Math.floor(from / 60000)}:${Math.floor(to / 60000)}`;
+    const staleCacheKey = `market:candles:stale:${symbol}:${resolution}`;
 
+    // 1. Exact time-window cache hit
     const cached = await redis.get(cacheKey);
     if (cached) {
       return JSON.parse(cached) as Candle[];
     }
 
-    const token = await this.getAccessToken();
+    let token: string;
+    try {
+      token = await this.getAccessToken();
+    } catch (tokenErr) {
+      // If access token is unavailable, check for resilient stale data before failing
+      const stale = await redis.get(staleCacheKey);
+      if (stale) {
+        logger.warn(
+          { symbol, resolution, tokenErr },
+          "Active Fyers access token unavailable; serving resilient stale cached candles"
+        );
+        return JSON.parse(stale) as Candle[];
+      }
+      throw new AppError(
+        ErrorCodes.MARKET_DATA_SERVICE_UNAVAILABLE,
+        "Market data feed is temporarily unavailable. Please retry shortly."
+      );
+    }
+
     const fyersSymbol = MarketSymbolMapper.toFyersSymbol(symbol);
     const fyersResolution = resolution === "1D" || resolution === "D" ? "D" : resolution;
 
@@ -191,6 +213,7 @@ export class FyersMarketService implements IMarketDataService {
               range_from: chunk.from,
               range_to: chunk.to,
             },
+            timeout: 8000,
           });
 
           if (response.data.s === "ok" && response.data.candles) {
@@ -202,6 +225,15 @@ export class FyersMarketService implements IMarketDataService {
 
       const flatCandles = chunkResults.flat();
       if (flatCandles.length === 0) {
+        // If upstream returned 0 candles, check for existing stale candles before concluding empty
+        const stale = await redis.get(staleCacheKey);
+        if (stale) {
+          logger.warn(
+            { symbol, resolution },
+            "Fyers returned empty candle array; serving existing stale cached candles"
+          );
+          return JSON.parse(stale) as Candle[];
+        }
         return [];
       }
 
@@ -223,8 +255,12 @@ export class FyersMarketService implements IMarketDataService {
 
       const candles = Array.from(candleMap.values()).sort((a, b) => a.timestamp - b.timestamp);
 
+      // Exact window cache (1 day for daily, 5 min for intraday)
       const ttl = isEOD ? 86400 : 300;
       await redis.setex(cacheKey, ttl, JSON.stringify(candles));
+
+      // Resilient Stale-While-Revalidate fallback cache (7 days) for outage survival
+      await redis.setex(staleCacheKey, 7 * 86400, JSON.stringify(candles));
 
       return candles;
     } catch (error) {
@@ -241,7 +277,23 @@ export class FyersMarketService implements IMarketDataService {
       } else {
         logger.error({ error, symbol }, "Failed to fetch historical candles from Fyers");
       }
-      return [];
+
+      // 1. Stale-While-Revalidate Fallback:
+      // If Fyers is offline (e.g. ENOTFOUND, ETIMEDOUT, 502/503), serve last known candles
+      const stale = await redis.get(staleCacheKey);
+      if (stale) {
+        logger.warn(
+          { symbol, resolution },
+          "Upstream Fyers market data unreachable; serving resilient stale cached candles"
+        );
+        return JSON.parse(stale) as Candle[];
+      }
+
+      // 2. If no stale cache exists, signal explicit 503 Service Unavailable
+      throw new AppError(
+        ErrorCodes.MARKET_DATA_SERVICE_UNAVAILABLE,
+        "Market data feed is temporarily unavailable. Please retry shortly."
+      );
     }
   }
 
