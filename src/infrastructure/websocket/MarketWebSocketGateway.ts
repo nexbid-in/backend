@@ -13,7 +13,7 @@ export class MarketWebSocketGateway {
     private wss: WebSocketServer;
     private subscriptions = new Map<WebSocket, Set<string>>();
     private socketSubscriptionTimestamps = new Map<WebSocket, Map<string, number>>();
-    private symbolRefCounts = new Map<string, number>();
+    private symbolSubscribers = new Map<string, Set<WebSocket>>();
     private brokerUnsubscribeTimers = new Map<string, NodeJS.Timeout>();
 
     constructor(server: HttpServer, private readonly marketService: IMarketDataService) {
@@ -66,11 +66,22 @@ export class MarketWebSocketGateway {
                                 this.brokerUnsubscribeTimers.delete(cleanSym);
                             }
 
-                            const prevCount = this.symbolRefCounts.get(cleanSym) ?? 0;
-                            this.symbolRefCounts.set(cleanSym, prevCount + 1);
+                            let subscribers = this.symbolSubscribers.get(cleanSym);
+                            if (!subscribers) {
+                                subscribers = new Set<WebSocket>();
+                                this.symbolSubscribers.set(cleanSym, subscribers);
+                            }
+                            const isFirstSubscriber = subscribers.size === 0;
+                            subscribers.add(ws);
 
-                            logger.info({ rawSym, cleanSym, totalSubscribers: prevCount + 1 }, "Client subscribed to market feed");
-                            void this.marketService.subscribe([cleanSym]);
+                            logger.info(
+                                { rawSym, cleanSym, totalSubscribers: subscribers.size },
+                                "Client subscribed to market feed"
+                            );
+
+                            if (isFirstSubscriber) {
+                                void this.marketService.subscribe([cleanSym]);
+                            }
 
                             // Emit instant quote if cached
                             void (async () => {
@@ -122,25 +133,33 @@ export class MarketWebSocketGateway {
                             userSubs?.delete(rawSym.replace(/\s+/g, ""));
                             timestamps?.delete(cleanSym);
 
-                            const prevCount = this.symbolRefCounts.get(cleanSym) ?? 1;
-                            const nextCount = Math.max(0, prevCount - 1);
-                            this.symbolRefCounts.set(cleanSym, nextCount);
+                            const subscribers = this.symbolSubscribers.get(cleanSym);
+                            if (subscribers) {
+                                subscribers.delete(ws);
+                                const remainingCount = subscribers.size;
+                                logger.info(
+                                    { rawSym, cleanSym, remainingSubscribers: remainingCount },
+                                    "Client unsubscribed from market feed"
+                                );
 
-                            logger.info({ rawSym, cleanSym, remainingSubscribers: nextCount }, "Client unsubscribed from market feed");
+                                // Only unsubscribe from upstream broker if NO clients on server need it,
+                                // debounced by 5 seconds to survive rapid tab switching
+                                if (remainingCount === 0) {
+                                    const timer = setTimeout(() => {
+                                        const current = this.symbolSubscribers.get(cleanSym);
+                                        if (!current || current.size === 0) {
+                                            logger.info(
+                                                { cleanSym },
+                                                "No remaining subscribers after debounce; unsubscribing broker feed"
+                                            );
+                                            void this.marketService.unsubscribe([cleanSym]);
+                                            this.symbolSubscribers.delete(cleanSym);
+                                        }
+                                        this.brokerUnsubscribeTimers.delete(cleanSym);
+                                    }, 5000);
 
-                            // Only unsubscribe from upstream broker if NO clients on server need it,
-                            // debounced by 5 seconds to survive rapid tab switching
-                            if (nextCount === 0) {
-                                const timer = setTimeout(() => {
-                                    const currentCount = this.symbolRefCounts.get(cleanSym) ?? 0;
-                                    if (currentCount <= 0) {
-                                        logger.info({ cleanSym }, "No remaining subscribers after debounce; unsubscribing broker feed");
-                                        void this.marketService.unsubscribe([cleanSym]);
-                                    }
-                                    this.brokerUnsubscribeTimers.delete(cleanSym);
-                                }, 5000);
-
-                                this.brokerUnsubscribeTimers.set(cleanSym, timer);
+                                    this.brokerUnsubscribeTimers.set(cleanSym, timer);
+                                }
                             }
                         }
                     }
@@ -150,24 +169,19 @@ export class MarketWebSocketGateway {
             });
 
             ws.on("close", () => {
-                const userSubs = this.subscriptions.get(ws);
-                if (userSubs) {
-                    const cleanSymbolsToDecrement = new Set<string>();
-                    for (const sym of userSubs) {
-                        cleanSymbolsToDecrement.add(MarketSymbolMapper.fromFyersSymbol(sym));
-                    }
-
-                    for (const cleanSym of cleanSymbolsToDecrement) {
-                        const prevCount = this.symbolRefCounts.get(cleanSym) ?? 1;
-                        const nextCount = Math.max(0, prevCount - 1);
-                        this.symbolRefCounts.set(cleanSym, nextCount);
-
-                        if (nextCount === 0) {
+                for (const [cleanSym, subscribers] of this.symbolSubscribers.entries()) {
+                    if (subscribers.has(ws)) {
+                        subscribers.delete(ws);
+                        if (subscribers.size === 0) {
                             const timer = setTimeout(() => {
-                                const currentCount = this.symbolRefCounts.get(cleanSym) ?? 0;
-                                if (currentCount <= 0) {
-                                    logger.info({ cleanSym }, "No remaining subscribers after socket disconnect; unsubscribing broker feed");
+                                const current = this.symbolSubscribers.get(cleanSym);
+                                if (!current || current.size === 0) {
+                                    logger.info(
+                                        { cleanSym },
+                                        "No remaining subscribers after socket disconnect; unsubscribing broker feed"
+                                    );
                                     void this.marketService.unsubscribe([cleanSym]);
+                                    this.symbolSubscribers.delete(cleanSym);
                                 }
                                 this.brokerUnsubscribeTimers.delete(cleanSym);
                             }, 5000);

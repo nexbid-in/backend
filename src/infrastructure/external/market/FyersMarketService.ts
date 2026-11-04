@@ -42,7 +42,25 @@ export class FyersMarketService implements IMarketDataService {
   private isConnecting = false;
 
   constructor() {
-    void this.ensureSocketConnected();
+    // Upstream data socket connects on demand upon the first symbol subscription
+  }
+
+  private isIndianMarketOpen(): boolean {
+    const now = new Date();
+    const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+    const istDate = new Date(utcMs + 5.5 * 3600000);
+
+    const day = istDate.getDay(); // 0 = Sunday, 6 = Saturday
+    if (day === 0 || day === 6) {
+      return false;
+    }
+
+    const hours = istDate.getHours();
+    const minutes = istDate.getMinutes();
+    const timeInMinutes = hours * 60 + minutes;
+
+    // NSE / BSE normal trading hours: 09:15 AM (555 min) to 03:30 PM (930 min) IST
+    return timeInMinutes >= 555 && timeInMinutes <= 930;
   }
 
   private async getAccessToken(): Promise<string> {
@@ -54,6 +72,10 @@ export class FyersMarketService implements IMarketDataService {
   }
 
   private async ensureSocketConnected(): Promise<void> {
+    if (this.activeSubscriptions.size === 0) {
+      return;
+    }
+
     let token: string;
     try {
       token = await this.getAccessToken();
@@ -154,7 +176,18 @@ export class FyersMarketService implements IMarketDataService {
           this.isSocketConnected = false;
           this.isConnecting = false;
           this.subscribedToBroker.clear();
-          logger.warn("Fyers Live WebSocket closed");
+
+          if (this.activeSubscriptions.size === 0) {
+            logger.info("Fyers Live WebSocket closed; 0 active subscriptions, putting socket to sleep");
+            this.socket = null;
+            return;
+          }
+
+          if (!this.isIndianMarketOpen()) {
+            logger.info("Fyers Live WebSocket closed outside market trading hours (09:15-15:30 IST)");
+          } else {
+            logger.warn("Fyers Live WebSocket closed during active market hours; autoreconnect active");
+          }
         });
 
         this.socket.connect();
@@ -399,6 +432,19 @@ export class FyersMarketService implements IMarketDataService {
 
     if (this.socket && this.isSocketConnected && toRemove.length > 0) {
       this.socket.unsubscribe(toRemove);
+    }
+
+    // Lazy Standby: If 0 subscriptions remain across the platform, close the idle upstream socket
+    if (this.activeSubscriptions.size === 0 && this.socket) {
+      logger.info("No active subscriptions remaining across gateway; closing idle Fyers socket");
+      try {
+        this.socket.close();
+      } catch {
+        // ignore close error
+      }
+      this.socket = null;
+      this.isSocketConnected = false;
+      this.subscribedToBroker.clear();
     }
 
     return Promise.resolve();
