@@ -23,7 +23,7 @@ interface IFyersDataSocket {
 }
 
 type FyersDataSocketFactory = {
-  getInstance(accessToken: string): IFyersDataSocket;
+  getInstance(accessToken: string, logPath?: string, enableLogging?: boolean): IFyersDataSocket;
 };
 
 const FyersDataSocketClass = (
@@ -150,7 +150,7 @@ export class FyersMarketService implements IMarketDataService {
 
       try {
         this.currentSocketToken = token;
-        this.socket = FyersDataSocketClass.getInstance(token);
+        this.socket = FyersDataSocketClass.getInstance(token, "", false);
 
         this.socket.on("connect", () => {
           this.isSocketConnected = true;
