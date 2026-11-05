@@ -42,6 +42,10 @@ const envSchema = z.object({
     FYERS_APP_ID: z.string().optional(),
     FYERS_SECRET_KEY: z.string().optional(),
     FYERS_ACCESS_TOKEN: z.string().optional(),
+    FYERS_USER_ID: z.string().optional(),
+    FYERS_PIN: z.string().optional(),
+    FYERS_TOTP_KEY: z.string().optional(),
+    FYERS_REDIRECT_URI: z.string().default("https://trade.fyers.in/api-login/redirect-uri/index.html"),
 });
 
 // Validate the process.env against the schema

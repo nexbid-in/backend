@@ -10,6 +10,8 @@ import { MarketTick } from "../../../domain/entities/market/MarketTick";
 import { MarketSymbolMapper } from "./MarketSymbolMapper";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
+import { FyersAuthService } from "./FyersAuthService";
+import { IBrokerAuthService } from "../../../application/interface/services/IBrokerAuthService";
 
 interface IFyersDataSocket {
   on(event: string, callback: (data?: unknown) => void): void;
@@ -20,10 +22,12 @@ interface IFyersDataSocket {
   close(): void;
 }
 
-type FyersDataSocketConstructor = new (accessToken: string) => IFyersDataSocket;
+type FyersDataSocketFactory = {
+  getInstance(accessToken: string): IFyersDataSocket;
+};
 
 const FyersDataSocketClass = (
-  fyersPkg as { fyersDataSocket: FyersDataSocketConstructor }
+  fyersPkg as { fyersDataSocket: FyersDataSocketFactory }
 ).fyersDataSocket;
 
 interface FyersHistoryResponse {
@@ -41,7 +45,7 @@ export class FyersMarketService implements IMarketDataService {
   private isSocketConnected = false;
   private isConnecting = false;
 
-  constructor() {
+  constructor(private readonly brokerAuthService: IBrokerAuthService) {
     // Upstream data socket connects on demand upon the first symbol subscription
   }
 
@@ -63,10 +67,49 @@ export class FyersMarketService implements IMarketDataService {
     return timeInMinutes >= 555 && timeInMinutes <= 930;
   }
 
-  private async getAccessToken(): Promise<string> {
-    const token = (await redis.get("market:fyers:access_token")) || env.FYERS_ACCESS_TOKEN;
+  private isTokenExpired(token: string): boolean {
+    try {
+      const parts = token.split(".");
+      if (parts.length !== 3) return true;
+      const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8")) as { exp?: number };
+      if (typeof payload.exp !== "number") return true;
+      // Consider expired if expiring within 60 seconds
+      return payload.exp * 1000 <= Date.now() + 60000;
+    } catch {
+      return true;
+    }
+  }
+
+  private async getAccessToken(forceRefresh = false): Promise<string> {
+    if (forceRefresh) {
+      logger.info("Forced refresh requested; generating new Fyers access token...");
+      return this.brokerAuthService.generateAndStoreAccessToken();
+    }
+
+    let token = await redis.get(FyersAuthService.REDIS_TOKEN_KEY);
+    if (token && this.isTokenExpired(token)) {
+      logger.warn("Cached Fyers access token in Redis is expired; generating fresh token...");
+      token = null;
+    }
+
     if (!token) {
-      throw new Error("Active Fyers access token not found in Redis or .env");
+      logger.info("Fyers access token not found or expired; generating via automated auth...");
+      try {
+        token = await this.brokerAuthService.generateAndStoreAccessToken();
+      } catch (authErr) {
+        logger.error({ authErr }, "Failed automated Fyers token generation");
+      }
+    }
+
+    if (!token) {
+      const envToken = env.FYERS_ACCESS_TOKEN;
+      if (envToken && !this.isTokenExpired(envToken)) {
+        token = envToken;
+      }
+    }
+
+    if (!token) {
+      throw new Error("Active Fyers access token not found in Redis, .env, or via automated auth");
     }
     return token;
   }
@@ -95,6 +138,7 @@ export class FyersMarketService implements IMarketDataService {
       } catch {
         // ignore close error
       }
+      (fyersPkg as { fyersDataSocket: { instance?: unknown } }).fyersDataSocket.instance = null;
       this.socket = null;
       this.isSocketConnected = false;
       this.subscribedToBroker.clear();
@@ -106,7 +150,7 @@ export class FyersMarketService implements IMarketDataService {
 
       try {
         this.currentSocketToken = token;
-        this.socket = new FyersDataSocketClass(token);
+        this.socket = FyersDataSocketClass.getInstance(token);
 
         this.socket.on("connect", () => {
           this.isSocketConnected = true;
@@ -274,11 +318,11 @@ export class FyersMarketService implements IMarketDataService {
       currentFrom = currentTo + 1;
     }
 
-    try {
-      const chunkResults = await Promise.all(
+    const fetchWithToken = async (authToken: string) => {
+      return Promise.all(
         chunks.map(async (chunk) => {
           const response = await axios.get<FyersHistoryResponse>("https://api-t1.fyers.in/data/history", {
-            headers: { Authorization: `${env.FYERS_APP_ID ?? ""}:${token}` },
+            headers: { Authorization: `${env.FYERS_APP_ID ?? ""}:${authToken}` },
             params: {
               symbol: fyersSymbol,
               resolution: fyersResolution,
@@ -295,6 +339,21 @@ export class FyersMarketService implements IMarketDataService {
           return [];
         })
       );
+    };
+
+    try {
+      let chunkResults: [number, number, number, number, number, number][][];
+      try {
+        chunkResults = await fetchWithToken(token);
+      } catch (firstErr) {
+        if (axios.isAxiosError(firstErr) && firstErr.response?.status === 401) {
+          logger.warn({ symbol, fyersSymbol }, "Fyers returned 401 Unauthorized; generating fresh token and retrying...");
+          const freshToken = await this.getAccessToken(true);
+          chunkResults = await fetchWithToken(freshToken);
+        } else {
+          throw firstErr;
+        }
+      }
 
       const flatCandles = chunkResults.flat();
       if (flatCandles.length === 0) {

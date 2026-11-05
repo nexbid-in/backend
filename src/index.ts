@@ -6,7 +6,7 @@ import { connectRedis } from "./infrastructure/config/redis";
 import { env } from "./infrastructure/config/env";
 import { logger } from "./infrastructure/logging/logger";
 import { paymentReconciliationCron } from "./di/wallet/container";
-import { marketDataService } from "./di/market/container";
+import { marketDataService, fyersTokenRefreshCron } from "./di/market/container";
 import { MarketWebSocketGateway } from "./infrastructure/websocket/MarketWebSocketGateway";
 
 const startServer = async () => {
@@ -24,6 +24,7 @@ const startServer = async () => {
         server.listen(PORT, () => {
             logger.info(`Server is running at http://localhost:${PORT}`);
             paymentReconciliationCron.start();
+            fyersTokenRefreshCron.start();
         });
     } catch (error: unknown) {
         logger.error({ error }, "Failed to start server");
