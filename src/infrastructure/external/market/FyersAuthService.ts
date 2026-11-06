@@ -70,7 +70,7 @@ export class FyersAuthService implements IBrokerAuthService {
       );
     }
 
-    logger.info({ fyId }, "Starting automated Fyers API v3 headless authentication...");
+    logger.info("Starting automated Fyers API v3 headless authentication...");
 
     try {
       // Step 1: Send Login OTP
@@ -171,7 +171,7 @@ export class FyersAuthService implements IBrokerAuthService {
       );
 
       logger.info(
-        { fyId, expiresSeconds: FyersAuthService.TOKEN_TTL_SECONDS },
+        { expiresSeconds: FyersAuthService.TOKEN_TTL_SECONDS },
         "Successfully generated and stored Fyers API v3 access token in Redis"
       );
 
