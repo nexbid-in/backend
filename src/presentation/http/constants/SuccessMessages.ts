@@ -41,7 +41,8 @@ export const SuccessMessages = {
   // ==========================================
   // Watchlist & Stock
   // ==========================================
-  STOCKS_RETRIEVED: "Stocks retrieved successfully",
+  STOCKS_RETRIEVED: "Instruments retrieved successfully",
+  INSTRUMENTS_RETRIEVED: "Instruments retrieved successfully",
   WATCHLIST_RETRIEVED: "Watchlist retrieved successfully",
   WATCHLIST_ITEM_ADDED: "Stock added to watchlist successfully",
   WATCHLIST_ITEM_REMOVED: "Stock removed from watchlist successfully",

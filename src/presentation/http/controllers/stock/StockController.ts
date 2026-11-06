@@ -14,13 +14,15 @@ export class StockController {
 
       const result = await this._searchStocks.execute({
         query: validatedQuery.q,
+        type: validatedQuery.type,
+        page: validatedQuery.page,
         limit: validatedQuery.limit,
       });
 
       ApiResponse.success(
         res,
         HttpStatus.OK,
-        SuccessMessages.STOCKS_RETRIEVED,
+        SuccessMessages.INSTRUMENTS_RETRIEVED,
         result
       );
     } catch (error) {

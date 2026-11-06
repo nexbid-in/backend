@@ -7,15 +7,29 @@ export class SearchStocksUseCase implements ISearchStocksUseCase {
   constructor(private readonly _stockRepo: IStockRepository) {}
 
   async execute(data: SearchStocksRequestDTO): Promise<SearchStocksResponseDTO> {
-    const trimmed = data.query?.trim() ?? "";
-    if (!trimmed) {
-      return { stocks: [] };
-    }
+    const page = data.page && data.page > 0 ? data.page : 1;
+    const limit = data.limit && data.limit > 0 ? Math.min(data.limit, 50) : 20;
 
-    const stocks = await this._stockRepo.search(trimmed, data.limit ?? 15);
+    const result = await this._stockRepo.search({
+      query: data.query,
+      type: data.type,
+      page,
+      limit,
+    });
+
+    const totalPages = result.total === 0 ? 0 : Math.ceil(result.total / limit);
+    const hasMore = page < totalPages;
 
     return {
-      stocks: stocks.map((stock) => WatchlistDTOMapper.toStockDTO(stock)),
+      stocks: result.stocks.map((stock) => WatchlistDTOMapper.toStockDTO(stock)),
+      pagination: {
+        page,
+        limit,
+        total: result.total,
+        totalPages,
+        hasMore,
+      },
+      counts: result.counts,
     };
   }
 }
