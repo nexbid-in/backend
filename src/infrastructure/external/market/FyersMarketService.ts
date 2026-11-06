@@ -7,6 +7,7 @@ import { logger } from "../../logging/logger";
 import { IMarketDataService } from "../../../application/interface/services/IMarketDataService";
 import { Candle } from "../../../domain/entities/market/Candle";
 import { MarketTick } from "../../../domain/entities/market/MarketTick";
+import { MarketQuote } from "../../../domain/entities/market/MarketQuote";
 import { MarketSymbolMapper } from "./MarketSymbolMapper";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
@@ -185,6 +186,11 @@ export class FyersMarketService implements IMarketDataService {
                   ? +(((ltp - close) / close) * 100).toFixed(2)
                   : 0;
               const volume = typeof raw.vol_traded_today === "number" ? raw.vol_traded_today : 0;
+              const atp = typeof raw.avg_trade_price === "number" ? raw.avg_trade_price : undefined;
+              const bidPrice = typeof raw.bid_price === "number" ? raw.bid_price : undefined;
+              const askPrice = typeof raw.ask_price === "number" ? raw.ask_price : undefined;
+              const totalBuyQty = typeof raw.tot_buy_qty === "number" ? raw.tot_buy_qty : undefined;
+              const totalSellQty = typeof raw.tot_sell_qty === "number" ? raw.tot_sell_qty : undefined;
               const timestamp =
                 typeof raw.last_traded_time === "number"
                   ? raw.last_traded_time * 1000
@@ -203,6 +209,11 @@ export class FyersMarketService implements IMarketDataService {
                 changePercent,
                 volume,
                 timestamp,
+                atp,
+                bidPrice,
+                askPrice,
+                totalBuyQty,
+                totalSellQty,
               };
 
               this.latestTicks.set(cleanSymbol, tick);
@@ -451,9 +462,115 @@ export class FyersMarketService implements IMarketDataService {
     }
   }
 
-  async getQuote(symbol: string): Promise<MarketTick | null> {
+  async getQuote(symbol: string): Promise<MarketQuote | null> {
     const clean = MarketSymbolMapper.fromFyersSymbol(symbol.toUpperCase().trim());
-    return Promise.resolve(this.latestTicks.get(clean) ?? null);
+    const liveTick = this.latestTicks.get(clean);
+    if (!liveTick) return null;
+
+    return {
+      symbol: clean,
+      ltp: liveTick.ltp,
+      open: liveTick.open,
+      high: liveTick.high,
+      low: liveTick.low,
+      close: liveTick.close,
+      change: liveTick.change,
+      changePercent: liveTick.changePercent,
+      volume: liveTick.volume,
+      atp: liveTick.atp ?? liveTick.ltp,
+      lowerCircuit: null,
+      upperCircuit: null,
+      totalBuyQty: liveTick.totalBuyQty ?? null,
+      totalSellQty: liveTick.totalSellQty ?? null,
+      bidPrice: liveTick.bidPrice ?? null,
+      askPrice: liveTick.askPrice ?? null,
+      timestamp: liveTick.timestamp,
+    };
+  }
+
+  async getMarketDepth(symbol: string): Promise<Partial<MarketQuote> | null> {
+    const clean = MarketSymbolMapper.fromFyersSymbol(symbol.toUpperCase().trim());
+    const fyersSymbol = MarketSymbolMapper.toFyersSymbol(clean);
+
+    // Skip indices (NIFTY, SENSEX) - they do not have order book depth or circuit bands
+    if (fyersSymbol.includes("-INDEX")) {
+      return null;
+    }
+
+    // Check Redis cache for market depth (TTL 60s) to avoid 429 rate limit
+    const depthCacheKey = `market:depth:${clean}`;
+    try {
+      const cached = await redis.get(depthCacheKey);
+      if (cached) {
+        return JSON.parse(cached) as Partial<MarketQuote>;
+      }
+    } catch {
+      // ignore redis read error
+    }
+
+    try {
+      const token = await this.getAccessToken();
+      const response = await axios.get<{
+        s: string;
+        d?: Record<
+          string,
+          {
+            totalbuyqty?: number;
+            totalsellqty?: number;
+            bids?: Array<{ price: number; volume: number; ord: number }>;
+            ask?: Array<{ price: number; volume: number; ord: number }>;
+            o?: number;
+            h?: number;
+            l?: number;
+            c?: number;
+            ch?: number;
+            chp?: number;
+            ltp?: number;
+            v?: number;
+            atp?: number;
+            lower_ckt?: number;
+            upper_ckt?: number;
+          }
+        >;
+      }>("https://api-t1.fyers.in/data/depth", {
+        params: { symbol: fyersSymbol, ohlcv_flag: 1 },
+        headers: { Authorization: `${env.FYERS_APP_ID ?? ""}:${token}` },
+        timeout: 4000,
+      });
+
+      const depthData = response.data?.d?.[fyersSymbol];
+      if (depthData) {
+        const depthResult: Partial<MarketQuote> = {
+          atp: depthData.atp,
+          lowerCircuit: depthData.lower_ckt ?? null,
+          upperCircuit: depthData.upper_ckt ?? null,
+          totalBuyQty: depthData.totalbuyqty ?? null,
+          totalSellQty: depthData.totalsellqty ?? null,
+          bidPrice: depthData.bids?.[0]?.price ?? null,
+          askPrice: depthData.ask?.[0]?.price ?? null,
+        };
+
+        // Cache in Redis for 60 seconds
+        void redis.set(depthCacheKey, JSON.stringify(depthResult), "EX", 60);
+
+        return depthResult;
+      }
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        logger.warn(
+          {
+            symbol: clean,
+            status: err.response?.status,
+            reason: (err.response?.data as { message?: string } | undefined)?.message || err.message,
+          },
+          "Fyers market depth fetch skipped/failed"
+        );
+      } else {
+        logger.warn({ symbol: clean, error: err }, "Unexpected error fetching Fyers market depth");
+      }
+    }
+
+    return null;
   }
 
   async subscribe(symbols: string[]): Promise<void> {

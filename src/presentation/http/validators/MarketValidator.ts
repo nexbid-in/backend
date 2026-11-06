@@ -8,3 +8,10 @@ export const getHistoricalCandlesQuerySchema = z.object({
 });
 
 export type GetHistoricalCandlesQuery = z.infer<typeof getHistoricalCandlesQuerySchema>;
+
+export const getStockOverviewParamsSchema = z.object({
+  symbol: z.string().trim().min(1, "Symbol is required"),
+});
+
+export type GetStockOverviewParams = z.infer<typeof getStockOverviewParamsSchema>;
+

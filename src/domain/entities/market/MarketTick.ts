@@ -8,5 +8,10 @@ export interface MarketTick {
     change: number;         
     changePercent: number;  
     volume: number;
-    timestamp: number;      
+    timestamp: number;
+    atp?: number;
+    bidPrice?: number | null;
+    askPrice?: number | null;
+    totalBuyQty?: number | null;
+    totalSellQty?: number | null;
 }

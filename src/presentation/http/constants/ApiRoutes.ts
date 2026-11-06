@@ -53,6 +53,7 @@ export const ApiRoutes = {
     BASE: "/market",
     HISTORY: "/history",
     QUOTE: "/quote",
+    OVERVIEW: "/overview/:symbol",
   },
 
 } as const;
