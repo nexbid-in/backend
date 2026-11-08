@@ -54,6 +54,25 @@ export class WalletRepository implements IWalletRepository {
     }
   }
 
+  async update(wallet: Wallet): Promise<void> {
+    try {
+      const data = WalletPersistenceMapper.toPrisma(wallet);
+      await prisma.wallet.update({
+        where: { id: data.id },
+        data: {
+          balance: Number(data.balance),
+          usedMargin: Number(data.usedMargin),
+          totalVirtualBought: Number(data.totalVirtualBought),
+          totalRealSpent: Number(data.totalRealSpent),
+          status: data.status,
+          updatedAt: data.updatedAt,
+        },
+      });
+    } catch (error) {
+      handlePrismaError(error);
+    }
+  }
+
   async saveWithTransaction(
     wallet: Wallet,
     transaction: WalletTransaction

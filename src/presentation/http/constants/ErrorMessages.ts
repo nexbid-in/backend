@@ -59,4 +59,16 @@ export const ErrorMessages = {
   // Market Data
   // ==========================================
   MARKET_DATA_SERVICE_UNAVAILABLE: "Market data service is temporarily unavailable. Please retry shortly.",
+
+  // ==========================================
+  // Trading & Orders
+  // ==========================================
+  STOCK_NOT_TRADABLE: "This instrument is not eligible for trading.",
+  ORDER_CANNOT_BE_CANCELLED: "Only pending orders can be cancelled.",
+  POSITION_NOT_FOUND: "Position not found.",
+  POSITION_ALREADY_CLOSED: "Position is already squared off.",
+  SHORT_SELLING_NOT_ALLOWED_IN_CNC: "Short selling is only allowed under MIS (Intraday) product type.",
+  INSUFFICIENT_HOLDINGS: "Insufficient stock holdings to execute CNC delivery sell order.",
+  INVALID_ORDER_QUANTITY: "Order quantity must be at least 1.",
+  INVALID_ORDER_PRICE: "Limit price must be greater than zero.",
 } as const;

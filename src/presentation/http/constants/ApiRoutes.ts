@@ -56,4 +56,15 @@ export const ApiRoutes = {
     OVERVIEW: "/overview/:symbol",
   },
 
+  ORDERS: {
+    BASE: "/orders",
+    ROOT: "/",
+    ITEM: "/:id",
+  },
+
+  PORTFOLIO: {
+    BASE: "/portfolio",
+    POSITIONS: "/positions",
+    SQUARE_OFF: "/positions/:id/square-off",
+  },
 } as const;

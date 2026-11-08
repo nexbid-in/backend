@@ -47,4 +47,12 @@ export const SuccessMessages = {
   WATCHLIST_ITEM_ADDED: "Stock added to watchlist successfully",
   WATCHLIST_ITEM_REMOVED: "Stock removed from watchlist successfully",
 
+  // ==========================================
+  // Trading & Orders
+  // ==========================================
+  ORDER_PLACED: "Order placed successfully",
+  ORDERS_RETRIEVED: "Orders retrieved successfully",
+  ORDER_CANCELLED: "Order cancelled successfully",
+  POSITIONS_RETRIEVED: "Positions retrieved successfully",
+  POSITION_SQUARED_OFF: "Position squared off successfully",
 } as const;

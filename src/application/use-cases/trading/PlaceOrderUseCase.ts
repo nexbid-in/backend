@@ -1,0 +1,169 @@
+import crypto from "crypto";
+import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRepository";
+import { IPositionRepository } from "../../../domain/repositories/trading/IPositionRepository";
+import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
+import { IStockRepository } from "../../../domain/repositories/stock/IStockRepository";
+import { IMarketDataService } from "../../interface/services/IMarketDataService";
+import { OrderMatchingEngine } from "../../../infrastructure/external/trading/OrderMatchingEngine";
+import { Order, OrderSide, OrderType, ProductType, OrderStatus } from "../../../domain/entities/trading/Order";
+import { PositionSide } from "../../../domain/entities/trading/Position";
+import { MarginCalculatorService } from "../../services/trading/MarginCalculatorService";
+import { PlaceOrderRequestDTO, OrderResponseDTO } from "../../dto/trading/OrderDTOs";
+import { AppError } from "../../../shared/errors/AppError";
+import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
+
+export class PlaceOrderUseCase {
+  constructor(
+    private readonly orderRepo: IOrderRepository,
+    private readonly positionRepo: IPositionRepository,
+    private readonly walletRepo: IWalletRepository,
+    private readonly stockRepo: IStockRepository,
+    private readonly marketDataService: IMarketDataService,
+    private readonly matchingEngine: OrderMatchingEngine
+  ) {}
+
+  async execute(dto: PlaceOrderRequestDTO): Promise<OrderResponseDTO> {
+    const cleanSymbol = dto.symbol.toUpperCase().trim();
+
+    // 1. Verify stock eligibility
+    const stock = await this.stockRepo.findBySymbol(cleanSymbol);
+    if (!stock || !stock.isActive) {
+      throw new AppError(ErrorCodes.STOCK_NOT_FOUND);
+    }
+    if (!stock.isTradable) {
+      throw new AppError(ErrorCodes.STOCK_NOT_TRADABLE);
+    }
+
+    // 2. Short selling rules
+    // CNC (Delivery) only allows selling if user already has an open LONG holding of at least this quantity
+    if (dto.productType === ProductType.CNC && dto.side === OrderSide.SELL) {
+      const holding = await this.positionRepo.findByUserAndSymbol(
+        dto.userId,
+        cleanSymbol,
+        ProductType.CNC
+      );
+
+      if (!holding || holding.side !== PositionSide.LONG || holding.quantity < dto.quantity) {
+        throw new AppError(
+          ErrorCodes.SHORT_SELLING_NOT_ALLOWED_IN_CNC,
+          "Short selling is only permitted under MIS (Intraday) product type"
+        );
+      }
+    }
+
+    // 3. Obtain execution / reference price
+    let referencePrice: number;
+    const quote = await this.marketDataService.getQuote(cleanSymbol);
+
+    if (dto.orderType === OrderType.LIMIT) {
+      if (!dto.price || dto.price <= 0) {
+        throw new AppError(ErrorCodes.INVALID_ORDER_PRICE);
+      }
+      referencePrice = dto.price;
+    } else {
+      // MARKET order execution price
+      const bestAsk = quote?.askPrice ?? quote?.ltp ?? 0;
+      const bestBid = quote?.bidPrice ?? quote?.ltp ?? 0;
+
+      if (dto.side === OrderSide.BUY) {
+        referencePrice = bestAsk > 0 ? bestAsk : +(quote?.ltp ?? 100);
+      } else {
+        referencePrice = bestBid > 0 ? bestBid : +(quote?.ltp ?? 100);
+      }
+
+      if (referencePrice <= 0) {
+        throw new AppError(
+          ErrorCodes.MARKET_DATA_SERVICE_UNAVAILABLE,
+          "Unable to determine current market price for order placement"
+        );
+      }
+    }
+
+    // 4. Calculate margin requirements & check wallet sufficiency
+    // If user is closing an existing opposing position, no extra margin is needed
+    const existingPosition = await this.positionRepo.findByUserAndSymbol(
+      dto.userId,
+      cleanSymbol,
+      dto.productType
+    );
+
+    const isCoveringPosition =
+      existingPosition &&
+      existingPosition.isOpen() &&
+      ((existingPosition.side === PositionSide.LONG && dto.side === OrderSide.SELL) ||
+        (existingPosition.side === PositionSide.SHORT && dto.side === OrderSide.BUY));
+
+    let requiredMargin = 0;
+    if (!isCoveringPosition) {
+      requiredMargin = MarginCalculatorService.calculateRequiredMargin(
+        dto.productType,
+        dto.quantity,
+        referencePrice
+      );
+    }
+
+    const wallet = await this.walletRepo.findOrCreateByUserId(dto.userId);
+    if (!wallet.isActive()) {
+      throw new AppError(ErrorCodes.WALLET_FROZEN);
+    }
+
+    if (requiredMargin > 0) {
+      if (wallet.balance < requiredMargin) {
+        throw new AppError(
+          ErrorCodes.INSUFFICIENT_FUNDS,
+          `Insufficient funds. Required margin: ₹${requiredMargin.toFixed(2)}, Available: ₹${wallet.balance.toFixed(2)}`
+        );
+      }
+
+      // Lock required margin for MIS or LIMIT orders
+      if (dto.productType === ProductType.MIS || dto.orderType === OrderType.LIMIT) {
+        wallet.blockMargin(requiredMargin);
+        await this.walletRepo.update(wallet);
+      }
+    }
+
+    // 5. Create Order
+    let order = Order.create({
+      id: crypto.randomUUID(),
+      userId: dto.userId,
+      stockId: stock.id,
+      symbol: cleanSymbol,
+      side: dto.side,
+      orderType: dto.orderType,
+      productType: dto.productType,
+      status: OrderStatus.PENDING,
+      quantity: dto.quantity,
+      price: dto.orderType === OrderType.LIMIT ? dto.price : null,
+      triggerPrice: dto.triggerPrice ?? null,
+      blockedMargin: requiredMargin,
+    });
+
+    order = await this.orderRepo.save(order);
+
+    // 6. Execute immediately if MARKET order
+    if (dto.orderType === OrderType.MARKET) {
+      order = await this.matchingEngine.executeOrder(order, referencePrice);
+    }
+
+    return {
+      id: order.id,
+      userId: order.userId,
+      stockId: order.stockId,
+      symbol: order.symbol,
+      side: order.side,
+      orderType: order.orderType,
+      productType: order.productType,
+      status: order.status,
+      quantity: order.quantity,
+      filledQuantity: order.filledQuantity,
+      price: order.price,
+      averagePrice: order.averagePrice,
+      triggerPrice: order.triggerPrice,
+      rejectionReason: order.rejectionReason,
+      blockedMargin: order.blockedMargin,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+    };
+  }
+}
+

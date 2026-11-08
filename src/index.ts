@@ -7,6 +7,7 @@ import { env } from "./infrastructure/config/env";
 import { logger } from "./infrastructure/logging/logger";
 import { paymentReconciliationCron } from "./di/wallet/container";
 import { marketDataService, fyersTokenRefreshCron } from "./di/market/container";
+import { orderMatchingEngine, autoSquareOffCron } from "./di/trading/container";
 import { MarketWebSocketGateway } from "./infrastructure/websocket/MarketWebSocketGateway";
 
 const startServer = async () => {
@@ -20,11 +21,15 @@ const startServer = async () => {
         // Attach Market WebSocket Server
         new MarketWebSocketGateway(server, marketDataService);
 
+        // Start Virtual Order Matching Engine
+        orderMatchingEngine.start();
+
         const PORT = env.PORT;
         server.listen(PORT, () => {
             logger.info(`Server is running at http://localhost:${PORT}`);
             paymentReconciliationCron.start();
             fyersTokenRefreshCron.start();
+            autoSquareOffCron.start();
         });
     } catch (error: unknown) {
         logger.error({ error }, "Failed to start server");
