@@ -42,7 +42,8 @@ export const getOrdersUseCase = new GetOrdersUseCase(orderRepository);
 
 export const cancelOrderUseCase = new CancelOrderUseCase(
   orderRepository,
-  walletRepository
+  walletRepository,
+  orderMatchingEngine
 );
 
 export const getPositionsUseCase = new GetPositionsUseCase(

@@ -21,8 +21,8 @@ const startServer = async () => {
         // Attach Market WebSocket Server
         new MarketWebSocketGateway(server, marketDataService);
 
-        // Start Virtual Order Matching Engine
-        orderMatchingEngine.start();
+        // Start Virtual Order Matching Engine and hydrate in-memory order book
+        await orderMatchingEngine.start();
 
         const PORT = env.PORT;
         server.listen(PORT, () => {

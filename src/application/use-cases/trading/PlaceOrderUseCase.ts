@@ -181,6 +181,11 @@ export class PlaceOrderUseCase {
 
     if (canExecuteImmediately) {
       order = await this.matchingEngine.executeOrder(order, referencePrice);
+    } else {
+      // Order remains PENDING (Limit order or AMO)
+      // Add to in-memory matching book and ensure market feed is streaming ticks for this symbol
+      this.matchingEngine.addOrderToBook(order);
+      await this.marketDataService.subscribe([order.symbol]);
     }
 
     return {

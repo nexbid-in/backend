@@ -10,7 +10,10 @@ import { MarketTick } from "../../../domain/entities/market/MarketTick";
 import { logger } from "../../logging/logger";
 
 export class OrderMatchingEngine {
-  private isProcessing = false;
+  // In-memory limit order book: Clean Symbol -> Pending Order[]
+  private orderBook = new Map<string, Order[]>();
+  // Active execution guard per order to prevent double-fills
+  private executingOrderIds = new Set<string>();
 
   constructor(
     private readonly orderRepo: IOrderRepository,
@@ -19,9 +22,59 @@ export class OrderMatchingEngine {
     private readonly marketDataService: IMarketDataService
   ) {}
 
-  public start(): void {
+  public async start(): Promise<void> {
+    try {
+      // 1. Hydrate in-memory order book from database on startup
+      const pendingOrders = await this.orderRepo.findPendingOrders();
+      const symbolsToSubscribe = new Set<string>();
+
+      for (const order of pendingOrders) {
+        this.addOrderToBook(order);
+        symbolsToSubscribe.add(order.symbol);
+      }
+
+      logger.info(
+        { pendingCount: pendingOrders.length, symbols: Array.from(symbolsToSubscribe) },
+        "Virtual Order Matching Engine hydrated in-memory order book from database"
+      );
+
+      // 2. Ensure broker feed is actively streaming ticks for all pending symbols
+      if (symbolsToSubscribe.size > 0) {
+        await this.marketDataService.subscribe(Array.from(symbolsToSubscribe));
+      }
+    } catch (err) {
+      logger.error({ err }, "Failed to hydrate order book on matching engine startup");
+    }
+
+    // 3. Register real-time market tick listener
     this.marketDataService.onTick(this.processTick.bind(this));
     logger.info("Virtual Order Matching Engine started and listening to market ticks");
+  }
+
+  public addOrderToBook(order: Order): void {
+    const sym = order.symbol.toUpperCase().trim();
+    const existing = this.orderBook.get(sym) ?? [];
+    if (!existing.some((o) => o.id === order.id)) {
+      existing.push(order);
+      this.orderBook.set(sym, existing);
+      logger.info(
+        { orderId: order.id, symbol: sym, price: order.price, side: order.side },
+        "Added pending order to in-memory limit order book"
+      );
+    }
+  }
+
+  public removeOrderFromBook(orderId: string, symbol: string): void {
+    const sym = symbol.toUpperCase().trim();
+    const existing = this.orderBook.get(sym);
+    if (!existing) return;
+
+    const filtered = existing.filter((o) => o.id !== orderId);
+    if (filtered.length > 0) {
+      this.orderBook.set(sym, filtered);
+    } else {
+      this.orderBook.delete(sym);
+    }
   }
 
   /**
@@ -38,6 +91,9 @@ export class OrderMatchingEngine {
     // 1. Mark order as executed
     order.markExecuted(fillPrice, order.quantity);
     await this.orderRepo.update(order);
+
+    // Remove immediately from in-memory limit order book
+    this.removeOrderFromBook(order.id, order.symbol);
 
     // 2. Fetch or initialize user's position
     let position = await this.positionRepo.findByUserAndSymbol(
@@ -163,38 +219,48 @@ export class OrderMatchingEngine {
   }
 
   /**
-   * Processes live incoming ticks to match pending limit orders.
+   * Processes live incoming ticks to match pending limit orders in microsecond in-memory lookups.
+   * Eliminates database polling per tick and prevents tick dropping race conditions.
    */
   public async processTick(tick: MarketTick): Promise<void> {
-    if (this.isProcessing) return;
-    this.isProcessing = true;
+    const sym = tick.symbol.toUpperCase().trim();
+    const orders = this.orderBook.get(sym);
+    if (!orders || orders.length === 0) return; // 0ms instantaneous exit!
 
-    try {
-      const pendingOrders = await this.orderRepo.findPendingOrdersBySymbol(tick.symbol);
-      if (pendingOrders.length === 0) return;
+    for (const order of [...orders]) {
+      if (!order.isPending() || !order.price) continue;
+      if (this.executingOrderIds.has(order.id)) continue;
 
-      for (const order of pendingOrders) {
-        if (!order.isPending() || !order.price) continue;
+      let shouldExecute = false;
+      let executionPrice = order.price;
 
-        let shouldExecute = false;
-        let executionPrice = order.price;
+      if (order.side === OrderSide.BUY && tick.ltp <= order.price) {
+        shouldExecute = true;
+        executionPrice = Math.min(order.price, tick.ltp);
+      } else if (order.side === OrderSide.SELL && tick.ltp >= order.price) {
+        shouldExecute = true;
+        executionPrice = Math.max(order.price, tick.ltp);
+      }
 
-        if (order.side === OrderSide.BUY && tick.ltp <= order.price) {
-          shouldExecute = true;
-          executionPrice = Math.min(order.price, tick.ltp);
-        } else if (order.side === OrderSide.SELL && tick.ltp >= order.price) {
-          shouldExecute = true;
-          executionPrice = Math.max(order.price, tick.ltp);
-        }
+      if (shouldExecute) {
+        this.executingOrderIds.add(order.id);
+        // Remove from book immediately so another tick does not re-trigger it
+        this.removeOrderFromBook(order.id, sym);
 
-        if (shouldExecute) {
+        try {
+          logger.info(
+            { orderId: order.id, symbol: sym, side: order.side, limitPrice: order.price, tickLtp: tick.ltp, executionPrice },
+            "Limit order condition satisfied! Executing trade"
+          );
           await this.executeOrder(order, executionPrice);
+        } catch (execErr) {
+          logger.error({ execErr, orderId: order.id, symbol: sym }, "Failed to execute matched limit order");
+          // Re-insert order if execution failed
+          this.addOrderToBook(order);
+        } finally {
+          this.executingOrderIds.delete(order.id);
         }
       }
-    } catch (err) {
-      logger.error({ err, symbol: tick.symbol }, "Error processing tick in OrderMatchingEngine");
-    } finally {
-      this.isProcessing = false;
     }
   }
 }

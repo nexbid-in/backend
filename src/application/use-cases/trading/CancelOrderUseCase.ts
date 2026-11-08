@@ -1,5 +1,6 @@
 import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRepository";
 import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
+import { OrderMatchingEngine } from "../../../infrastructure/external/trading/OrderMatchingEngine";
 import { CancelOrderRequestDTO, OrderResponseDTO } from "../../dto/trading/OrderDTOs";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
@@ -7,7 +8,8 @@ import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 export class CancelOrderUseCase {
   constructor(
     private readonly orderRepo: IOrderRepository,
-    private readonly walletRepo: IWalletRepository
+    private readonly walletRepo: IWalletRepository,
+    private readonly matchingEngine: OrderMatchingEngine
   ) {}
 
   async execute(dto: CancelOrderRequestDTO): Promise<OrderResponseDTO> {
@@ -23,11 +25,14 @@ export class CancelOrderUseCase {
       );
     }
 
-    // 1. Mark order as cancelled
+    // 1. Mark order as cancelled in database
     order.markCancelled();
     await this.orderRepo.update(order);
 
-    // 2. Release any blocked margin held by this pending order
+    // 2. Remove order from in-memory matching book
+    this.matchingEngine.removeOrderFromBook(order.id, order.symbol);
+
+    // 3. Release any blocked margin held by this pending order
     if (order.blockedMargin > 0) {
       const wallet = await this.walletRepo.findOrCreateByUserId(dto.userId);
       wallet.releaseMargin(order.blockedMargin);
