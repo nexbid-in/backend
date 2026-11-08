@@ -49,4 +49,11 @@ export const ApiRoutes = {
     ITEM: "/:stockId",
   },
 
+  MARKET: {
+    BASE: "/market",
+    HISTORY: "/history",
+    QUOTE: "/quote",
+    OVERVIEW: "/overview/:symbol",
+  },
+
 } as const;

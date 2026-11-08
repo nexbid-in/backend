@@ -157,5 +157,10 @@ export const HttpErrorMap: Record<
     message: ErrorMessages.WATCHLIST_LIMIT_EXCEEDED,
   },
 
+  [ErrorCodes.MARKET_DATA_SERVICE_UNAVAILABLE]: {
+    status: HttpStatus.SERVICE_UNAVAILABLE,
+    message: ErrorMessages.MARKET_DATA_SERVICE_UNAVAILABLE,
+  },
+
 };
 

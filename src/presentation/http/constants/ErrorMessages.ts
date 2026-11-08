@@ -54,4 +54,9 @@ export const ErrorMessages = {
   STOCK_ALREADY_IN_WATCHLIST: "Stock is already in your watchlist.",
   WATCHLIST_ITEM_NOT_FOUND: "Watchlist item not found.",
   WATCHLIST_LIMIT_EXCEEDED: "Watchlist limit reached. Maximum 100 stocks allowed per user.",
+
+  // ==========================================
+  // Market Data
+  // ==========================================
+  MARKET_DATA_SERVICE_UNAVAILABLE: "Market data service is temporarily unavailable. Please retry shortly.",
 } as const;

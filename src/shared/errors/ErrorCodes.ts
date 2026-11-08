@@ -49,6 +49,9 @@ export const ErrorCodes = {
   WATCHLIST_ITEM_NOT_FOUND: "WATCHLIST_ITEM_NOT_FOUND",
   WATCHLIST_LIMIT_EXCEEDED: "WATCHLIST_LIMIT_EXCEEDED",
 
+  // Market Data
+  MARKET_DATA_SERVICE_UNAVAILABLE: "MARKET_DATA_SERVICE_UNAVAILABLE",
+
 } as const;
 
 export type ErrorCodes = (typeof ErrorCodes)[keyof typeof ErrorCodes];

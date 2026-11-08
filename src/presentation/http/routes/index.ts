@@ -7,6 +7,7 @@ import UserRoutes from "./user/user.routes";
 import WalletRoutes from "./wallet/wallet.routes";
 import StockRoutes from "./stock/stock.routes";
 import WatchlistRoutes from "./watchlist/watchlist.routes";
+import marketRoutes from "./market/market.routes";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use(ApiRoutes.USER.BASE, UserRoutes);
 router.use(ApiRoutes.WALLET.BASE, WalletRoutes);
 router.use(ApiRoutes.STOCKS.BASE, StockRoutes);
 router.use(ApiRoutes.WATCHLIST.BASE, WatchlistRoutes);
+router.use(ApiRoutes.MARKET.BASE, marketRoutes);
 
 export default router;
