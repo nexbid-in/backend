@@ -26,6 +26,7 @@ export class OrderPersistenceMapper {
       triggerPrice: order.triggerPrice,
       rejectionReason: order.rejectionReason,
       blockedMargin: order.blockedMargin,
+      isAmo: order.isAmo,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
     };
@@ -48,6 +49,7 @@ export class OrderPersistenceMapper {
       triggerPrice: toNum(raw.triggerPrice),
       rejectionReason: raw.rejectionReason,
       blockedMargin: toNum(raw.blockedMargin) ?? 0,
+      isAmo: Boolean(raw.isAmo),
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     });

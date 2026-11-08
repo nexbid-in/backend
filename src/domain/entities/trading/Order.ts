@@ -45,6 +45,7 @@ export interface OrderProps {
   triggerPrice?: number | null;
   rejectionReason?: string | null;
   blockedMargin?: number;
+  isAmo?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -67,6 +68,7 @@ export class Order {
       triggerPrice: number | null;
       rejectionReason: string | null;
       blockedMargin: number;
+      isAmo: boolean;
       createdAt: Date;
       updatedAt: Date;
     }
@@ -99,6 +101,7 @@ export class Order {
       triggerPrice: props.triggerPrice ?? null,
       rejectionReason: props.rejectionReason ?? null,
       blockedMargin: props.blockedMargin ?? 0,
+      isAmo: props.isAmo ?? false,
       createdAt: props.createdAt ?? new Date(),
       updatedAt: props.updatedAt ?? new Date(),
     });
@@ -120,6 +123,7 @@ export class Order {
   get triggerPrice(): number | null { return this.props.triggerPrice; }
   get rejectionReason(): string | null { return this.props.rejectionReason; }
   get blockedMargin(): number { return this.props.blockedMargin; }
+  get isAmo(): boolean { return this.props.isAmo; }
   get createdAt(): Date { return this.props.createdAt; }
   get updatedAt(): Date { return this.props.updatedAt; }
 

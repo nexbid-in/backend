@@ -10,6 +10,7 @@ export const placeOrderSchema = z
     quantity: z.coerce.number().int().positive("Quantity must be a positive integer"),
     price: z.coerce.number().positive("Price must be greater than zero").optional().nullable(),
     triggerPrice: z.coerce.number().positive("Trigger price must be greater than zero").optional().nullable(),
+    isAmo: z.boolean().optional().default(false),
   })
   .refine(
     (data) => {

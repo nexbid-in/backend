@@ -19,6 +19,7 @@ export interface OrderPersistenceDTO {
   triggerPrice: DecimalLike | null;
   rejectionReason: string | null;
   blockedMargin: DecimalLike;
+  isAmo?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

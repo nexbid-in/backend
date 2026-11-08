@@ -59,6 +59,7 @@ export const ApiRoutes = {
   ORDERS: {
     BASE: "/orders",
     ROOT: "/",
+    MARKET_STATUS: "/market-status",
     ITEM: "/:id",
   },
 

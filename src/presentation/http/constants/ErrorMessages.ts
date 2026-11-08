@@ -71,4 +71,7 @@ export const ErrorMessages = {
   INSUFFICIENT_HOLDINGS: "Insufficient stock holdings to execute CNC delivery sell order.",
   INVALID_ORDER_QUANTITY: "Order quantity must be at least 1.",
   INVALID_ORDER_PRICE: "Limit price must be greater than zero.",
+  MARKET_CLOSED: "Indian Stock Exchange (NSE/BSE) is currently closed. Regular trading hours are Mon-Fri 09:15 AM to 03:30 PM IST. You can place an After Market Order (AMO).",
+  MIS_ORDER_CUTOFF_EXCEEDED: "New intraday (MIS) orders are blocked after 03:20 PM IST due to auto-square-off cutoffs.",
+  AMO_NOT_ALLOWED_DURING_MARKET: "After Market Orders (AMO) cannot be placed during live market hours (09:15 AM - 03:30 PM IST).",
 } as const;

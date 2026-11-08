@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import { PlaceOrderUseCase } from "../../../../application/use-cases/trading/PlaceOrderUseCase";
 import { GetOrdersUseCase } from "../../../../application/use-cases/trading/GetOrdersUseCase";
 import { CancelOrderUseCase } from "../../../../application/use-cases/trading/CancelOrderUseCase";
+import { MarketHoursService } from "../../../../application/services/trading/MarketHoursService";
+import { env } from "../../../../infrastructure/config/env";
 import {
   placeOrderSchema,
   getOrdersQuerySchema,
@@ -38,13 +40,28 @@ export class OrderController {
         quantity: body.quantity,
         price: body.price,
         triggerPrice: body.triggerPrice,
+        isAmo: body.isAmo,
       });
 
       ApiResponse.success(
         res,
         HttpStatus.CREATED,
-        SuccessMessages.ORDER_PLACED,
+        order.isAmo ? SuccessMessages.AMO_ORDER_PLACED : SuccessMessages.ORDER_PLACED,
         order
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getMarketStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const status = MarketHoursService.getMarketStatus(env.ENFORCE_MARKET_HOURS);
+      ApiResponse.success(
+        res,
+        HttpStatus.OK,
+        SuccessMessages.MARKET_STATUS_RETRIEVED,
+        status
       );
     } catch (error) {
       next(error);

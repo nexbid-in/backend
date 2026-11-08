@@ -50,6 +50,7 @@ export class CancelOrderUseCase {
       triggerPrice: order.triggerPrice,
       rejectionReason: order.rejectionReason,
       blockedMargin: order.blockedMargin,
+      isAmo: order.isAmo,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
     };

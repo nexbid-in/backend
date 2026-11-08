@@ -238,12 +238,14 @@ model Order {
 
   rejectionReason String?
   blockedMargin   Decimal      @default(0.00) @db.Decimal(15, 2)
+  isAmo           Boolean      @default(false)
 
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
   @@index([userId, status])
   @@index([symbol, status])
+  @@index([status, isAmo])
   @@index([userId, createdAt(sort: Desc)])
 }
 

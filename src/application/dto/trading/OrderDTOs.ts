@@ -9,6 +9,7 @@ export interface PlaceOrderRequestDTO {
   quantity: number;
   price?: number | null;
   triggerPrice?: number | null;
+  isAmo?: boolean;
 }
 
 export interface OrderResponseDTO {
@@ -27,6 +28,7 @@ export interface OrderResponseDTO {
   triggerPrice: number | null;
   rejectionReason: string | null;
   blockedMargin: number;
+  isAmo: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

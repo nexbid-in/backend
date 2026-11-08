@@ -201,5 +201,20 @@ export const HttpErrorMap: Record<
     status: HttpStatus.BAD_REQUEST,
     message: ErrorMessages.INVALID_ORDER_PRICE,
   },
+
+  [ErrorCodes.MARKET_CLOSED]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.MARKET_CLOSED,
+  },
+
+  [ErrorCodes.MIS_ORDER_CUTOFF_EXCEEDED]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.MIS_ORDER_CUTOFF_EXCEEDED,
+  },
+
+  [ErrorCodes.AMO_NOT_ALLOWED_DURING_MARKET]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.AMO_NOT_ALLOWED_DURING_MARKET,
+  },
 };
 

@@ -7,7 +7,7 @@ import { env } from "./infrastructure/config/env";
 import { logger } from "./infrastructure/logging/logger";
 import { paymentReconciliationCron } from "./di/wallet/container";
 import { marketDataService, fyersTokenRefreshCron } from "./di/market/container";
-import { orderMatchingEngine, autoSquareOffCron } from "./di/trading/container";
+import { orderMatchingEngine, autoSquareOffCron, amoDispatchCron } from "./di/trading/container";
 import { MarketWebSocketGateway } from "./infrastructure/websocket/MarketWebSocketGateway";
 
 const startServer = async () => {
@@ -30,6 +30,7 @@ const startServer = async () => {
             paymentReconciliationCron.start();
             fyersTokenRefreshCron.start();
             autoSquareOffCron.start();
+            amoDispatchCron.start();
         });
     } catch (error: unknown) {
         logger.error({ error }, "Failed to start server");

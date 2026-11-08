@@ -38,6 +38,11 @@ const envSchema = z.object({
     RAZORPAY_KEY_ID: z.string().min(1, "RAZORPAY_KEY_ID is required"),
     RAZORPAY_KEY_SECRET: z.string().min(1, "RAZORPAY_KEY_SECRET is required"),
 
+    ENFORCE_MARKET_HOURS: z
+        .string()
+        .default("false")
+        .transform((val) => val === "true"),
+
     MARKET_DATA_PROVIDER: z.enum(["mock", "fyers"]).default("mock"),
     FYERS_APP_ID: z.string().optional(),
     FYERS_SECRET_KEY: z.string().optional(),

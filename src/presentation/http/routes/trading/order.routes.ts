@@ -17,6 +17,12 @@ router.get(
   orderController.getOrders.bind(orderController)
 );
 
+router.get(
+  ApiRoutes.ORDERS.MARKET_STATUS,
+  authMiddleware,
+  orderController.getMarketStatus.bind(orderController)
+);
+
 router.delete(
   ApiRoutes.ORDERS.ITEM,
   authMiddleware,

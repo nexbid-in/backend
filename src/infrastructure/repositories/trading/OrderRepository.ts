@@ -45,6 +45,7 @@ export class OrderRepository
           triggerPrice: data.triggerPrice,
           rejectionReason: data.rejectionReason,
           blockedMargin: data.blockedMargin,
+          isAmo: data.isAmo ?? false,
           createdAt: data.createdAt,
           updatedAt: data.updatedAt,
         },
@@ -94,6 +95,21 @@ export class OrderRepository
     try {
       const raw = await prisma.order.findMany({
         where: { status: OrderStatus.PENDING },
+        orderBy: { createdAt: "asc" },
+      });
+      return raw.map((r) => OrderPersistenceMapper.toDomain(r));
+    } catch (error) {
+      handlePrismaError(error);
+    }
+  }
+
+  async findPendingAmoOrders(): Promise<Order[]> {
+    try {
+      const raw = await prisma.order.findMany({
+        where: {
+          status: OrderStatus.PENDING,
+          isAmo: true,
+        },
         orderBy: { createdAt: "asc" },
       });
       return raw.map((r) => OrderPersistenceMapper.toDomain(r));

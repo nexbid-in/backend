@@ -10,6 +10,7 @@ import { CancelOrderUseCase } from "../../application/use-cases/trading/CancelOr
 import { GetPositionsUseCase } from "../../application/use-cases/trading/GetPositionsUseCase";
 import { SquareOffPositionUseCase } from "../../application/use-cases/trading/SquareOffPositionUseCase";
 import { AutoSquareOffCron } from "../../infrastructure/cron/AutoSquareOffCron";
+import { AmoDispatchCron } from "../../infrastructure/cron/AmoDispatchCron";
 import { OrderController } from "../../presentation/http/controllers/trading/OrderController";
 import { PortfolioController } from "../../presentation/http/controllers/trading/PortfolioController";
 
@@ -60,6 +61,12 @@ export const squareOffPositionUseCase = new SquareOffPositionUseCase(
 export const autoSquareOffCron = new AutoSquareOffCron(
   positionRepository,
   squareOffPositionUseCase
+);
+
+export const amoDispatchCron = new AmoDispatchCron(
+  orderRepository,
+  marketDataService,
+  orderMatchingEngine
 );
 
 // 5. Controllers
