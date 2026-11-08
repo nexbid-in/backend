@@ -59,6 +59,17 @@ export class MarketHoursService {
   }
 
   /**
+   * Returns the exact UTC Date corresponding to 00:00:00.000 AM IST of today.
+   * Useful for daily trading session rollover and day P&L calculations.
+   */
+  public static getStartOfTodayIst(): Date {
+    const istOffsetMs = 5.5 * 60 * 60 * 1000;
+    const nowIst = new Date(Date.now() + istOffsetMs);
+    nowIst.setUTCHours(0, 0, 0, 0);
+    return new Date(nowIst.getTime() - istOffsetMs);
+  }
+
+  /**
    * Returns a comprehensive status of current market trading sessions
    */
   public static getMarketStatus(

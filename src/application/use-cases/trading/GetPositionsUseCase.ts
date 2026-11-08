@@ -2,6 +2,7 @@ import { IPositionRepository } from "../../../domain/repositories/trading/IPosit
 import { IMarketDataService } from "../../interface/services/IMarketDataService";
 import { GetPositionsResponseDTO, PositionResponseDTO, PortfolioSummaryDTO } from "../../dto/trading/PositionDTOs";
 import { PositionSide } from "../../../domain/entities/trading/Position";
+import { MarketHoursService } from "../../services/trading/MarketHoursService";
 
 export class GetPositionsUseCase {
   constructor(
@@ -10,10 +11,15 @@ export class GetPositionsUseCase {
   ) {}
 
   async execute(userId: string, filter: "OPEN" | "ALL" = "ALL"): Promise<GetPositionsResponseDTO> {
-    const rawPositions =
-      filter === "OPEN"
-        ? await this.positionRepo.findOpenPositionsByUserId(userId)
-        : await this.positionRepo.findAllPositionsByUserId(userId);
+    const allPositions = await this.positionRepo.findAllPositionsByUserId(userId);
+    const startOfTodayIst = MarketHoursService.getStartOfTodayIst();
+
+    // Session Positions (Zerodha Kite standard daily rollover):
+    // 1. All currently active OPEN positions (including long-term CNC holdings)
+    // 2. CLOSED positions that were squared off TODAY during this session
+    const sessionPositions = allPositions.filter(
+      (pos) => pos.isOpen() || pos.updatedAt >= startOfTodayIst
+    );
 
     let totalInvestment = 0;
     let currentPortfolioValue = 0;
@@ -22,20 +28,14 @@ export class GetPositionsUseCase {
     let openCount = 0;
     let closedCount = 0;
 
-    const mappedPositions: PositionResponseDTO[] = [];
-
-    for (const pos of rawPositions) {
-      const quote = await this.marketDataService.getQuote(pos.symbol);
-      const currentLtp = quote?.ltp && quote.ltp > 0 ? quote.ltp : pos.averagePrice;
-
-      const unrealizedPnL = pos.calculateUnrealizedPnL(currentLtp);
-      const totalPnL = pos.calculateTotalPnL(currentLtp);
-      const totalCost = +(pos.averagePrice * pos.quantity).toFixed(2);
-      const pnlPercentage =
-        totalCost > 0 ? +((unrealizedPnL / totalCost) * 100).toFixed(2) : 0;
-
+    for (const pos of sessionPositions) {
       if (pos.isOpen()) {
         openCount++;
+        const quote = await this.marketDataService.getQuote(pos.symbol);
+        const currentLtp = quote?.ltp && quote.ltp > 0 ? quote.ltp : pos.averagePrice;
+        const unrealizedPnL = pos.calculateUnrealizedPnL(currentLtp);
+        const totalCost = +(pos.averagePrice * pos.quantity).toFixed(2);
+
         totalInvestment += totalCost;
         if (pos.side === PositionSide.LONG) {
           currentPortfolioValue += +(currentLtp * pos.quantity).toFixed(2);
@@ -48,7 +48,27 @@ export class GetPositionsUseCase {
         closedCount++;
       }
 
+      // Realized P&L is accumulated from closed positions today and partial exits
       totalRealizedPnL += pos.realizedPnL;
+    }
+
+    // Filter table rows based on user tab (Open vs All for today's session)
+    const positionsToReturn =
+      filter === "OPEN"
+        ? sessionPositions.filter((p) => p.isOpen())
+        : sessionPositions;
+
+    const mappedPositions: PositionResponseDTO[] = [];
+
+    for (const pos of positionsToReturn) {
+      const quote = await this.marketDataService.getQuote(pos.symbol);
+      const currentLtp = quote?.ltp && quote.ltp > 0 ? quote.ltp : pos.averagePrice;
+
+      const unrealizedPnL = pos.calculateUnrealizedPnL(currentLtp);
+      const totalPnL = pos.calculateTotalPnL(currentLtp);
+      const totalCost = +(pos.averagePrice * pos.quantity).toFixed(2);
+      const pnlPercentage =
+        totalCost > 0 ? +((unrealizedPnL / totalCost) * 100).toFixed(2) : 0;
 
       mappedPositions.push({
         id: pos.id,
@@ -86,7 +106,7 @@ export class GetPositionsUseCase {
       netPnL,
       overallReturnPercentage: overallReturn,
       positionsCount: {
-        total: rawPositions.length,
+        total: sessionPositions.length,
         open: openCount,
         closed: closedCount,
       },
