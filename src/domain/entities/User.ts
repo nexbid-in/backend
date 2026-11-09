@@ -3,23 +3,19 @@ import { AppError } from "../../shared/errors/AppError";
 import { ErrorCodes } from "../../shared/errors/ErrorCodes";
 
 export type UserProps = {
-  // Core Identity
   id: string;
   email: Email;
   firstName: string;
   lastName?: string | null;
 
-  // Optional Profile Info
   password?: string | null;
   role?: string;
   mobile?: string | null;
   profileImage?: string | null;
   googleId?: string | null;
 
-  // Account Status
   isBlocked?: boolean;
 
-  // Metadata
   createdAt?: Date;
   lastActiveAt?: Date | null;
 };

@@ -106,7 +106,6 @@ export const HttpErrorMap: Record<
     message: ErrorMessages.NEW_PASSWORD_SAME_AS_CURRENT,
   },
 
-  // Wallet
   [ErrorCodes.WALLET_NOT_FOUND]: {
     status: HttpStatus.NOT_FOUND,
     message: ErrorMessages.WALLET_NOT_FOUND,

@@ -49,7 +49,6 @@ export class WalletTransaction {
     });
   }
 
-  // Getters only — financial ledger records are immutable
   get id(): string { return this.props.id; }
   get walletId(): string { return this.props.walletId; }
   get userId(): string { return this.props.userId; }

@@ -16,8 +16,8 @@ export const OrderType = {
 export type OrderType = (typeof OrderType)[keyof typeof OrderType];
 
 export const ProductType = {
-  CNC: "CNC", // Delivery (100% Cash)
-  MIS: "MIS", // Intraday (5x Leverage, Long & Short)
+  CNC: "CNC",
+  MIS: "MIS",
 } as const;
 export type ProductType = (typeof ProductType)[keyof typeof ProductType];
 
@@ -107,7 +107,6 @@ export class Order {
     });
   }
 
-  // Getters
   get id(): string { return this.props.id; }
   get userId(): string { return this.props.userId; }
   get stockId(): string { return this.props.stockId; }
@@ -127,7 +126,6 @@ export class Order {
   get createdAt(): Date { return this.props.createdAt; }
   get updatedAt(): Date { return this.props.updatedAt; }
 
-  // State checks & transitions
   public isPending(): boolean {
     return this.props.status === OrderStatus.PENDING;
   }

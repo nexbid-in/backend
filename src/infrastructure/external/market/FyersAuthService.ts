@@ -7,11 +7,8 @@ import { IBrokerAuthService } from "../../../application/interface/services/IBro
 
 export class FyersAuthService implements IBrokerAuthService {
   public static readonly REDIS_TOKEN_KEY = "market:fyers:access_token";
-  public static readonly TOKEN_TTL_SECONDS = 86400; // 24 hours
+  public static readonly TOKEN_TTL_SECONDS = 86400;
 
-  /**
-   * Decodes an RFC 4648 Base32 string into a Buffer.
-   */
   private static base32Decode(base32: string): Buffer {
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
     let bits = "";
@@ -30,9 +27,6 @@ export class FyersAuthService implements IBrokerAuthService {
     return Buffer.from(bytes);
   }
 
-  /**
-   * Generates a 6-digit TOTP code conforming to RFC 6238 (HMAC-SHA1, 30s step).
-   */
   public static generateTOTP(secretKey: string): string {
     const key = FyersAuthService.base32Decode(secretKey);
     const epoch = Math.floor(Date.now() / 1000);
@@ -53,9 +47,6 @@ export class FyersAuthService implements IBrokerAuthService {
     return code.toString().padStart(6, "0");
   }
 
-  /**
-   * Runs the automated headless authentication pipeline to obtain and cache a fresh API v3 Access Token.
-   */
   public async generateAndStoreAccessToken(): Promise<string> {
     const fyId = env.FYERS_USER_ID?.trim();
     const pin = env.FYERS_PIN?.trim();
@@ -73,7 +64,6 @@ export class FyersAuthService implements IBrokerAuthService {
     logger.info("Starting automated Fyers API v3 headless authentication...");
 
     try {
-      // Step 1: Send Login OTP
       const res1 = await axios.post<{ request_key: string }>(
         "https://api-t2.fyers.in/vagator/v2/send_login_otp",
         { fy_id: fyId, app_id: "2" }
@@ -83,7 +73,6 @@ export class FyersAuthService implements IBrokerAuthService {
         throw new Error(`Step 1 (send_login_otp) failed: No request_key returned (${JSON.stringify(res1.data)})`);
       }
 
-      // Step 2: Verify TOTP
       const totp = FyersAuthService.generateTOTP(totpKey);
       const res2 = await axios.post<{ request_key: string; s: string }>(
         "https://api-t2.fyers.in/vagator/v2/verify_otp",
@@ -94,7 +83,6 @@ export class FyersAuthService implements IBrokerAuthService {
         throw new Error(`Step 2 (verify_otp) failed: No request_key returned (${JSON.stringify(res2.data)})`);
       }
 
-      // Step 3: Verify PIN
       const res3 = await axios.post<{ data: { access_token: string }; s: string }>(
         "https://api-t2.fyers.in/vagator/v2/verify_pin",
         { request_key: requestKey2, identity_type: "pin", identifier: pin }
@@ -104,7 +92,6 @@ export class FyersAuthService implements IBrokerAuthService {
         throw new Error(`Step 3 (verify_pin) failed: No web access_token returned (${JSON.stringify(res3.data)})`);
       }
 
-      // Step 4: Request auth_code via API v3
       const pureAppId = appId.split("-")[0];
       const appType = appId.split("-")[1] || "100";
 
@@ -142,7 +129,6 @@ export class FyersAuthService implements IBrokerAuthService {
         throw new Error(`Step 4 (token) failed: No auth_code found in redirect URL (${redirectUrl})`);
       }
 
-      // Step 5: Validate auth_code to obtain API v3 Access Token
       const appIdHash = crypto
         .createHash("sha256")
         .update(`${appId}:${secretKey}`)
@@ -162,7 +148,6 @@ export class FyersAuthService implements IBrokerAuthService {
         throw new Error(`Step 5 (validate-authcode) failed: No access_token returned (${JSON.stringify(res5.data)})`);
       }
 
-      // Store in Redis with 24-hour expiration
       await redis.set(
         FyersAuthService.REDIS_TOKEN_KEY,
         accessToken,
@@ -193,9 +178,6 @@ export class FyersAuthService implements IBrokerAuthService {
     }
   }
 
-  /**
-   * Retrieves active token from Redis, or generates a new one if missing or forced.
-   */
   public async getOrRefreshToken(force = false): Promise<string> {
     if (!force) {
       const existing = await redis.get(FyersAuthService.REDIS_TOKEN_KEY);

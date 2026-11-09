@@ -10,9 +10,7 @@ import { MarketTick } from "../../../domain/entities/market/MarketTick";
 import { logger } from "../../logging/logger";
 
 export class OrderMatchingEngine {
-  // In-memory limit order book: Clean Symbol -> Pending Order[]
   private orderBook = new Map<string, Order[]>();
-  // Active execution guard per order to prevent double-fills
   private executingOrderIds = new Set<string>();
 
   constructor(
@@ -24,7 +22,6 @@ export class OrderMatchingEngine {
 
   public async start(): Promise<void> {
     try {
-      // 1. Hydrate in-memory order book from database on startup
       const pendingOrders = await this.orderRepo.findPendingOrders();
       const symbolsToSubscribe = new Set<string>();
 
@@ -38,7 +35,6 @@ export class OrderMatchingEngine {
         "Virtual Order Matching Engine hydrated in-memory order book from database"
       );
 
-      // 2. Ensure broker feed is actively streaming ticks for all pending symbols
       if (symbolsToSubscribe.size > 0) {
         await this.marketDataService.subscribe(Array.from(symbolsToSubscribe));
       }
@@ -46,7 +42,6 @@ export class OrderMatchingEngine {
       logger.error({ err }, "Failed to hydrate order book on matching engine startup");
     }
 
-    // 3. Register real-time market tick listener
     this.marketDataService.onTick((tick) => {
       void this.processTick(tick);
     });
@@ -79,9 +74,6 @@ export class OrderMatchingEngine {
     }
   }
 
-  /**
-   * Executes an order at a specific price atomically, updating positions, ledger, and wallet.
-   */
   public async executeOrder(order: Order, fillPrice: number): Promise<Order> {
     if (!order.isPending()) return order;
 
@@ -90,14 +82,10 @@ export class OrderMatchingEngine {
       "Executing order in matching engine"
     );
 
-    // 1. Mark order as executed
     order.markExecuted(fillPrice, order.quantity);
     await this.orderRepo.update(order);
-
-    // Remove immediately from in-memory limit order book
     this.removeOrderFromBook(order.id, order.symbol);
 
-    // 2. Fetch or initialize user's position
     let position = await this.positionRepo.findByUserAndSymbol(
       order.userId,
       order.symbol,
@@ -115,18 +103,14 @@ export class OrderMatchingEngine {
       });
     }
 
-    // Determine whether this order is reducing/closing an existing position
     const isClosingPosition =
       (position.side === PositionSide.LONG && order.side === OrderSide.SELL) ||
       (position.side === PositionSide.SHORT && order.side === OrderSide.BUY);
 
     const prevAvgPrice = position.averagePrice;
     const closedQty = isClosingPosition ? Math.min(position.quantity, order.quantity) : 0;
-
-    // Apply the fill to position
     const incrementalPnL = position.applyFill(order.side, order.quantity, fillPrice);
 
-    // Update position blocked margin
     if (order.productType === ProductType.MIS) {
       const remainingMargin = position.isOpen()
         ? +((position.quantity * position.averagePrice) / 5).toFixed(2)
@@ -140,7 +124,6 @@ export class OrderMatchingEngine {
       await this.positionRepo.update(position);
     }
 
-    // 3. Update Wallet & Record Ledger Transaction
     const wallet = await this.walletRepo.findOrCreateByUserId(order.userId);
 
     if (order.productType === ProductType.CNC) {
@@ -177,8 +160,6 @@ export class OrderMatchingEngine {
       }
     } else if (order.productType === ProductType.MIS) {
       if (isClosingPosition && closedQty > 0) {
-        // Position was squared off (partially or fully)
-        // Calculate margin released based on previous entry price
         const marginReleased = +((closedQty * prevAvgPrice) / 5).toFixed(2);
         const netCashImpact = +(marginReleased + incrementalPnL).toFixed(2);
 
@@ -198,9 +179,6 @@ export class OrderMatchingEngine {
         });
         await this.walletRepo.saveWithTransaction(wallet, tx);
       } else {
-        // Position was expanded or freshly opened
-        // Blocked margin was already held at order creation
-        // If fill price differed slightly, adjust used margin difference
         const actualRequiredMargin = +((order.quantity * fillPrice) / 5).toFixed(2);
         const diff = +(order.blockedMargin - actualRequiredMargin).toFixed(2);
 
@@ -220,14 +198,10 @@ export class OrderMatchingEngine {
     return order;
   }
 
-  /**
-   * Processes live incoming ticks to match pending limit orders in microsecond in-memory lookups.
-   * Eliminates database polling per tick and prevents tick dropping race conditions.
-   */
   public async processTick(tick: MarketTick): Promise<void> {
     const sym = tick.symbol.toUpperCase().trim();
     const orders = this.orderBook.get(sym);
-    if (!orders || orders.length === 0) return; // 0ms instantaneous exit!
+    if (!orders || orders.length === 0) return;
 
     for (const order of [...orders]) {
       if (!order.isPending() || !order.price) continue;
@@ -246,7 +220,6 @@ export class OrderMatchingEngine {
 
       if (shouldExecute) {
         this.executingOrderIds.add(order.id);
-        // Remove from book immediately so another tick does not re-trigger it
         this.removeOrderFromBook(order.id, sym);
 
         try {
@@ -257,7 +230,6 @@ export class OrderMatchingEngine {
           await this.executeOrder(order, executionPrice);
         } catch (execErr) {
           logger.error({ execErr, orderId: order.id, symbol: sym }, "Failed to execute matched limit order");
-          // Re-insert order if execution failed
           this.addOrderToBook(order);
         } finally {
           this.executingOrderIds.delete(order.id);

@@ -14,9 +14,6 @@ export class GetPositionsUseCase {
     const allPositions = await this.positionRepo.findAllPositionsByUserId(userId);
     const startOfTodayIst = MarketHoursService.getStartOfTodayIst();
 
-    // Session Positions (Zerodha Kite standard daily rollover):
-    // 1. All currently active OPEN positions (including long-term CNC holdings)
-    // 2. CLOSED positions that were squared off TODAY during this session
     const sessionPositions = allPositions.filter(
       (pos) => pos.isOpen() || pos.updatedAt >= startOfTodayIst
     );
@@ -40,7 +37,6 @@ export class GetPositionsUseCase {
         if (pos.side === PositionSide.LONG) {
           currentPortfolioValue += +(currentLtp * pos.quantity).toFixed(2);
         } else {
-          // Short position: current value reflects initial short proceeds minus floating move
           currentPortfolioValue += +(totalCost + unrealizedPnL).toFixed(2);
         }
         totalUnrealizedPnL += unrealizedPnL;
@@ -48,11 +44,9 @@ export class GetPositionsUseCase {
         closedCount++;
       }
 
-      // Realized P&L is accumulated from closed positions today and partial exits
       totalRealizedPnL += pos.realizedPnL;
     }
 
-    // Filter table rows based on user tab (Open vs All for today's session)
     const positionsToReturn =
       filter === "OPEN"
         ? sessionPositions.filter((p) => p.isOpen())

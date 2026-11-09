@@ -24,13 +24,11 @@ export class GetStockOverviewUseCase implements IGetStockOverviewUseCase {
   async execute(data: GetStockOverviewRequestDTO): Promise<StockOverviewResponseDTO> {
     const cleanSymbol = data.symbol.toUpperCase().trim();
 
-    // 1. Fetch stock metadata from repository
     const stock = await this._stockRepository.findBySymbol(cleanSymbol);
     if (!stock) {
       throw new AppError(ErrorCodes.STOCK_NOT_FOUND, `Stock '${cleanSymbol}' not found`);
     }
 
-    // 2. Fetch live quote (in-memory) and market depth (cached / broker API)
     const quote = await this._marketDataService.getQuote(cleanSymbol);
     const depth = this._marketDataService.getMarketDepth
       ? await this._marketDataService.getMarketDepth(cleanSymbol)
@@ -54,7 +52,6 @@ export class GetStockOverviewUseCase implements IGetStockOverviewUseCase {
       askPrice: depth?.askPrice ?? quote?.askPrice ?? null,
     };
 
-    // 3. Compute or fetch 52-week range and historical performance returns
     const { range52W, performance } = await this.get52WeekAndPerformance(cleanSymbol, vitals);
 
     return {
@@ -85,7 +82,6 @@ export class GetStockOverviewUseCase implements IGetStockOverviewUseCase {
           range52W: StockRange52WDTO;
           performance: StockPerformanceReturnsDTO;
         };
-        // Update 52W range dynamically if today's high/low breaches cached bounds
         const dynamicHigh = Math.max(parsed.range52W.high, vitals.high);
         const dynamicLow =
           vitals.low > 0 ? Math.min(parsed.range52W.low, vitals.low) : parsed.range52W.low;
@@ -99,7 +95,6 @@ export class GetStockOverviewUseCase implements IGetStockOverviewUseCase {
       logger.warn({ symbol, cacheErr }, "Failed to read 52W stats cache from Redis");
     }
 
-    // Cache miss: Calculate 52W High/Low and 1W/1M/1Y returns from 1-year daily candles
     const now = Date.now();
     const oneYearAgo = now - 365 * 24 * 60 * 60 * 1000;
 
@@ -136,7 +131,6 @@ export class GetStockOverviewUseCase implements IGetStockOverviewUseCase {
 
         const currentPrice = vitals.ltp > 0 ? vitals.ltp : candles[candles.length - 1].close;
 
-        // 1-Week Return (approx. 5 trading days ago)
         if (candles.length >= 6) {
           const candle1W = candles[candles.length - 6];
           if (candle1W.close > 0) {
@@ -144,7 +138,6 @@ export class GetStockOverviewUseCase implements IGetStockOverviewUseCase {
           }
         }
 
-        // 1-Month Return (approx. 21 trading days ago)
         if (candles.length >= 22) {
           const candle1M = candles[candles.length - 22];
           if (candle1M.close > 0) {
@@ -152,13 +145,11 @@ export class GetStockOverviewUseCase implements IGetStockOverviewUseCase {
           }
         }
 
-        // 1-Year Return (first candle in 1-year dataset)
         const candle1Y = candles[0];
         if (candle1Y.close > 0) {
           performance.oneYear = +(((currentPrice - candle1Y.close) / candle1Y.close) * 100).toFixed(2);
         }
 
-        // Store computed stats in Redis with 12-hour TTL
         await redis.set(
           cacheKey,
           JSON.stringify({ range52W, performance }),

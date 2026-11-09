@@ -15,8 +15,6 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ) => {
-
-  // 1. Catch Malformed JSON Payload Errors
   if (err instanceof SyntaxError && "status" in err && err.status === 400 && "body" in err) {
     return ApiResponse.error(
       res,
@@ -26,7 +24,6 @@ export const errorHandler = (
     );
   }
 
-  // 2. Zod Validation Errors
   if (err instanceof ZodError) {
     const details = err.issues.map((issue) => ({
       path: issue.path.join("."),
@@ -35,7 +32,6 @@ export const errorHandler = (
     return ApiResponse.error(res, HttpStatus.BAD_REQUEST, ErrorCodes.VALIDATION_FAILED, ErrorMessages.VALIDATION_FAILED, details);
   }
 
-  // 3. Custom App Errors
   if (err instanceof AppError) {
     if (err.code === ErrorCodes.ACCOUNT_BLOCKED) {
       clearAuthCookies(res);
@@ -45,7 +41,6 @@ export const errorHandler = (
     return ApiResponse.error(res, mapping.status, err.code, mapping.message);
   }
 
-  // 6. Fallback for Unhandled Errors
   logger.error({ err }, "Unhandled error");
 
   return ApiResponse.error(res, HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.INTERNAL_SERVER_ERROR, ErrorMessages.INTERNAL_SERVER_ERROR);

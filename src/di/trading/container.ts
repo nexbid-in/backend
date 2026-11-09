@@ -14,13 +14,11 @@ import { AmoDispatchCron } from "../../infrastructure/cron/AmoDispatchCron";
 import { OrderController } from "../../presentation/http/controllers/trading/OrderController";
 import { PortfolioController } from "../../presentation/http/controllers/trading/PortfolioController";
 
-// 1. Repositories
 export const orderRepository = new OrderRepository();
 export const positionRepository = new PositionRepository();
 export const walletRepository = new WalletRepository();
 export const stockRepository = new StockRepository();
 
-// 2. Order Matching Engine
 export const orderMatchingEngine = new OrderMatchingEngine(
   orderRepository,
   positionRepository,
@@ -28,7 +26,6 @@ export const orderMatchingEngine = new OrderMatchingEngine(
   marketDataService
 );
 
-// 3. Use Cases
 export const placeOrderUseCase = new PlaceOrderUseCase(
   orderRepository,
   positionRepository,
@@ -58,7 +55,6 @@ export const squareOffPositionUseCase = new SquareOffPositionUseCase(
   orderMatchingEngine
 );
 
-// 4. Crons
 export const autoSquareOffCron = new AutoSquareOffCron(
   positionRepository,
   squareOffPositionUseCase
@@ -70,7 +66,6 @@ export const amoDispatchCron = new AmoDispatchCron(
   orderMatchingEngine
 );
 
-// 5. Controllers
 export const orderController = new OrderController(
   placeOrderUseCase,
   getOrdersUseCase,

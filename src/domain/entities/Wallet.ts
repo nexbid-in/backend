@@ -46,7 +46,6 @@ export class Wallet {
     });
   }
 
-  // --- Getters ---
   get id(): string { return this.props.id; }
   get userId(): string { return this.props.userId; }
   get balance(): number { return this.props.balance; }
@@ -57,8 +56,6 @@ export class Wallet {
   get createdAt(): Date { return this.props.createdAt; }
   get updatedAt(): Date { return this.props.updatedAt; }
 
-  // --- Domain Business Logic & Invariants ---
-
   public isActive(): boolean {
     return this.props.status === "ACTIVE";
   }
@@ -67,10 +64,6 @@ export class Wallet {
     return this.isActive() && amount > 0 && this.props.balance >= amount;
   }
 
-  // ==========================================
-  // 1. TOP-UP (Real Money Deposit)
-  // ==========================================
-  // Called ONLY when the user buys virtual money via payment gateway
   public topUp(virtualAmount: number, realAmount: number): void {
     if (!this.isActive()) throw new AppError(ErrorCodes.WALLET_FROZEN);
     if (virtualAmount <= 0 || realAmount <= 0) throw new AppError(ErrorCodes.INVALID_AMOUNT);
@@ -81,11 +74,6 @@ export class Wallet {
     this.props.updatedAt = new Date();
   }
 
-  // ==========================================
-  // 2. TRADING CREDITS & DEBITS (Stock Buy/Sell)
-  // ==========================================
-
-  // Called when stock is sold (crediting sale proceeds or realized profit)
   public creditTradeProceeds(amount: number): void {
     if (!this.isActive()) throw new AppError(ErrorCodes.WALLET_FROZEN);
     if (amount <= 0) throw new AppError(ErrorCodes.INVALID_AMOUNT);
@@ -94,7 +82,6 @@ export class Wallet {
     this.props.updatedAt = new Date();
   }
 
-  // Called when stock is bought (CNC / delivery full debit)
   public debitTradeCost(amount: number): void {
     if (!this.isActive()) throw new AppError(ErrorCodes.WALLET_FROZEN);
     if (amount <= 0) throw new AppError(ErrorCodes.INVALID_AMOUNT);
@@ -104,11 +91,6 @@ export class Wallet {
     this.props.updatedAt = new Date();
   }
 
-  // ==========================================
-  // 3. MARGIN MANAGEMENT (Pending Orders & Intraday)
-  // ==========================================
-
-  // Block margin when user places a limit order or opens an intraday position
   public blockMargin(amount: number): void {
     if (!this.canDebit(amount)) throw new AppError(ErrorCodes.INSUFFICIENT_FUNDS);
 
@@ -117,7 +99,6 @@ export class Wallet {
     this.props.updatedAt = new Date();
   }
 
-  // Release margin when user cancels a pending order
   public releaseMargin(amount: number): void {
     if (amount <= 0 || this.props.usedMargin < amount) {
       throw new AppError(ErrorCodes.INVALID_AMOUNT);
@@ -128,7 +109,6 @@ export class Wallet {
     this.props.updatedAt = new Date();
   }
 
-  // Settle an open position (squaring off an intraday trade)
   public settlePosition(blockedMargin: number, netPayout: number): void {
     if (blockedMargin <= 0 || this.props.usedMargin < blockedMargin) {
       throw new AppError(ErrorCodes.INVALID_AMOUNT);
@@ -139,11 +119,6 @@ export class Wallet {
     this.props.updatedAt = new Date();
   }
 
-  // ==========================================
-  // 4. BONUSES & PROMOTIONS
-  // ==========================================
-
-  // Credit welcome bonus, referral reward, or promotional virtual money
   public creditBonus(amount: number): void {
     if (!this.isActive()) throw new AppError(ErrorCodes.WALLET_FROZEN);
     if (amount <= 0) throw new AppError(ErrorCodes.INVALID_AMOUNT);
@@ -152,23 +127,16 @@ export class Wallet {
     this.props.updatedAt = new Date();
   }
 
-  // ==========================================
-  // 5. STATUS TRANSITIONS (Admin / System / Kill Switch)
-  // ==========================================
-
-  // Admin or System freezes the wallet 
   public freeze(): void {
     this.props.status = "FROZEN";
     this.props.updatedAt = new Date();
   }
 
-  // Admin reactivates the wallet after review
   public unfreeze(): void {
     this.props.status = "ACTIVE";
     this.props.updatedAt = new Date();
   }
 
-  // User or System (Risk/Margin limit breach) suspends trading
   public suspend(): void {
     this.props.status = "SUSPENDED";
     this.props.updatedAt = new Date();

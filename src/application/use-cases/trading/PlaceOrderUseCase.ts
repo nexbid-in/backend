@@ -27,7 +27,6 @@ export class PlaceOrderUseCase {
   async execute(dto: PlaceOrderRequestDTO): Promise<OrderResponseDTO> {
     const cleanSymbol = dto.symbol.toUpperCase().trim();
 
-    // 1. Verify stock eligibility
     const stock = await this.stockRepo.findBySymbol(cleanSymbol);
     if (!stock || !stock.isActive) {
       throw new AppError(ErrorCodes.STOCK_NOT_FOUND);
@@ -36,7 +35,6 @@ export class PlaceOrderUseCase {
       throw new AppError(ErrorCodes.STOCK_NOT_TRADABLE);
     }
 
-    // 2. Validate Exchange Trading Hours & AMO Rules
     const marketStatus = MarketHoursService.getMarketStatus(env.ENFORCE_MARKET_HOURS);
 
     if (env.ENFORCE_MARKET_HOURS) {
@@ -48,7 +46,6 @@ export class PlaceOrderUseCase {
           );
         }
       } else {
-        // Regular order placed outside live market hours
         if (!marketStatus.isOpen) {
           throw new AppError(
             ErrorCodes.MARKET_CLOSED,
@@ -56,7 +53,6 @@ export class PlaceOrderUseCase {
           );
         }
 
-        // Intraday MIS order placed after 03:20 PM IST
         if (dto.productType === ProductType.MIS && !marketStatus.isMisAllowed) {
           throw new AppError(
             ErrorCodes.MIS_ORDER_CUTOFF_EXCEEDED,
@@ -66,8 +62,6 @@ export class PlaceOrderUseCase {
       }
     }
 
-    // 2. Short selling rules
-    // CNC (Delivery) only allows selling if user already has an open LONG holding of at least this quantity
     if (dto.productType === ProductType.CNC && dto.side === OrderSide.SELL) {
       const holding = await this.positionRepo.findByUserAndSymbol(
         dto.userId,
@@ -83,7 +77,6 @@ export class PlaceOrderUseCase {
       }
     }
 
-    // 3. Obtain execution / reference price
     let referencePrice: number;
     const quote = await this.marketDataService.getQuote(cleanSymbol);
 
@@ -93,7 +86,6 @@ export class PlaceOrderUseCase {
       }
       referencePrice = dto.price;
     } else {
-      // MARKET order execution price
       const bestAsk = quote?.askPrice ?? quote?.ltp ?? 0;
       const bestBid = quote?.bidPrice ?? quote?.ltp ?? 0;
 
@@ -111,8 +103,6 @@ export class PlaceOrderUseCase {
       }
     }
 
-    // 4. Calculate margin requirements & check wallet sufficiency
-    // If user is closing an existing opposing position, no extra margin is needed
     const existingPosition = await this.positionRepo.findByUserAndSymbol(
       dto.userId,
       cleanSymbol,
@@ -147,14 +137,12 @@ export class PlaceOrderUseCase {
         );
       }
 
-      // Lock required margin for MIS or LIMIT orders
       if (dto.productType === ProductType.MIS || dto.orderType === OrderType.LIMIT) {
         wallet.blockMargin(requiredMargin);
         await this.walletRepo.update(wallet);
       }
     }
 
-    // 5. Create Order
     let order = Order.create({
       id: crypto.randomUUID(),
       userId: dto.userId,
@@ -173,7 +161,6 @@ export class PlaceOrderUseCase {
 
     order = await this.orderRepo.save(order);
 
-    // 6. Execute immediately if MARKET order and NOT an AMO (and either sandbox mode or market is open)
     const canExecuteImmediately =
       dto.orderType === OrderType.MARKET &&
       !dto.isAmo &&
@@ -182,8 +169,6 @@ export class PlaceOrderUseCase {
     if (canExecuteImmediately) {
       order = await this.matchingEngine.executeOrder(order, referencePrice);
     } else {
-      // Order remains PENDING (Limit order or AMO)
-      // Add to in-memory matching book and ensure market feed is streaming ticks for this symbol
       this.matchingEngine.addOrderToBook(order);
       await this.marketDataService.subscribe([order.symbol]);
     }

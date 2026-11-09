@@ -1,7 +1,6 @@
 import { z } from "zod";
 import dotenv from "dotenv";
 
-// Load environment variables from .env file
 dotenv.config();
 
 const envSchema = z.object({
@@ -53,7 +52,6 @@ const envSchema = z.object({
     FYERS_REDIRECT_URI: z.string().default("https://trade.fyers.in/api-login/redirect-uri/index.html"),
 });
 
-// Validate the process.env against the schema
 const parsedEnv = envSchema.safeParse(process.env);
 
 if (!parsedEnv.success) {

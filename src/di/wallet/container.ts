@@ -15,7 +15,6 @@ import { ReconcilePendingOrdersUseCase } from "../../application/use-cases/walle
 import { PaymentReconciliationCron } from "../../infrastructure/cron/PaymentReconciliationCron";
 import { WalletController } from "../../presentation/http/controllers/wallet/WalletController";
 
-// Repositories & Services
 const walletRepository = new WalletRepository();
 const walletTransactionRepository = new WalletTransactionRepository();
 const paymentOrderRepository = new PaymentOrderRepository();
@@ -25,7 +24,6 @@ const paymentGatewayService = new RazorpayService(
   env.RAZORPAY_KEY_SECRET
 );
 
-// Use Cases
 const getWalletOverviewUseCase = new GetWalletOverviewUseCase(
   walletRepository,
   userRepository,

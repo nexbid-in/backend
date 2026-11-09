@@ -9,7 +9,6 @@ export class AutoSquareOffCron {
   constructor(
     private readonly positionRepo: IPositionRepository,
     private readonly squareOffUseCase: SquareOffPositionUseCase,
-    // 03:20 PM IST (Mon-Fri)
     private readonly cronSchedule: string = "20 15 * * 1-5"
   ) {}
 

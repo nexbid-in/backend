@@ -25,14 +25,11 @@ export class CancelOrderUseCase {
       );
     }
 
-    // 1. Mark order as cancelled in database
     order.markCancelled();
     await this.orderRepo.update(order);
 
-    // 2. Remove order from in-memory matching book
     this.matchingEngine.removeOrderFromBook(order.id, order.symbol);
 
-    // 3. Release any blocked margin held by this pending order
     if (order.blockedMargin > 0) {
       const wallet = await this.walletRepo.findOrCreateByUserId(dto.userId);
       wallet.releaseMargin(order.blockedMargin);

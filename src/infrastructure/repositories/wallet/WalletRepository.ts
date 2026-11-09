@@ -82,7 +82,6 @@ export class WalletRepository implements IWalletRepository {
       const txData = WalletTransactionPersistenceMapper.toPrisma(transaction);
 
       await prisma.$transaction(async (tx) => {
-        // 1. Update wallet state
         await tx.wallet.update({
           where: { id: walletData.id },
           data: {
@@ -95,7 +94,6 @@ export class WalletRepository implements IWalletRepository {
           },
         });
 
-        // 2. Insert ledger transaction
         await tx.walletTransaction.create({
           data: {
             id: txData.id,
@@ -127,7 +125,6 @@ export class WalletRepository implements IWalletRepository {
       const orderData = PaymentOrderPersistenceMapper.toPrisma(paymentOrder);
 
       await prisma.$transaction(async (tx) => {
-        // 1. Update PaymentOrder status & paymentId
         await tx.paymentOrder.update({
           where: { id: orderData.id },
           data: {
@@ -137,7 +134,6 @@ export class WalletRepository implements IWalletRepository {
           },
         });
 
-        // 2. Update Wallet balance & metrics
         await tx.wallet.update({
           where: { id: walletData.id },
           data: {
@@ -148,7 +144,6 @@ export class WalletRepository implements IWalletRepository {
           },
         });
 
-        // 3. Write immutable ledger record
         await tx.walletTransaction.create({
           data: {
             id: txData.id,

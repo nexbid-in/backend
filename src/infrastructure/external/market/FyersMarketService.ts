@@ -46,16 +46,14 @@ export class FyersMarketService implements IMarketDataService {
   private isSocketConnected = false;
   private isConnecting = false;
 
-  constructor(private readonly brokerAuthService: IBrokerAuthService) {
-    // Upstream data socket connects on demand upon the first symbol subscription
-  }
+  constructor(private readonly brokerAuthService: IBrokerAuthService) {}
 
   private isIndianMarketOpen(): boolean {
     const now = new Date();
     const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
     const istDate = new Date(utcMs + 5.5 * 3600000);
 
-    const day = istDate.getDay(); // 0 = Sunday, 6 = Saturday
+    const day = istDate.getDay();
     if (day === 0 || day === 6) {
       return false;
     }
@@ -64,7 +62,6 @@ export class FyersMarketService implements IMarketDataService {
     const minutes = istDate.getMinutes();
     const timeInMinutes = hours * 60 + minutes;
 
-    // NSE / BSE normal trading hours: 09:15 AM (555 min) to 03:30 PM (930 min) IST
     return timeInMinutes >= 555 && timeInMinutes <= 930;
   }
 
@@ -74,7 +71,6 @@ export class FyersMarketService implements IMarketDataService {
       if (parts.length !== 3) return true;
       const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8")) as { exp?: number };
       if (typeof payload.exp !== "number") return true;
-      // Consider expired if expiring within 60 seconds
       return payload.exp * 1000 <= Date.now() + 60000;
     } catch {
       return true;
@@ -137,7 +133,7 @@ export class FyersMarketService implements IMarketDataService {
       try {
         this.socket.close();
       } catch {
-        // ignore close error
+        /* ignore */
       }
       (fyersPkg as { fyersDataSocket: { instance?: unknown } }).fyersDataSocket.instance = null;
       this.socket = null;
@@ -271,7 +267,6 @@ export class FyersMarketService implements IMarketDataService {
     const cacheKey = `market:candles:${symbol}:${resolution}:${Math.floor(from / 60000)}:${Math.floor(to / 60000)}`;
     const staleCacheKey = `market:candles:stale:${symbol}:${resolution}`;
 
-    // 1. Exact time-window cache hit
     const cached = await redis.get(cacheKey);
     if (cached) {
       return JSON.parse(cached) as Candle[];
@@ -281,7 +276,6 @@ export class FyersMarketService implements IMarketDataService {
     try {
       token = await this.getAccessToken();
     } catch (tokenErr) {
-      // If access token is unavailable, check for resilient stale data before failing
       const stale = await redis.get(staleCacheKey);
       if (stale) {
         logger.warn(
@@ -299,15 +293,10 @@ export class FyersMarketService implements IMarketDataService {
     const fyersSymbol = MarketSymbolMapper.toFyersSymbol(symbol);
     const fyersResolution = resolution === "1D" || resolution === "D" ? "D" : resolution;
 
-    // Fyers maximum date-range per single request:
-    // - Daily / Weekly / Monthly: max 365 days
-    // - Intraday minutes: max 100 days
-    // - Seconds: max 30 days
     const isEOD = ["D", "W", "M", "1D", "1W", "1M"].includes(fyersResolution);
     const isSecond = fyersResolution.endsWith("S");
     const maxChunkSec = isEOD ? 365 * 86400 : isSecond ? 30 * 86400 : 100 * 86400;
 
-    // Fyers Standard Plan retention bounds (5 years EOD, 1 year Intraday)
     const nowSec = Math.floor(Date.now() / 1000);
     const maxHistorySec = isEOD ? 5 * 365 * 86400 : isSecond ? 30 * 86400 : 365 * 86400;
     const earliestAllowedSec = nowSec - maxHistorySec;
@@ -320,7 +309,6 @@ export class FyersMarketService implements IMarketDataService {
       return [];
     }
 
-    // Generate chunk intervals
     const chunks: { from: number; to: number }[] = [];
     let currentFrom = clampedFromSec;
     while (currentFrom < requestedToSec) {
@@ -368,7 +356,6 @@ export class FyersMarketService implements IMarketDataService {
 
       const flatCandles = chunkResults.flat();
       if (flatCandles.length === 0) {
-        // If upstream returned 0 candles, check for existing stale candles before concluding empty
         const stale = await redis.get(staleCacheKey);
         if (stale) {
           logger.warn(
@@ -380,7 +367,6 @@ export class FyersMarketService implements IMarketDataService {
         return [];
       }
 
-      // Deduplicate and sort by timestamp
       const candleMap = new Map<number, Candle>();
       for (const c of flatCandles) {
         const timestamp = c[0] * 1000;
@@ -398,14 +384,10 @@ export class FyersMarketService implements IMarketDataService {
 
       const candles = Array.from(candleMap.values()).sort((a, b) => a.timestamp - b.timestamp);
 
-      // Exact window cache (1 day for daily, 5 min for intraday)
       const ttl = isEOD ? 86400 : 300;
       await redis.setex(cacheKey, ttl, JSON.stringify(candles));
-
-      // Resilient Stale-While-Revalidate fallback cache (7 days) for outage survival
       await redis.setex(staleCacheKey, 7 * 86400, JSON.stringify(candles));
 
-      // Seed latest tick if not present
       const cleanSymbol = MarketSymbolMapper.fromFyersSymbol(symbol);
       const lastCandle = candles[candles.length - 1];
       if (lastCandle && !this.latestTicks.has(cleanSymbol)) {
@@ -443,8 +425,6 @@ export class FyersMarketService implements IMarketDataService {
         logger.error({ error, symbol }, "Failed to fetch historical candles from Fyers");
       }
 
-      // 1. Stale-While-Revalidate Fallback:
-      // If Fyers is offline (e.g. ENOTFOUND, ETIMEDOUT, 502/503), serve last known candles
       const stale = await redis.get(staleCacheKey);
       if (stale) {
         logger.warn(
@@ -454,7 +434,6 @@ export class FyersMarketService implements IMarketDataService {
         return JSON.parse(stale) as Candle[];
       }
 
-      // 2. If no stale cache exists, signal explicit 503 Service Unavailable
       throw new AppError(
         ErrorCodes.MARKET_DATA_SERVICE_UNAVAILABLE,
         "Market data feed is temporarily unavailable. Please retry shortly."
@@ -492,12 +471,10 @@ export class FyersMarketService implements IMarketDataService {
     const clean = MarketSymbolMapper.fromFyersSymbol(symbol.toUpperCase().trim());
     const fyersSymbol = MarketSymbolMapper.toFyersSymbol(clean);
 
-    // Skip indices (NIFTY, SENSEX) - they do not have order book depth or circuit bands
     if (fyersSymbol.includes("-INDEX")) {
       return null;
     }
 
-    // Check Redis cache for market depth (TTL 60s) to avoid 429 rate limit
     const depthCacheKey = `market:depth:${clean}`;
     try {
       const cached = await redis.get(depthCacheKey);
@@ -505,7 +482,7 @@ export class FyersMarketService implements IMarketDataService {
         return JSON.parse(cached) as Partial<MarketQuote>;
       }
     } catch {
-      // ignore redis read error
+      /* ignore */
     }
 
     try {
@@ -550,7 +527,6 @@ export class FyersMarketService implements IMarketDataService {
           askPrice: depthData.ask?.[0]?.price ?? null,
         };
 
-        // Cache in Redis for 60 seconds
         void redis.set(depthCacheKey, JSON.stringify(depthResult), "EX", 60);
 
         return depthResult;
@@ -610,13 +586,12 @@ export class FyersMarketService implements IMarketDataService {
       this.socket.unsubscribe(toRemove);
     }
 
-    // Lazy Standby: If 0 subscriptions remain across the platform, close the idle upstream socket
     if (this.activeSubscriptions.size === 0 && this.socket) {
       logger.info("No active subscriptions remaining across gateway; closing idle Fyers socket");
       try {
         this.socket.close();
       } catch {
-        // ignore close error
+        /* ignore */
       }
       this.socket = null;
       this.isSocketConnected = false;

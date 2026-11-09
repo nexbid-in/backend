@@ -26,8 +26,6 @@ export class ReconcilePendingOrdersUseCase implements IReconcilePendingOrdersUse
     for (const order of staleOrders) {
       try {
         const payments = await this._paymentGateway.getOrderPayments(order.orderId);
-
-        // Check if there was any successful / captured payment on gateway
         const capturedPayment = payments.find((p) => p.status === "captured");
 
         if (capturedPayment) {
@@ -62,7 +60,6 @@ export class ReconcilePendingOrdersUseCase implements IReconcilePendingOrdersUse
           }
         }
 
-        // If no captured payment exists -> mark as FAILED
         const lastFailedPayment = payments.find((p) => p.status === "failed");
         order.markAsFailed(lastFailedPayment?.id);
         await this._paymentOrderRepo.save(order);

@@ -10,7 +10,6 @@ export class FyersTokenRefreshCron {
 
   constructor(
     private readonly _brokerAuthService: IBrokerAuthService,
-    // 06:15 AM IST, runs Monday through Friday
     private readonly _cronSchedule: string = "15 6 * * 1-5"
   ) {}
 
@@ -22,12 +21,10 @@ export class FyersTokenRefreshCron {
 
     logger.info({ schedule: this._cronSchedule, timezone: "Asia/Kolkata" }, "Initializing Fyers Token Refresh Cron");
 
-    // Startup check: Ensure a valid token exists in Redis upon server boot
     setTimeout(() => {
       void this.checkInitialToken();
     }, 3000);
 
-    // Schedule daily pre-market execution in IST
     cron.schedule(
       this._cronSchedule,
       () => {

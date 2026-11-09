@@ -20,9 +20,7 @@ interface MockSymbolState {
   lastUpdated: number;
 }
 
-// Realistic baseline prices for benchmark indices and seeded stocks
 const BASELINE_PRICES: Record<string, number> = {
-  // Indices
   "NIFTY 50": 24500,
   "NIFTY50": 24500,
   "BANKNIFTY": 52000,
@@ -35,7 +33,6 @@ const BASELINE_PRICES: Record<string, number> = {
   "NIFTY FMCG": 60000,
   "NIFTY MIDCAP 50": 16000,
 
-  // Equities
   RELIANCE: 1285,
   TCS: 4150,
   HDFCBANK: 1750,
@@ -86,7 +83,6 @@ export class MockMarketService implements IMarketDataService {
 
     const isIdx = this.isIndex(cleanSymbol);
 
-    // Look up baseline price or generate a stable deterministic price based on symbol hash
     let base = BASELINE_PRICES[cleanSymbol];
     if (!base) {
       let hash = 0;
@@ -97,9 +93,7 @@ export class MockMarketService implements IMarketDataService {
       base = isIdx ? 20000 : 200 + Math.abs(hash % 2800);
     }
 
-    // Previous day close within +/- 1.5% of baseline
     const prevClose = +(base * (1 + (Math.random() - 0.5) * 0.03)).toFixed(2);
-    // Today's open within +/- 0.5% of prevClose
     const open = +(prevClose * (1 + (Math.random() - 0.5) * 0.01)).toFixed(2);
     const ltp = open;
     const high = open;
@@ -175,7 +169,6 @@ export class MockMarketService implements IMarketDataService {
     let basePrice = targetBase;
 
     for (let time = from; time < to; time += intervalMs) {
-      // Mean-reversion random walk
       const meanReversion = (targetBase - basePrice) * 0.02;
       const noise = (Math.random() - 0.5) * (targetBase * 0.004);
       const delta = meanReversion + noise;
@@ -190,7 +183,6 @@ export class MockMarketService implements IMarketDataService {
       basePrice = close;
     }
 
-    // Seamlessly attach today's live state as the last candle
     if (candles.length > 0) {
       const last = candles[candles.length - 1];
       last.close = state.ltp;
@@ -267,7 +259,6 @@ export class MockMarketService implements IMarketDataService {
         const state = this.symbolStates.get(cleanSymbol);
         if (!state) return;
 
-        // Realistic tick price step: +/- 0.05% fluctuation with gentle mean reversion to basePrice
         const meanPull = (state.basePrice - state.ltp) * 0.01;
         const tickNoise = (Math.random() - 0.5) * (state.basePrice * 0.001);
         const delta = +(meanPull + tickNoise).toFixed(2);
@@ -275,7 +266,6 @@ export class MockMarketService implements IMarketDataService {
         let newLtp = +(state.ltp + delta).toFixed(2);
         if (newLtp <= 0) newLtp = state.ltp;
 
-        // Update state maintaining OHLC and volume invariants
         state.ltp = newLtp;
         state.high = Math.max(state.high, newLtp);
         state.low = Math.min(state.low, newLtp);

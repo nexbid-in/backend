@@ -12,7 +12,6 @@ export class AmoDispatchCron {
     private readonly orderRepo: IOrderRepository,
     private readonly marketDataService: IMarketDataService,
     private readonly matchingEngine: OrderMatchingEngine,
-    // 09:15 AM IST (Monday to Friday)
     private readonly cronSchedule: string = "15 9 * * 1-5"
   ) {}
 
@@ -64,7 +63,6 @@ export class AmoDispatchCron {
               "Successfully executed pending Market AMO at market open"
             );
           } else {
-            // Limit AMOs will match against live incoming ticks in OrderMatchingEngine.processTick
             logger.info(
               { orderId: order.id, symbol: order.symbol, limitPrice: order.price },
               "Limit AMO is active and awaiting tick match in order book"

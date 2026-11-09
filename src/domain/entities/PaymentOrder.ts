@@ -55,7 +55,6 @@ export class PaymentOrder {
     });
   }
 
-  // Getters
   get id(): string { return this.props.id; }
   get userId(): string { return this.props.userId; }
   get orderId(): string { return this.props.orderId; }
@@ -66,7 +65,6 @@ export class PaymentOrder {
   get createdAt(): Date { return this.props.createdAt; }
   get updatedAt(): Date { return this.props.updatedAt; }
 
-  // State Transitions
   public markAsSuccess(paymentId: string): void {
     if (this.props.status === PaymentStatus.SUCCESS) {
       throw new AppError(ErrorCodes.VALIDATION_FAILED); 

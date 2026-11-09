@@ -27,11 +27,9 @@ export class SquareOffPositionUseCase {
       throw new AppError(ErrorCodes.POSITION_ALREADY_CLOSED, "Position is already closed");
     }
 
-    // 1. Determine opposing order side to flatten the position
     const opposingSide =
       position.side === PositionSide.LONG ? OrderSide.SELL : OrderSide.BUY;
 
-    // 2. Fetch current exit price
     const quote = await this.marketDataService.getQuote(position.symbol);
     let exitPrice: number;
 
@@ -45,7 +43,6 @@ export class SquareOffPositionUseCase {
       exitPrice = position.averagePrice;
     }
 
-    // 3. Create synthetic MARKET square-off order
     let squareOffOrder = Order.create({
       id: crypto.randomUUID(),
       userId: dto.userId,
@@ -61,10 +58,8 @@ export class SquareOffPositionUseCase {
 
     squareOffOrder = await this.orderRepo.save(squareOffOrder);
 
-    // 4. Execute through matching engine to apply fill and settle wallet
     await this.matchingEngine.executeOrder(squareOffOrder, exitPrice);
 
-    // 5. Fetch updated position state
     const updatedPosition = await this.positionRepo.findById(position.id);
     const finalPosition = updatedPosition ?? position;
 
