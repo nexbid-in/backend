@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { PlaceOrderUseCase } from "../../../../application/use-cases/trading/PlaceOrderUseCase";
-import { GetOrdersUseCase } from "../../../../application/use-cases/trading/GetOrdersUseCase";
-import { CancelOrderUseCase } from "../../../../application/use-cases/trading/CancelOrderUseCase";
+import { IPlaceOrderUseCase } from "../../../../application/interface/use-cases/trading/IPlaceOrderUseCase";
+import { IGetOrdersUseCase } from "../../../../application/interface/use-cases/trading/IGetOrdersUseCase";
+import { ICancelOrderUseCase } from "../../../../application/interface/use-cases/trading/ICancelOrderUseCase";
 import { MarketHoursService } from "../../../../application/services/trading/MarketHoursService";
 import { env } from "../../../../infrastructure/config/env";
 import {
@@ -17,9 +17,9 @@ import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 
 export class OrderController {
   constructor(
-    private readonly placeOrderUseCase: PlaceOrderUseCase,
-    private readonly getOrdersUseCase: GetOrdersUseCase,
-    private readonly cancelOrderUseCase: CancelOrderUseCase
+    private readonly placeOrderUseCase: IPlaceOrderUseCase,
+    private readonly getOrdersUseCase: IGetOrdersUseCase,
+    private readonly cancelOrderUseCase: ICancelOrderUseCase
   ) {}
 
   async placeOrder(req: Request, res: Response, next: NextFunction): Promise<void> {

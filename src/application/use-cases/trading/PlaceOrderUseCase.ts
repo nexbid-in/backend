@@ -11,10 +11,11 @@ import { MarginCalculatorService } from "../../services/trading/MarginCalculator
 import { MarketHoursService } from "../../services/trading/MarketHoursService";
 import { env } from "../../../infrastructure/config/env";
 import { PlaceOrderRequestDTO, OrderResponseDTO } from "../../dto/trading/OrderDTOs";
+import { IPlaceOrderUseCase } from "../../interface/use-cases/trading/IPlaceOrderUseCase";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 
-export class PlaceOrderUseCase {
+export class PlaceOrderUseCase implements IPlaceOrderUseCase {
   constructor(
     private readonly orderRepo: IOrderRepository,
     private readonly positionRepo: IPositionRepository,

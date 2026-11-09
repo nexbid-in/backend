@@ -2,10 +2,11 @@ import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRep
 import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
 import { OrderMatchingEngine } from "../../../infrastructure/external/trading/OrderMatchingEngine";
 import { CancelOrderRequestDTO, OrderResponseDTO } from "../../dto/trading/OrderDTOs";
+import { ICancelOrderUseCase } from "../../interface/use-cases/trading/ICancelOrderUseCase";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 
-export class CancelOrderUseCase {
+export class CancelOrderUseCase implements ICancelOrderUseCase {
   constructor(
     private readonly orderRepo: IOrderRepository,
     private readonly walletRepo: IWalletRepository,

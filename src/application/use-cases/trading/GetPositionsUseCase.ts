@@ -3,8 +3,9 @@ import { IMarketDataService } from "../../interface/services/IMarketDataService"
 import { GetPositionsResponseDTO, PositionResponseDTO, PortfolioSummaryDTO } from "../../dto/trading/PositionDTOs";
 import { PositionSide } from "../../../domain/entities/trading/Position";
 import { MarketHoursService } from "../../services/trading/MarketHoursService";
+import { IGetPositionsUseCase } from "../../interface/use-cases/trading/IGetPositionsUseCase";
 
-export class GetPositionsUseCase {
+export class GetPositionsUseCase implements IGetPositionsUseCase {
   constructor(
     private readonly positionRepo: IPositionRepository,
     private readonly marketDataService: IMarketDataService

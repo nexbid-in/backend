@@ -14,7 +14,7 @@ import redis from "../../../infrastructure/config/redis";
 import { logger } from "../../../infrastructure/logging/logger";
 
 export class GetStockOverviewUseCase implements IGetStockOverviewUseCase {
-  private static readonly CACHE_TTL_SECONDS = 43200; // 12 hours
+  private static readonly CACHE_TTL_SECONDS = 43200;
 
   constructor(
     private readonly _stockRepository: IStockRepository,

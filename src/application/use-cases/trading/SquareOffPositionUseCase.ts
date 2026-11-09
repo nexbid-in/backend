@@ -6,10 +6,11 @@ import { OrderMatchingEngine } from "../../../infrastructure/external/trading/Or
 import { Order, OrderSide, OrderType, OrderStatus } from "../../../domain/entities/trading/Order";
 import { PositionSide } from "../../../domain/entities/trading/Position";
 import { SquareOffPositionRequestDTO, PositionResponseDTO } from "../../dto/trading/PositionDTOs";
+import { ISquareOffPositionUseCase } from "../../interface/use-cases/trading/ISquareOffPositionUseCase";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 
-export class SquareOffPositionUseCase {
+export class SquareOffPositionUseCase implements ISquareOffPositionUseCase {
   constructor(
     private readonly positionRepo: IPositionRepository,
     private readonly orderRepo: IOrderRepository,

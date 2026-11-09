@@ -1,7 +1,8 @@
 import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRepository";
 import { GetOrdersRequestDTO, OrderResponseDTO } from "../../dto/trading/OrderDTOs";
+import { IGetOrdersUseCase } from "../../interface/use-cases/trading/IGetOrdersUseCase";
 
-export class GetOrdersUseCase {
+export class GetOrdersUseCase implements IGetOrdersUseCase {
   constructor(private readonly orderRepo: IOrderRepository) {}
 
   async execute(dto: GetOrdersRequestDTO): Promise<OrderResponseDTO[]> {
