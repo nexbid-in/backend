@@ -2,8 +2,6 @@ import { Candle } from "../../../domain/entities/market/Candle";
 import { MarketTick } from "../../../domain/entities/market/MarketTick";
 import { MarketQuote } from "../../../domain/entities/market/MarketQuote";
 
-export const MARKET_DATA_SERVICE = Symbol.for("IMarketDataService");
-
 export interface IMarketDataService {
     getHistoricalCandles(
         symbol: string,

@@ -3,7 +3,7 @@ import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRep
 import { IPositionRepository } from "../../../domain/repositories/trading/IPositionRepository";
 import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
 import { IMarketDataService } from "../../../application/interface/services/IMarketDataService";
-import { Order, OrderSide, OrderStatus, ProductType } from "../../../domain/entities/trading/Order";
+import { Order, OrderSide, ProductType } from "../../../domain/entities/trading/Order";
 import { Position, PositionSide } from "../../../domain/entities/trading/Position";
 import { WalletTransaction } from "../../../domain/entities/WalletTransaction";
 import { MarketTick } from "../../../domain/entities/market/MarketTick";
@@ -47,7 +47,9 @@ export class OrderMatchingEngine {
     }
 
     // 3. Register real-time market tick listener
-    this.marketDataService.onTick(this.processTick.bind(this));
+    this.marketDataService.onTick((tick) => {
+      void this.processTick(tick);
+    });
     logger.info("Virtual Order Matching Engine started and listening to market ticks");
   }
 

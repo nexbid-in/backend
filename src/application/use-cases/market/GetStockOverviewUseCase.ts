@@ -108,7 +108,7 @@ export class GetStockOverviewUseCase implements IGetStockOverviewUseCase {
       low: vitals.low > 0 ? vitals.low : vitals.ltp,
     };
 
-    let performance: StockPerformanceReturnsDTO = {
+    const performance: StockPerformanceReturnsDTO = {
       oneWeek: null,
       oneMonth: null,
       oneYear: null,

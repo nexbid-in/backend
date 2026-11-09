@@ -120,7 +120,7 @@ export class AuthController {
   }
 
   logout(
-    req: Request,
+    _req: Request,
     res: Response,
     next: NextFunction
   ) {

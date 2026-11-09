@@ -54,7 +54,7 @@ export class OrderController {
     }
   }
 
-  async getMarketStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+  getMarketStatus(_req: Request, res: Response, next: NextFunction): void {
     try {
       const status = MarketHoursService.getMarketStatus(env.ENFORCE_MARKET_HOURS);
       ApiResponse.success(

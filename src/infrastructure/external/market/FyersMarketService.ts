@@ -462,12 +462,12 @@ export class FyersMarketService implements IMarketDataService {
     }
   }
 
-  async getQuote(symbol: string): Promise<MarketQuote | null> {
+  getQuote(symbol: string): Promise<MarketQuote | null> {
     const clean = MarketSymbolMapper.fromFyersSymbol(symbol.toUpperCase().trim());
     const liveTick = this.latestTicks.get(clean);
-    if (!liveTick) return null;
+    if (!liveTick) return Promise.resolve(null);
 
-    return {
+    return Promise.resolve({
       symbol: clean,
       ltp: liveTick.ltp,
       open: liveTick.open,
@@ -485,7 +485,7 @@ export class FyersMarketService implements IMarketDataService {
       bidPrice: liveTick.bidPrice ?? null,
       askPrice: liveTick.askPrice ?? null,
       timestamp: liveTick.timestamp,
-    };
+    });
   }
 
   async getMarketDepth(symbol: string): Promise<Partial<MarketQuote> | null> {

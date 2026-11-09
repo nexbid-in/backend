@@ -47,22 +47,6 @@ export class PositionRepository
     }
   }
 
-  async findOpenPositionsByUserId(userId: string): Promise<Position[]> {
-    try {
-      const raw = await prisma.position.findMany({
-        where: {
-          userId,
-          side: { not: PositionSide.CLOSED },
-          quantity: { gt: 0 },
-        },
-        orderBy: { updatedAt: "desc" },
-      });
-      return raw.map((r) => PositionPersistenceMapper.toDomain(r));
-    } catch (error) {
-      handlePrismaError(error);
-    }
-  }
-
   async findAllPositionsByUserId(userId: string): Promise<Position[]> {
     try {
       const raw = await prisma.position.findMany({

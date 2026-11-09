@@ -76,21 +76,6 @@ export class OrderRepository
     }
   }
 
-  async findPendingOrdersBySymbol(symbol: string): Promise<Order[]> {
-    try {
-      const raw = await prisma.order.findMany({
-        where: {
-          symbol: symbol.toUpperCase().trim(),
-          status: OrderStatus.PENDING,
-        },
-        orderBy: { createdAt: "asc" },
-      });
-      return raw.map((r) => OrderPersistenceMapper.toDomain(r));
-    } catch (error) {
-      handlePrismaError(error);
-    }
-  }
-
   async findPendingOrders(): Promise<Order[]> {
     try {
       const raw = await prisma.order.findMany({

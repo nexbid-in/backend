@@ -9,7 +9,8 @@ export default defineConfig([
     ignores: [
       "dist/**",
       "node_modules/**",
-      "eslint.config.mjs"
+      "eslint.config.mjs",
+      "src/infrastructure/database/generated/**"
     ]
   },
 

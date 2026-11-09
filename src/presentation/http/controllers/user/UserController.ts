@@ -36,7 +36,7 @@ export class UserController {
     }
   }
 
-  async getUploadSignature(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getUploadSignature(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const signatureData = await this._getUploadSignature.execute();
 

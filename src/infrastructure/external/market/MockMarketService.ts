@@ -294,4 +294,11 @@ export class MockMarketService implements IMarketDataService {
       });
     }, 1000);
   }
+
+  public stop(): void {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
 }
