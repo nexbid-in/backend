@@ -36,6 +36,7 @@ export interface OrderResponseDTO {
 export interface GetOrdersRequestDTO {
   userId: string;
   status?: OrderStatus;
+  scope?: "TODAY" | "ALL";
 }
 
 export interface CancelOrderRequestDTO {

@@ -7,7 +7,12 @@ import { env } from "./infrastructure/config/env";
 import { logger } from "./infrastructure/logging/logger";
 import { paymentReconciliationCron } from "./di/wallet/container";
 import { marketDataService, fyersTokenRefreshCron } from "./di/market/container";
-import { orderMatchingEngine, autoSquareOffCron, amoDispatchCron } from "./di/trading/container";
+import {
+    orderMatchingEngine,
+    autoSquareOffCron,
+    amoDispatchCron,
+    eodOrderExpiryCron,
+} from "./di/trading/container";
 import { MarketWebSocketGateway } from "./infrastructure/websocket/MarketWebSocketGateway";
 
 const startServer = async () => {
@@ -19,6 +24,7 @@ const startServer = async () => {
         await connectRedis();
 
         new MarketWebSocketGateway(server, marketDataService);
+        await eodOrderExpiryCron.expireStaleDayOrders();
         await orderMatchingEngine.start();
 
         const PORT = env.PORT;
@@ -28,6 +34,7 @@ const startServer = async () => {
             fyersTokenRefreshCron.start();
             autoSquareOffCron.start();
             amoDispatchCron.start();
+            eodOrderExpiryCron.start();
         });
     } catch (error: unknown) {
         logger.error({ error }, "Failed to start server");

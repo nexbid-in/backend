@@ -6,6 +6,7 @@ export interface IOrderRepository {
   update(order: Order): Promise<Order>;
   findPendingOrders(): Promise<Order[]>;
   findPendingAmoOrders(): Promise<Order[]>;
-  findByUserId(userId: string, status?: OrderStatus): Promise<Order[]>;
+  findPendingDayOrders(beforeDate?: Date): Promise<Order[]>;
+  findByUserId(userId: string, status?: OrderStatus, sessionStart?: Date): Promise<Order[]>;
 }
 

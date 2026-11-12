@@ -11,6 +11,7 @@ import { GetPositionsUseCase } from "../../application/use-cases/trading/GetPosi
 import { SquareOffPositionUseCase } from "../../application/use-cases/trading/SquareOffPositionUseCase";
 import { AutoSquareOffCron } from "../../infrastructure/cron/AutoSquareOffCron";
 import { AmoDispatchCron } from "../../infrastructure/cron/AmoDispatchCron";
+import { EodOrderExpiryCron } from "../../infrastructure/cron/EodOrderExpiryCron";
 import { OrderController } from "../../presentation/http/controllers/trading/OrderController";
 import { PortfolioController } from "../../presentation/http/controllers/trading/PortfolioController";
 
@@ -63,6 +64,12 @@ export const autoSquareOffCron = new AutoSquareOffCron(
 export const amoDispatchCron = new AmoDispatchCron(
   orderRepository,
   marketDataService,
+  orderMatchingEngine
+);
+
+export const eodOrderExpiryCron = new EodOrderExpiryCron(
+  orderRepository,
+  walletRepository,
   orderMatchingEngine
 );
 

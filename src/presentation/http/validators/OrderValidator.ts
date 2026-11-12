@@ -24,6 +24,7 @@ export const placeOrderSchema = z
 
 export const getOrdersQuerySchema = z.object({
   status: z.nativeEnum(OrderStatus).optional(),
+  scope: z.enum(["TODAY", "ALL"]).default("TODAY"),
 });
 
 export const cancelOrderParamsSchema = z.object({

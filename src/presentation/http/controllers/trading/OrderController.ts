@@ -80,6 +80,7 @@ export class OrderController {
       const orders = await this.getOrdersUseCase.execute({
         userId,
         status: query.status,
+        scope: query.scope,
       });
 
       ApiResponse.success(

@@ -103,12 +103,41 @@ export class OrderRepository
     }
   }
 
-  async findByUserId(userId: string, status?: OrderStatus): Promise<Order[]> {
+  async findPendingDayOrders(beforeDate?: Date): Promise<Order[]> {
+    try {
+      const raw = await prisma.order.findMany({
+        where: {
+          status: OrderStatus.PENDING,
+          isAmo: false,
+          ...(beforeDate ? { createdAt: { lt: beforeDate } } : {}),
+        },
+        orderBy: { createdAt: "asc" },
+      });
+      return raw.map((r) => OrderPersistenceMapper.toDomain(r));
+    } catch (error) {
+      handlePrismaError(error);
+    }
+  }
+
+  async findByUserId(
+    userId: string,
+    status?: OrderStatus,
+    sessionStart?: Date
+  ): Promise<Order[]> {
     try {
       const raw = await prisma.order.findMany({
         where: {
           userId,
           ...(status ? { status } : {}),
+          ...(sessionStart
+            ? {
+                OR: [
+                  { createdAt: { gte: sessionStart } },
+                  { isAmo: true, status: OrderStatus.PENDING },
+                  { isAmo: true, updatedAt: { gte: sessionStart } },
+                ],
+              }
+            : {}),
         },
         orderBy: { createdAt: "desc" },
       });

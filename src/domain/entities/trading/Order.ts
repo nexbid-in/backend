@@ -144,11 +144,14 @@ export class Order {
     this.props.updatedAt = new Date();
   }
 
-  public markCancelled(): void {
+  public markCancelled(reason?: string): void {
     if (!this.canBeCancelled()) {
       throw new AppError(ErrorCodes.ORDER_CANNOT_BE_CANCELLED);
     }
     this.props.status = OrderStatus.CANCELLED;
+    if (reason) {
+      this.props.rejectionReason = reason;
+    }
     this.props.updatedAt = new Date();
   }
 
