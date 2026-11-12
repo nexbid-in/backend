@@ -391,17 +391,19 @@ export class FyersMarketService implements IMarketDataService {
       const cleanSymbol = MarketSymbolMapper.fromFyersSymbol(symbol);
       const lastCandle = candles[candles.length - 1];
       if (lastCandle && !this.latestTicks.has(cleanSymbol)) {
-        const firstCandle = candles[0];
-        const change = +(lastCandle.close - firstCandle.open).toFixed(2);
+        const referenceClose = isEOD
+          ? (candles[candles.length - 2]?.close ?? lastCandle.open)
+          : candles[0].open;
+        const change = +(lastCandle.close - referenceClose).toFixed(2);
         const changePercent =
-          firstCandle.open > 0 ? +(((lastCandle.close - firstCandle.open) / firstCandle.open) * 100).toFixed(2) : 0;
+          referenceClose > 0 ? +(((lastCandle.close - referenceClose) / referenceClose) * 100).toFixed(2) : 0;
         this.latestTicks.set(cleanSymbol, {
           symbol: cleanSymbol,
           ltp: lastCandle.close,
           open: lastCandle.open,
           high: lastCandle.high,
           low: lastCandle.low,
-          close: lastCandle.close,
+          close: referenceClose,
           change,
           changePercent,
           volume: lastCandle.volume,
@@ -475,7 +477,7 @@ export class FyersMarketService implements IMarketDataService {
       return null;
     }
 
-    const depthCacheKey = `market:depth:${clean}`;
+    const depthCacheKey = `market:depth:v2:${clean}`;
     try {
       const cached = await redis.get(depthCacheKey);
       if (cached) {
@@ -517,7 +519,24 @@ export class FyersMarketService implements IMarketDataService {
 
       const depthData = response.data?.d?.[fyersSymbol];
       if (depthData) {
+        const ltp = depthData.ltp;
+        const change = depthData.ch;
+        const derivedPrevClose =
+          ltp !== undefined && typeof change === "number"
+            ? +(ltp - change).toFixed(2)
+            : depthData.c && depthData.c > 0
+              ? depthData.c
+              : undefined;
+
         const depthResult: Partial<MarketQuote> = {
+          ...(ltp !== undefined && { ltp }),
+          ...(depthData.o !== undefined && { open: depthData.o }),
+          ...(depthData.h !== undefined && { high: depthData.h }),
+          ...(depthData.l !== undefined && { low: depthData.l }),
+          ...(derivedPrevClose !== undefined && { close: derivedPrevClose }),
+          ...(change !== undefined && { change }),
+          ...(depthData.chp !== undefined && { changePercent: depthData.chp }),
+          ...(depthData.v !== undefined && { volume: depthData.v }),
           atp: depthData.atp,
           lowerCircuit: depthData.lower_ckt ?? null,
           upperCircuit: depthData.upper_ckt ?? null,
@@ -527,7 +546,27 @@ export class FyersMarketService implements IMarketDataService {
           askPrice: depthData.ask?.[0]?.price ?? null,
         };
 
-        void redis.set(depthCacheKey, JSON.stringify(depthResult), "EX", 60);
+        if (ltp && ltp > 0 && !this.latestTicks.has(clean)) {
+          this.latestTicks.set(clean, {
+            symbol: clean,
+            ltp,
+            open: depthData.o ?? ltp,
+            high: depthData.h ?? ltp,
+            low: depthData.l ?? ltp,
+            close: derivedPrevClose ?? ltp,
+            change: change ?? 0,
+            changePercent: depthData.chp ?? 0,
+            volume: depthData.v ?? 0,
+            atp: depthData.atp ?? ltp,
+            totalBuyQty: depthData.totalbuyqty ?? null,
+            totalSellQty: depthData.totalsellqty ?? null,
+            bidPrice: depthData.bids?.[0]?.price ?? null,
+            askPrice: depthData.ask?.[0]?.price ?? null,
+            timestamp: Date.now(),
+          });
+        }
+
+        void redis.set(depthCacheKey, JSON.stringify(depthResult), "EX", 15);
 
         return depthResult;
       }
