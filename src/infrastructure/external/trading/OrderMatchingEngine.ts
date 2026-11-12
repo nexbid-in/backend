@@ -1,10 +1,13 @@
 import crypto from "crypto";
 import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRepository";
 import { IPositionRepository } from "../../../domain/repositories/trading/IPositionRepository";
+import { ITradeRepository } from "../../../domain/repositories/trading/ITradeRepository";
 import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
 import { IMarketDataService } from "../../../application/interface/services/IMarketDataService";
+import { MarketHoursService } from "../../../application/services/trading/MarketHoursService";
 import { Order, OrderSide, ProductType } from "../../../domain/entities/trading/Order";
 import { Position, PositionSide } from "../../../domain/entities/trading/Position";
+import { Trade } from "../../../domain/entities/trading/Trade";
 import { WalletTransaction } from "../../../domain/entities/WalletTransaction";
 import { MarketTick } from "../../../domain/entities/market/MarketTick";
 import { logger } from "../../logging/logger";
@@ -16,6 +19,7 @@ export class OrderMatchingEngine {
   constructor(
     private readonly orderRepo: IOrderRepository,
     private readonly positionRepo: IPositionRepository,
+    private readonly tradeRepo: ITradeRepository,
     private readonly walletRepo: IWalletRepository,
     private readonly marketDataService: IMarketDataService
   ) {}
@@ -101,6 +105,8 @@ export class OrderMatchingEngine {
         symbol: order.symbol,
         productType: order.productType,
       });
+    } else if (!position.isOpen() && position.updatedAt < MarketHoursService.getStartOfTodayIst()) {
+      position.resetSessionCounters();
     }
 
     const isClosingPosition =
@@ -123,6 +129,22 @@ export class OrderMatchingEngine {
     } else {
       await this.positionRepo.update(position);
     }
+
+    const trade = Trade.create({
+      id: crypto.randomUUID(),
+      orderId: order.id,
+      userId: order.userId,
+      stockId: order.stockId,
+      symbol: order.symbol,
+      side: order.side,
+      productType: order.productType,
+      quantity: order.quantity,
+      price: fillPrice,
+      tradeValue: +(fillPrice * order.quantity).toFixed(2),
+      realizedPnL: incrementalPnL,
+      executedAt: order.updatedAt,
+    });
+    await this.tradeRepo.save(trade);
 
     const wallet = await this.walletRepo.findOrCreateByUserId(order.userId);
 

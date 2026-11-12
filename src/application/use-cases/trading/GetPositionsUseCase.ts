@@ -1,4 +1,5 @@
 import { IPositionRepository } from "../../../domain/repositories/trading/IPositionRepository";
+import { ITradeRepository } from "../../../domain/repositories/trading/ITradeRepository";
 import { IMarketDataService } from "../../interface/services/IMarketDataService";
 import { GetPositionsResponseDTO, PositionResponseDTO, PortfolioSummaryDTO } from "../../dto/trading/PositionDTOs";
 import { PositionSide } from "../../../domain/entities/trading/Position";
@@ -8,12 +9,29 @@ import { IGetPositionsUseCase } from "../../interface/use-cases/trading/IGetPosi
 export class GetPositionsUseCase implements IGetPositionsUseCase {
   constructor(
     private readonly positionRepo: IPositionRepository,
+    private readonly tradeRepo: ITradeRepository,
     private readonly marketDataService: IMarketDataService
   ) {}
 
   async execute(userId: string, filter: "OPEN" | "ALL" = "ALL"): Promise<GetPositionsResponseDTO> {
-    const allPositions = await this.positionRepo.findAllPositionsByUserId(userId);
     const startOfTodayIst = MarketHoursService.getStartOfTodayIst();
+    const [allPositions, todayTrades] = await Promise.all([
+      this.positionRepo.findAllPositionsByUserId(userId),
+      this.tradeRepo.findByUserId(userId, { from: startOfTodayIst }),
+    ]);
+
+    const todayRealizedByKey = new Map<string, number>();
+    let totalRealizedPnL = 0;
+
+    for (const trade of todayTrades) {
+      const key = `${trade.symbol}:${trade.productType}`;
+      todayRealizedByKey.set(
+        key,
+        +((todayRealizedByKey.get(key) ?? 0) + trade.realizedPnL).toFixed(2)
+      );
+      totalRealizedPnL += trade.realizedPnL;
+    }
+    totalRealizedPnL = +totalRealizedPnL.toFixed(2);
 
     const sessionPositions = allPositions.filter(
       (pos) => pos.isOpen() || pos.updatedAt >= startOfTodayIst
@@ -22,7 +40,6 @@ export class GetPositionsUseCase implements IGetPositionsUseCase {
     let totalInvestment = 0;
     let currentPortfolioValue = 0;
     let totalUnrealizedPnL = 0;
-    let totalRealizedPnL = 0;
     let openCount = 0;
     let closedCount = 0;
 
@@ -44,8 +61,6 @@ export class GetPositionsUseCase implements IGetPositionsUseCase {
       } else {
         closedCount++;
       }
-
-      totalRealizedPnL += pos.realizedPnL;
     }
 
     const positionsToReturn =
@@ -60,7 +75,8 @@ export class GetPositionsUseCase implements IGetPositionsUseCase {
       const currentLtp = quote?.ltp && quote.ltp > 0 ? quote.ltp : pos.averagePrice;
 
       const unrealizedPnL = pos.calculateUnrealizedPnL(currentLtp);
-      const totalPnL = pos.calculateTotalPnL(currentLtp);
+      const realizedPnL = todayRealizedByKey.get(`${pos.symbol}:${pos.productType}`) ?? 0;
+      const totalPnL = +(realizedPnL + unrealizedPnL).toFixed(2);
       const totalCost = +(pos.averagePrice * pos.quantity).toFixed(2);
       const pnlPercentage =
         totalCost > 0 ? +((unrealizedPnL / totalCost) * 100).toFixed(2) : 0;
@@ -80,7 +96,7 @@ export class GetPositionsUseCase implements IGetPositionsUseCase {
         averagePrice: pos.averagePrice,
         currentLtp,
         unrealizedPnL,
-        realizedPnL: pos.realizedPnL,
+        realizedPnL,
         totalPnL,
         pnlPercentage,
         blockedMargin: pos.blockedMargin,

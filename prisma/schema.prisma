@@ -41,6 +41,7 @@ model User {
   watchlistItems     WatchlistItem[]
   orders             Order[]
   positions          Position[]
+  trades             Trade[]
 }
 
 // =============================================================
@@ -156,6 +157,7 @@ model Stock {
   watchlistItems WatchlistItem[]
   orders         Order[]
   positions      Position[]
+  trades         Trade[]
 
   @@index([symbol])
   @@index([name])
@@ -243,6 +245,8 @@ model Order {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
+  trades          Trade[]
+
   @@index([userId, status])
   @@index([symbol, status])
   @@index([status, isAmo])
@@ -279,5 +283,33 @@ model Position {
 
   @@unique([userId, symbol, productType])
   @@index([userId, side])
+}
+
+// =============================================================
+// 10. TRADE EXECUTIONS LEDGER
+// =============================================================
+
+model Trade {
+  id          String      @id @default(uuid())
+  orderId     String
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stockId     String
+  stock       Stock       @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  symbol      String
+
+  side        OrderSide
+  productType ProductType
+  quantity    Int
+  price       Decimal     @db.Decimal(12, 2)
+  tradeValue  Decimal     @db.Decimal(15, 2)
+  realizedPnL Decimal     @default(0.00) @db.Decimal(15, 2)
+
+  executedAt  DateTime    @default(now())
+
+  @@index([userId, executedAt(sort: Desc)])
+  @@index([userId, symbol, productType, executedAt(sort: Desc)])
+  @@index([orderId])
 }
 

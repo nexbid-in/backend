@@ -1,5 +1,6 @@
 import { OrderRepository } from "../../infrastructure/repositories/trading/OrderRepository";
 import { PositionRepository } from "../../infrastructure/repositories/trading/PositionRepository";
+import { TradeRepository } from "../../infrastructure/repositories/trading/TradeRepository";
 import { WalletRepository } from "../../infrastructure/repositories/wallet/WalletRepository";
 import { StockRepository } from "../../infrastructure/repositories/stock/StockRepository";
 import { marketDataService } from "../market/container";
@@ -17,12 +18,14 @@ import { PortfolioController } from "../../presentation/http/controllers/trading
 
 export const orderRepository = new OrderRepository();
 export const positionRepository = new PositionRepository();
+export const tradeRepository = new TradeRepository();
 export const walletRepository = new WalletRepository();
 export const stockRepository = new StockRepository();
 
 export const orderMatchingEngine = new OrderMatchingEngine(
   orderRepository,
   positionRepository,
+  tradeRepository,
   walletRepository,
   marketDataService
 );
@@ -46,12 +49,14 @@ export const cancelOrderUseCase = new CancelOrderUseCase(
 
 export const getPositionsUseCase = new GetPositionsUseCase(
   positionRepository,
+  tradeRepository,
   marketDataService
 );
 
 export const squareOffPositionUseCase = new SquareOffPositionUseCase(
   positionRepository,
   orderRepository,
+  tradeRepository,
   marketDataService,
   orderMatchingEngine
 );

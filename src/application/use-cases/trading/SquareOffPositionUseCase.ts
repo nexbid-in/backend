@@ -1,7 +1,9 @@
 import crypto from "crypto";
 import { IPositionRepository } from "../../../domain/repositories/trading/IPositionRepository";
 import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRepository";
+import { ITradeRepository } from "../../../domain/repositories/trading/ITradeRepository";
 import { IMarketDataService } from "../../interface/services/IMarketDataService";
+import { MarketHoursService } from "../../services/trading/MarketHoursService";
 import { OrderMatchingEngine } from "../../../infrastructure/external/trading/OrderMatchingEngine";
 import { Order, OrderSide, OrderType, OrderStatus } from "../../../domain/entities/trading/Order";
 import { PositionSide } from "../../../domain/entities/trading/Position";
@@ -14,6 +16,7 @@ export class SquareOffPositionUseCase implements ISquareOffPositionUseCase {
   constructor(
     private readonly positionRepo: IPositionRepository,
     private readonly orderRepo: IOrderRepository,
+    private readonly tradeRepo: ITradeRepository,
     private readonly marketDataService: IMarketDataService,
     private readonly matchingEngine: OrderMatchingEngine
   ) {}
@@ -64,6 +67,16 @@ export class SquareOffPositionUseCase implements ISquareOffPositionUseCase {
     const updatedPosition = await this.positionRepo.findById(position.id);
     const finalPosition = updatedPosition ?? position;
 
+    const todayTrades = await this.tradeRepo.findByUserId(dto.userId, {
+      from: MarketHoursService.getStartOfTodayIst(),
+      symbol: finalPosition.symbol,
+      productType: finalPosition.productType,
+    });
+    const realizedPnL = +todayTrades
+      .reduce((sum, trade) => sum + trade.realizedPnL, 0)
+      .toFixed(2);
+    const unrealizedPnL = finalPosition.calculateUnrealizedPnL(exitPrice);
+
     return {
       id: finalPosition.id,
       userId: finalPosition.userId,
@@ -78,9 +91,9 @@ export class SquareOffPositionUseCase implements ISquareOffPositionUseCase {
       sellAmount: finalPosition.sellAmount,
       averagePrice: finalPosition.averagePrice,
       currentLtp: exitPrice,
-      unrealizedPnL: finalPosition.calculateUnrealizedPnL(exitPrice),
-      realizedPnL: finalPosition.realizedPnL,
-      totalPnL: finalPosition.calculateTotalPnL(exitPrice),
+      unrealizedPnL,
+      realizedPnL,
+      totalPnL: +(realizedPnL + unrealizedPnL).toFixed(2),
       pnlPercentage: 0,
       blockedMargin: finalPosition.blockedMargin,
       createdAt: finalPosition.createdAt,

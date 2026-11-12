@@ -186,4 +186,16 @@ export class Position {
     this.props.blockedMargin = Math.max(0, amount);
     this.props.updatedAt = new Date();
   }
+
+  public resetSessionCounters(): void {
+    if (this.isOpen()) return;
+    this.props.buyQty = 0;
+    this.props.buyAmount = 0;
+    this.props.sellQty = 0;
+    this.props.sellAmount = 0;
+    this.props.realizedPnL = 0;
+    this.props.averagePrice = 0;
+    this.props.blockedMargin = 0;
+    this.props.updatedAt = new Date();
+  }
 }
