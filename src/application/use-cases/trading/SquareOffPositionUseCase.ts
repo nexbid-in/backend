@@ -4,11 +4,12 @@ import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRep
 import { ITradeRepository } from "../../../domain/repositories/trading/ITradeRepository";
 import { IMarketDataService } from "../../interface/services/IMarketDataService";
 import { MarketHoursService } from "../../services/trading/MarketHoursService";
-import { OrderMatchingEngine } from "../../../infrastructure/external/trading/OrderMatchingEngine";
+import { OrderExecutionService } from "../../services/trading/OrderExecutionService";
 import { Order, OrderSide, OrderType, OrderStatus } from "../../../domain/entities/trading/Order";
 import { PositionSide } from "../../../domain/entities/trading/Position";
 import { SquareOffPositionRequestDTO, PositionResponseDTO } from "../../dto/trading/PositionDTOs";
 import { ISquareOffPositionUseCase } from "../../interface/use-cases/trading/ISquareOffPositionUseCase";
+import { env } from "../../../infrastructure/config/env";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 
@@ -18,7 +19,7 @@ export class SquareOffPositionUseCase implements ISquareOffPositionUseCase {
     private readonly orderRepo: IOrderRepository,
     private readonly tradeRepo: ITradeRepository,
     private readonly marketDataService: IMarketDataService,
-    private readonly matchingEngine: OrderMatchingEngine
+    private readonly executionService: OrderExecutionService
   ) {}
 
   async execute(dto: SquareOffPositionRequestDTO): Promise<PositionResponseDTO> {
@@ -30,6 +31,9 @@ export class SquareOffPositionUseCase implements ISquareOffPositionUseCase {
     if (!position.isOpen()) {
       throw new AppError(ErrorCodes.POSITION_ALREADY_CLOSED, "Position is already closed");
     }
+
+    const marketStatus = MarketHoursService.getMarketStatus(env.ENFORCE_MARKET_HOURS);
+    const isAmo = env.ENFORCE_MARKET_HOURS ? !marketStatus.isOpen : false;
 
     const opposingSide =
       position.side === PositionSide.LONG ? OrderSide.SELL : OrderSide.BUY;
@@ -58,11 +62,16 @@ export class SquareOffPositionUseCase implements ISquareOffPositionUseCase {
       status: OrderStatus.PENDING,
       quantity: position.quantity,
       blockedMargin: 0,
+      isAmo,
     });
 
     squareOffOrder = await this.orderRepo.save(squareOffOrder);
 
-    await this.matchingEngine.executeOrder(squareOffOrder, exitPrice);
+    await this.executionService.dispatchOrder(
+      squareOffOrder,
+      exitPrice,
+      marketStatus
+    );
 
     const updatedPosition = await this.positionRepo.findById(position.id);
     const finalPosition = updatedPosition ?? position;
@@ -101,4 +110,3 @@ export class SquareOffPositionUseCase implements ISquareOffPositionUseCase {
     };
   }
 }
-

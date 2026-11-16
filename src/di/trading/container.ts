@@ -80,7 +80,7 @@ export const squareOffPositionUseCase = new SquareOffPositionUseCase(
   orderRepository,
   tradeRepository,
   marketDataService,
-  orderMatchingEngine
+  orderExecutionService
 );
 
 export const autoSquareOffCron = new AutoSquareOffCron(
