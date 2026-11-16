@@ -37,7 +37,7 @@ export class VerifyTopupPaymentUseCase implements IVerifyTopupPaymentUseCase {
     if (paymentOrder.status === PaymentStatus.SUCCESS) {
       return {
         success: true,
-        balance: wallet.balance,
+        balance: wallet.balance.toNumber(),
         virtualAmountAdded: 0,
       };
     }
@@ -76,7 +76,7 @@ export class VerifyTopupPaymentUseCase implements IVerifyTopupPaymentUseCase {
 
     return {
       success: true,
-      balance: wallet.balance,
+      balance: wallet.balance.toNumber(),
       virtualAmountAdded: paymentOrder.virtualAmount,
     };
   }

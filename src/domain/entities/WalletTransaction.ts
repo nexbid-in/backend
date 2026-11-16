@@ -1,3 +1,4 @@
+import { Money, MoneyInput } from "../value-objects/Money";
 import { AppError } from "../../shared/errors/AppError";
 import { ErrorCodes } from "../../shared/errors/ErrorCodes";
 
@@ -9,8 +10,8 @@ export interface WalletTransactionProps {
   userId: string;
   referenceId: string;
   type: WalletTransactionType;
-  amount: number;
-  balanceAfter: number;
+  amount: MoneyInput;
+  balanceAfter: MoneyInput;
   description: string;
   metadata?: Record<string, unknown> | null;
   createdAt?: Date;
@@ -23,8 +24,8 @@ export class WalletTransaction {
     userId: string;
     referenceId: string;
     type: WalletTransactionType;
-    amount: number;
-    balanceAfter: number;
+    amount: Money;
+    balanceAfter: Money;
     description: string;
     metadata: Record<string, unknown> | null;
     createdAt: Date;
@@ -41,8 +42,8 @@ export class WalletTransaction {
       userId: props.userId,
       referenceId: props.referenceId,
       type: props.type,
-      amount: props.amount,
-      balanceAfter: props.balanceAfter,
+      amount: Money.of(props.amount),
+      balanceAfter: Money.of(props.balanceAfter),
       description: props.description,
       metadata: props.metadata ?? null,
       createdAt: props.createdAt ?? new Date(),
@@ -54,8 +55,8 @@ export class WalletTransaction {
   get userId(): string { return this.props.userId; }
   get referenceId(): string { return this.props.referenceId; }
   get type(): WalletTransactionType { return this.props.type; }
-  get amount(): number { return this.props.amount; }
-  get balanceAfter(): number { return this.props.balanceAfter; }
+  get amount(): Money { return this.props.amount; }
+  get balanceAfter(): Money { return this.props.balanceAfter; }
   get description(): string { return this.props.description; }
   get metadata(): Record<string, unknown> | null { return this.props.metadata; }
   get createdAt(): Date { return this.props.createdAt; }

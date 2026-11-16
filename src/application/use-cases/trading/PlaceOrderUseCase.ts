@@ -131,7 +131,7 @@ export class PlaceOrderUseCase implements IPlaceOrderUseCase {
     }
 
     if (requiredMargin > 0) {
-      if (wallet.balance < requiredMargin) {
+      if (wallet.balance.isLessThan(requiredMargin)) {
         throw new AppError(
           ErrorCodes.INSUFFICIENT_FUNDS,
           `Insufficient funds. Required margin: ₹${requiredMargin.toFixed(2)}, Available: ₹${wallet.balance.toFixed(2)}`

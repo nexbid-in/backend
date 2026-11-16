@@ -5,7 +5,8 @@ import { DecimalLike } from "../../dto/internal/WalletPersistenceDTO";
 function toNum(val: DecimalLike): number {
   if (typeof val === "number") return val;
   if (typeof val === "string") return parseFloat(val);
-  return val.toNumber();
+  if (typeof val.toNumber === "function") return val.toNumber();
+  return parseFloat(val.toString());
 }
 
 export class PaymentOrderPersistenceMapper {

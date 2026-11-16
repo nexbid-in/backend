@@ -29,10 +29,10 @@ export class GetWalletOverviewUseCase implements IGetWalletOverviewUseCase {
     const wallet = await this._walletRepo.findOrCreateByUserId(data.userId);
 
     return {
-      balance: wallet.balance,
-      usedMargin: wallet.usedMargin,
-      totalVirtualMoneyBought: wallet.totalVirtualBought,
-      totalRealMoneyUsed: wallet.totalRealSpent,
+      balance: wallet.balance.toNumber(),
+      usedMargin: wallet.usedMargin.toNumber(),
+      totalVirtualMoneyBought: wallet.totalVirtualBought.toNumber(),
+      totalRealMoneyUsed: wallet.totalRealSpent.toNumber(),
       tradingStatus: wallet.status,
       exchangeRate: {
         real: 1,

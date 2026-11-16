@@ -83,7 +83,7 @@ export class EodOrderExpiryCron {
             (current.productType === ProductType.MIS || current.orderType === OrderType.LIMIT)
           ) {
             const wallet = await this.walletRepo.findOrCreateByUserId(current.userId);
-            if (wallet.usedMargin >= current.blockedMargin) {
+            if (wallet.usedMargin.isGreaterThanOrEqual(current.blockedMargin)) {
               wallet.releaseMargin(current.blockedMargin);
               await this.walletRepo.update(wallet);
             }
