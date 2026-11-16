@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import { IVerifyTopupPaymentUseCase } from "../../interface/use-cases/wallet/IVerifyTopupPaymentUseCase";
 import {
   VerifyTopupPaymentRequestDTO,
@@ -7,7 +6,7 @@ import {
 import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
 import { IPaymentOrderRepository } from "../../../domain/repositories/payment/IPaymentOrderRepository";
 import { IPaymentGatewayService } from "../../interface/services/IPaymentGatewayService";
-import { WalletTransaction } from "../../../domain/entities/WalletTransaction";
+import { WalletTopupSettlementService } from "../../services/wallet/WalletTopupSettlementService";
 import { PaymentStatus } from "../../../domain/entities/PaymentOrder";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
@@ -16,7 +15,8 @@ export class VerifyTopupPaymentUseCase implements IVerifyTopupPaymentUseCase {
   constructor(
     private readonly _walletRepo: IWalletRepository,
     private readonly _paymentOrderRepo: IPaymentOrderRepository,
-    private readonly _paymentGateway: IPaymentGatewayService
+    private readonly _paymentGateway: IPaymentGatewayService,
+    private readonly _settlementService: WalletTopupSettlementService
   ) {}
 
   async execute(data: VerifyTopupPaymentRequestDTO): Promise<VerifyTopupPaymentResponseDTO> {
@@ -54,25 +54,15 @@ export class VerifyTopupPaymentUseCase implements IVerifyTopupPaymentUseCase {
       throw new AppError(ErrorCodes.PAYMENT_VERIFICATION_FAILED);
     }
 
-    paymentOrder.markAsSuccess(data.paymentId);
-    wallet.topUp(paymentOrder.virtualAmount, paymentOrder.realAmount);
-
-    const transaction = WalletTransaction.create({
-      id: crypto.randomUUID(),
-      walletId: wallet.id,
-      userId: wallet.userId,
-      referenceId: paymentOrder.id,
-      type: "TOPUP",
-      amount: paymentOrder.virtualAmount,
-      balanceAfter: wallet.balance,
-      description: `Virtual money top-up (₹${paymentOrder.realAmount})`,
+    await this._settlementService.settleTopupSuccess({
+      wallet,
+      paymentOrder,
+      paymentId: data.paymentId,
       metadata: {
         orderId: data.orderId,
         paymentId: data.paymentId,
       },
     });
-
-    await this._walletRepo.saveTopupWithTransaction(wallet, transaction, paymentOrder);
 
     return {
       success: true,

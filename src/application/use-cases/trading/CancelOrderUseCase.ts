@@ -1,6 +1,7 @@
 import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRepository";
 import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
 import { OrderMatchingEngine } from "../../../infrastructure/external/trading/OrderMatchingEngine";
+import { OrderResponseMapper } from "../../mapper/trading/OrderResponseMapper";
 import { CancelOrderRequestDTO, OrderResponseDTO } from "../../dto/trading/OrderDTOs";
 import { ICancelOrderUseCase } from "../../interface/use-cases/trading/ICancelOrderUseCase";
 import { AppError } from "../../../shared/errors/AppError";
@@ -37,26 +38,7 @@ export class CancelOrderUseCase implements ICancelOrderUseCase {
       await this.walletRepo.update(wallet);
     }
 
-    return {
-      id: order.id,
-      userId: order.userId,
-      stockId: order.stockId,
-      symbol: order.symbol,
-      side: order.side,
-      orderType: order.orderType,
-      productType: order.productType,
-      status: order.status,
-      quantity: order.quantity,
-      filledQuantity: order.filledQuantity,
-      price: order.price,
-      averagePrice: order.averagePrice,
-      triggerPrice: order.triggerPrice,
-      rejectionReason: order.rejectionReason,
-      blockedMargin: order.blockedMargin,
-      isAmo: order.isAmo,
-      createdAt: order.createdAt,
-      updatedAt: order.updatedAt,
-    };
+    return OrderResponseMapper.toDTO(order);
   }
 }
 

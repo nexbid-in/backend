@@ -5,6 +5,10 @@ import { WalletRepository } from "../../infrastructure/repositories/wallet/Walle
 import { StockRepository } from "../../infrastructure/repositories/stock/StockRepository";
 import { marketDataService } from "../market/container";
 import { OrderMatchingEngine } from "../../infrastructure/external/trading/OrderMatchingEngine";
+import { TradeValidationService } from "../../application/services/trading/TradeValidationService";
+import { OrderPricingService } from "../../application/services/trading/OrderPricingService";
+import { OrderMarginService } from "../../application/services/trading/OrderMarginService";
+import { OrderExecutionService } from "../../application/services/trading/OrderExecutionService";
 import { PlaceOrderUseCase } from "../../application/use-cases/trading/PlaceOrderUseCase";
 import { GetOrdersUseCase } from "../../application/use-cases/trading/GetOrdersUseCase";
 import { CancelOrderUseCase } from "../../application/use-cases/trading/CancelOrderUseCase";
@@ -30,13 +34,31 @@ export const orderMatchingEngine = new OrderMatchingEngine(
   marketDataService
 );
 
+export const tradeValidationService = new TradeValidationService(
+  stockRepository,
+  positionRepository
+);
+
+export const orderPricingService = new OrderPricingService(
+  marketDataService
+);
+
+export const orderMarginService = new OrderMarginService(
+  positionRepository,
+  walletRepository
+);
+
+export const orderExecutionService = new OrderExecutionService(
+  orderMatchingEngine,
+  marketDataService
+);
+
 export const placeOrderUseCase = new PlaceOrderUseCase(
   orderRepository,
-  positionRepository,
-  walletRepository,
-  stockRepository,
-  marketDataService,
-  orderMatchingEngine
+  tradeValidationService,
+  orderPricingService,
+  orderMarginService,
+  orderExecutionService
 );
 
 export const getOrdersUseCase = new GetOrdersUseCase(orderRepository);
