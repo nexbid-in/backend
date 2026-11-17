@@ -33,6 +33,8 @@ export const SuccessMessages = {
   AMO_ORDER_PLACED: "After Market Order (AMO) placed successfully. It will be submitted when market opens.",
   ORDERS_RETRIEVED: "Orders retrieved successfully",
   ORDER_CANCELLED: "Order cancelled successfully",
+  ORDER_METRICS_RETRIEVED: "Order metrics retrieved successfully",
+  ORDER_DETAILS_RETRIEVED: "Order details retrieved successfully",
   POSITIONS_RETRIEVED: "Positions retrieved successfully",
   POSITION_SQUARED_OFF: "Position squared off successfully",
   MARKET_STATUS_RETRIEVED: "Market status retrieved successfully",

@@ -26,6 +26,10 @@ export const ApiRoutes = {
     BASE: "/admin",
     USERS: "/users",
     UPDATE_USER_STATUS: "/users/:userId/status",
+    ORDERS: "/orders",
+    ORDER_METRICS: "/orders/metrics",
+    ORDER_DETAILS: "/orders/:orderId",
+    CANCEL_ORDER: "/orders/:orderId/cancel",
   },
 
   WALLET: {

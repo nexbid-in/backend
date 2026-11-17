@@ -1,5 +1,8 @@
 import express from "express";
-import { adminUserController } from "../../../../di/admin/container";
+import {
+  adminUserController,
+  adminOrderController,
+} from "../../../../di/admin/container";
 import { requireRole } from "../../middlewares/roleMiddleware";
 import { authMiddleware } from "../../../../di/auth/container";
 import { ApiRoutes } from "../../constants/ApiRoutes";
@@ -18,6 +21,34 @@ router.patch(
   authMiddleware,
   requireRole(["ADMIN"]),
   adminUserController.updateUserStatus.bind(adminUserController)
-)
+);
+
+router.get(
+  ApiRoutes.ADMIN.ORDER_METRICS,
+  authMiddleware,
+  requireRole(["ADMIN"]),
+  adminOrderController.getMetrics.bind(adminOrderController)
+);
+
+router.get(
+  ApiRoutes.ADMIN.ORDERS,
+  authMiddleware,
+  requireRole(["ADMIN"]),
+  adminOrderController.getOrders.bind(adminOrderController)
+);
+
+router.post(
+  ApiRoutes.ADMIN.CANCEL_ORDER,
+  authMiddleware,
+  requireRole(["ADMIN"]),
+  adminOrderController.cancelOrder.bind(adminOrderController)
+);
+
+router.get(
+  ApiRoutes.ADMIN.ORDER_DETAILS,
+  authMiddleware,
+  requireRole(["ADMIN"]),
+  adminOrderController.getOrderDetails.bind(adminOrderController)
+);
 
 export default router;
