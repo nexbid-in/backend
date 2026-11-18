@@ -180,15 +180,15 @@ export class OrderRepository
       const where: Prisma.OrderWhereInput = {};
 
       if (status && status !== "ALL") {
-        where.status = status as OrderStatus;
+        where.status = status;
       }
 
       if (side && side !== "ALL") {
-        where.side = side as OrderSide;
+        where.side = side;
       }
 
       if (productType && productType !== "ALL") {
-        where.productType = productType as ProductType;
+        where.productType = productType;
       }
 
       if (isAmo !== undefined) {

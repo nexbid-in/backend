@@ -135,7 +135,6 @@ export class FyersMarketService implements IMarketDataService {
       } catch {
         /* ignore */
       }
-      (fyersPkg as { fyersDataSocket: { instance?: unknown } }).fyersDataSocket.instance = null;
       this.socket = null;
       this.isSocketConnected = false;
       this.subscribedToBroker.clear();
@@ -146,6 +145,7 @@ export class FyersMarketService implements IMarketDataService {
       this.isConnecting = true;
 
       try {
+        (fyersPkg as { fyersDataSocket: { instance?: unknown } }).fyersDataSocket.instance = null;
         this.currentSocketToken = token;
         this.socket = FyersDataSocketClass.getInstance(token, "", false);
 
@@ -589,23 +589,27 @@ export class FyersMarketService implements IMarketDataService {
   }
 
   async subscribe(symbols: string[]): Promise<void> {
-    const newlyAdded: string[] = [];
-
     symbols.forEach((sym) => {
       const clean = MarketSymbolMapper.fromFyersSymbol(sym.toUpperCase().trim());
       this.activeSubscriptions.add(clean);
-      if (!this.subscribedToBroker.has(clean)) {
-        newlyAdded.push(clean);
-      }
     });
 
     await this.ensureSocketConnected();
 
-    if (this.socket && this.isSocketConnected && newlyAdded.length > 0) {
-      const fyersSymbols = newlyAdded.map((s) => MarketSymbolMapper.toFyersSymbol(s));
-      logger.info({ fyersSymbols }, "Subscribing newly added symbols to Fyers Data Socket");
-      this.socket.subscribe(fyersSymbols);
-      newlyAdded.forEach((s) => this.subscribedToBroker.add(s));
+    if (this.socket && this.isSocketConnected) {
+      const toSubscribe: string[] = [];
+      this.activeSubscriptions.forEach((clean) => {
+        if (!this.subscribedToBroker.has(clean)) {
+          toSubscribe.push(clean);
+        }
+      });
+
+      if (toSubscribe.length > 0) {
+        const fyersSymbols = toSubscribe.map((s) => MarketSymbolMapper.toFyersSymbol(s));
+        logger.info({ fyersSymbols }, "Subscribing active symbols to Fyers Data Socket");
+        this.socket.subscribe(fyersSymbols);
+        toSubscribe.forEach((s) => this.subscribedToBroker.add(s));
+      }
     }
   }
 

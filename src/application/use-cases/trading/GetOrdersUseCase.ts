@@ -17,7 +17,7 @@ export class GetOrdersUseCase implements IGetOrdersUseCase {
       sessionStart
     );
 
-    return orders.map(OrderResponseMapper.toDTO);
+    return orders.map((order) => OrderResponseMapper.toDTO(order));
   }
 }
 

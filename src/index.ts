@@ -42,6 +42,14 @@ const startServer = async () => {
     }
 };
 
+process.on("uncaughtException", (error: Error) => {
+    logger.error({ error }, "Uncaught exception in process event loop");
+});
+
+process.on("unhandledRejection", (reason: unknown) => {
+    logger.error({ reason }, "Unhandled promise rejection in process event loop");
+});
+
 void startServer();
 
 
