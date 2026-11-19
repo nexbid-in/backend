@@ -57,13 +57,20 @@ export class Wallet {
   get createdAt(): Date { return this.props.createdAt; }
   get updatedAt(): Date { return this.props.updatedAt; }
 
+  get availableMargin(): Money {
+    if (this.props.balance.isGreaterThanOrEqual(this.props.usedMargin)) {
+      return this.props.balance.subtract(this.props.usedMargin);
+    }
+    return Money.zero();
+  }
+
   public isActive(): boolean {
     return this.props.status === "ACTIVE";
   }
 
   public canDebit(amount: MoneyInput): boolean {
     const amt = Money.of(amount);
-    return this.isActive() && amt.isPositive() && this.props.balance.isGreaterThanOrEqual(amt);
+    return this.isActive() && amt.isPositive() && this.availableMargin.isGreaterThanOrEqual(amt);
   }
 
   public topUp(virtualAmount: MoneyInput, realAmount: MoneyInput): void {
@@ -92,7 +99,7 @@ export class Wallet {
     const amt = Money.of(amount);
     if (!this.isActive()) throw new AppError(ErrorCodes.WALLET_FROZEN);
     if (!amt.isPositive()) throw new AppError(ErrorCodes.INVALID_AMOUNT);
-    if (this.props.balance.isLessThan(amt)) throw new AppError(ErrorCodes.INSUFFICIENT_FUNDS);
+    if (this.availableMargin.isLessThan(amt)) throw new AppError(ErrorCodes.INSUFFICIENT_FUNDS);
 
     this.props.balance = this.props.balance.subtract(amt);
     this.props.updatedAt = new Date();
@@ -102,32 +109,31 @@ export class Wallet {
     const amt = Money.of(amount);
     if (!this.canDebit(amt)) throw new AppError(ErrorCodes.INSUFFICIENT_FUNDS);
 
-    this.props.balance = this.props.balance.subtract(amt);
     this.props.usedMargin = this.props.usedMargin.add(amt);
     this.props.updatedAt = new Date();
   }
 
   public releaseMargin(amount: MoneyInput): void {
     const amt = Money.of(amount);
-    if (!amt.isPositive() || this.props.usedMargin.isLessThan(amt)) {
-      throw new AppError(ErrorCodes.INVALID_AMOUNT);
+    if (!amt.isPositive()) {
+      return;
     }
 
-    this.props.usedMargin = this.props.usedMargin.subtract(amt);
-    this.props.balance = this.props.balance.add(amt);
+    const unblock = this.props.usedMargin.isLessThan(amt) ? this.props.usedMargin : amt;
+    this.props.usedMargin = this.props.usedMargin.subtract(unblock);
     this.props.updatedAt = new Date();
   }
 
-  public settlePosition(blockedMargin: MoneyInput, netPayout: MoneyInput): void {
+  public settlePosition(blockedMargin: MoneyInput, realizedPnL: MoneyInput): void {
     const margin = Money.of(blockedMargin);
-    const payout = Money.of(netPayout);
+    const pnl = Money.of(realizedPnL);
 
-    if (!margin.isPositive() || this.props.usedMargin.isLessThan(margin)) {
-      throw new AppError(ErrorCodes.INVALID_AMOUNT);
+    if (margin.isPositive()) {
+      const unblock = this.props.usedMargin.isLessThan(margin) ? this.props.usedMargin : margin;
+      this.props.usedMargin = this.props.usedMargin.subtract(unblock);
     }
 
-    this.props.usedMargin = this.props.usedMargin.subtract(margin);
-    this.props.balance = this.props.balance.add(payout);
+    this.props.balance = this.props.balance.add(pnl);
     this.props.updatedAt = new Date();
   }
 

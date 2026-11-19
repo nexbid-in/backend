@@ -183,16 +183,15 @@ export class OrderMatchingEngine {
     } else if (order.productType === ProductType.MIS) {
       if (isClosingPosition && closedQty > 0) {
         const marginReleased = +((closedQty * prevAvgPrice) / 5).toFixed(2);
-        const netCashImpact = +(marginReleased + incrementalPnL).toFixed(2);
 
-        wallet.settlePosition(marginReleased, netCashImpact);
+        wallet.settlePosition(marginReleased, incrementalPnL);
 
         const tx = WalletTransaction.create({
           id: crypto.randomUUID(),
           walletId: wallet.id,
           userId: wallet.userId,
           referenceId: `order_${order.id}`,
-          type: "SELL",
+          type: order.side === OrderSide.BUY ? "BUY" : "SELL",
           amount: incrementalPnL,
           balanceAfter: wallet.balance,
           description: `MIS Square-off ${closedQty} ${order.symbol} @ ₹${fillPrice} (Realized P&L: ₹${

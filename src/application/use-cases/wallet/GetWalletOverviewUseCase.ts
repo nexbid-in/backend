@@ -30,6 +30,7 @@ export class GetWalletOverviewUseCase implements IGetWalletOverviewUseCase {
 
     return {
       balance: wallet.balance.toNumber(),
+      availableMargin: wallet.availableMargin.toNumber(),
       usedMargin: wallet.usedMargin.toNumber(),
       totalVirtualMoneyBought: wallet.totalVirtualBought.toNumber(),
       totalRealMoneyUsed: wallet.totalRealSpent.toNumber(),

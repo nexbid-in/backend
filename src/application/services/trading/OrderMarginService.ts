@@ -45,10 +45,10 @@ export class OrderMarginService {
     }
 
     if (requiredMargin > 0) {
-      if (wallet.balance.isLessThan(requiredMargin)) {
+      if (wallet.availableMargin.isLessThan(requiredMargin)) {
         throw new AppError(
           ErrorCodes.INSUFFICIENT_FUNDS,
-          `Insufficient funds. Required margin: ₹${requiredMargin.toFixed(2)}, Available: ₹${wallet.balance.toFixed(2)}`
+          `Insufficient funds. Required margin: ₹${requiredMargin.toFixed(2)}, Available: ₹${wallet.availableMargin.toFixed(2)}`
         );
       }
 
