@@ -16,11 +16,13 @@ import { PaymentReconciliationCron } from "../../infrastructure/cron/PaymentReco
 import { WalletController } from "../../presentation/http/controllers/wallet/WalletController";
 
 import { WalletTopupSettlementService } from "../../application/services/wallet/WalletTopupSettlementService";
+import { BusinessIdGenerator } from "../../infrastructure/services/idGenerator/BusinessIdGenerator";
 
 const walletRepository = new WalletRepository();
 const walletTransactionRepository = new WalletTransactionRepository();
 const paymentOrderRepository = new PaymentOrderRepository();
 const userRepository = new UserRepository();
+const idGenerator = new BusinessIdGenerator();
 const paymentGatewayService = new RazorpayService(
   env.RAZORPAY_KEY_ID,
   env.RAZORPAY_KEY_SECRET
@@ -46,6 +48,7 @@ const createTopupOrderUseCase = new CreateTopupOrderUseCase(
   walletRepository,
   paymentOrderRepository,
   paymentGatewayService,
+  idGenerator,
   env.VIRTUAL_CURRENCY_RATE
 );
 

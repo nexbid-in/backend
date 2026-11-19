@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import { IPositionRepository } from "../../../domain/repositories/trading/IPositionRepository";
 import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRepository";
 import { ITradeRepository } from "../../../domain/repositories/trading/ITradeRepository";
@@ -9,6 +8,7 @@ import { Order, OrderSide, OrderType, OrderStatus } from "../../../domain/entiti
 import { PositionSide } from "../../../domain/entities/trading/Position";
 import { SquareOffPositionRequestDTO, PositionResponseDTO } from "../../dto/trading/PositionDTOs";
 import { ISquareOffPositionUseCase } from "../../interface/use-cases/trading/ISquareOffPositionUseCase";
+import { IIdGenerator } from "../../interface/services/IIdGenerator";
 import { env } from "../../../infrastructure/config/env";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
@@ -19,7 +19,8 @@ export class SquareOffPositionUseCase implements ISquareOffPositionUseCase {
     private readonly orderRepo: IOrderRepository,
     private readonly tradeRepo: ITradeRepository,
     private readonly marketDataService: IMarketDataService,
-    private readonly executionService: OrderExecutionService
+    private readonly executionService: OrderExecutionService,
+    private readonly idGenerator: IIdGenerator
   ) {}
 
   async execute(dto: SquareOffPositionRequestDTO): Promise<PositionResponseDTO> {
@@ -52,7 +53,7 @@ export class SquareOffPositionUseCase implements ISquareOffPositionUseCase {
     }
 
     let squareOffOrder = Order.create({
-      id: crypto.randomUUID(),
+      id: this.idGenerator.generate("ORD"),
       userId: dto.userId,
       stockId: position.stockId,
       symbol: position.symbol,

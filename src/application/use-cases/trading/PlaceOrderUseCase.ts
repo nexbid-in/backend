@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRepository";
 import { Order, OrderStatus, OrderType } from "../../../domain/entities/trading/Order";
 import { TradeValidationService } from "../../services/trading/TradeValidationService";
@@ -10,6 +9,7 @@ import { OrderResponseMapper } from "../../mapper/trading/OrderResponseMapper";
 import { env } from "../../../infrastructure/config/env";
 import { PlaceOrderRequestDTO, OrderResponseDTO } from "../../dto/trading/OrderDTOs";
 import { IPlaceOrderUseCase } from "../../interface/use-cases/trading/IPlaceOrderUseCase";
+import { IIdGenerator } from "../../interface/services/IIdGenerator";
 
 export class PlaceOrderUseCase implements IPlaceOrderUseCase {
   constructor(
@@ -17,7 +17,8 @@ export class PlaceOrderUseCase implements IPlaceOrderUseCase {
     private readonly validationService: TradeValidationService,
     private readonly pricingService: OrderPricingService,
     private readonly marginService: OrderMarginService,
-    private readonly executionService: OrderExecutionService
+    private readonly executionService: OrderExecutionService,
+    private readonly idGenerator: IIdGenerator
   ) {}
 
   async execute(dto: PlaceOrderRequestDTO): Promise<OrderResponseDTO> {
@@ -42,7 +43,7 @@ export class PlaceOrderUseCase implements IPlaceOrderUseCase {
     );
 
     let order = Order.create({
-      id: crypto.randomUUID(),
+      id: this.idGenerator.generate("ORD"),
       userId: dto.userId,
       stockId: stock.id,
       symbol: cleanSymbol,

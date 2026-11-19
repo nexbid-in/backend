@@ -19,12 +19,14 @@ import { AmoDispatchCron } from "../../infrastructure/cron/AmoDispatchCron";
 import { EodOrderExpiryCron } from "../../infrastructure/cron/EodOrderExpiryCron";
 import { OrderController } from "../../presentation/http/controllers/trading/OrderController";
 import { PortfolioController } from "../../presentation/http/controllers/trading/PortfolioController";
+import { BusinessIdGenerator } from "../../infrastructure/services/idGenerator/BusinessIdGenerator";
 
 export const orderRepository = new OrderRepository();
 export const positionRepository = new PositionRepository();
 export const tradeRepository = new TradeRepository();
 export const walletRepository = new WalletRepository();
 export const stockRepository = new StockRepository();
+export const idGenerator = new BusinessIdGenerator();
 
 export const orderMatchingEngine = new OrderMatchingEngine(
   orderRepository,
@@ -58,7 +60,8 @@ export const placeOrderUseCase = new PlaceOrderUseCase(
   tradeValidationService,
   orderPricingService,
   orderMarginService,
-  orderExecutionService
+  orderExecutionService,
+  idGenerator
 );
 
 export const getOrdersUseCase = new GetOrdersUseCase(orderRepository);
@@ -80,7 +83,8 @@ export const squareOffPositionUseCase = new SquareOffPositionUseCase(
   orderRepository,
   tradeRepository,
   marketDataService,
-  orderExecutionService
+  orderExecutionService,
+  idGenerator
 );
 
 export const autoSquareOffCron = new AutoSquareOffCron(
