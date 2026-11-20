@@ -33,9 +33,9 @@ export const getAdminOrdersSchema: z.ZodType<AdminOrdersQueryDTO> = z.object({
 });
 
 export const getAdminOrderDetailsSchema = z.object({
-  orderId: z.string().uuid("Invalid order ID format"),
+  orderId: z.string().regex(/^ORD-\d{6}-[2-9A-HJ-NP-Z]{6}$/, "Invalid order ID format"),
 });
 
 export const adminCancelOrderSchema: z.ZodType<AdminCancelOrderDTO> = z.object({
-  orderId: z.string().uuid("Invalid order ID format"),
+  orderId: z.string().regex(/^ORD-\d{6}-[2-9A-HJ-NP-Z]{6}$/, "Invalid order ID format"),
 });
