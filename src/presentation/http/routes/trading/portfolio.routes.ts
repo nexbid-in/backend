@@ -11,6 +11,12 @@ router.get(
   portfolioController.getPositions.bind(portfolioController)
 );
 
+router.get(
+  ApiRoutes.PORTFOLIO.HOLDINGS,
+  authMiddleware,
+  portfolioController.getHoldings.bind(portfolioController)
+);
+
 router.post(
   ApiRoutes.PORTFOLIO.SQUARE_OFF,
   authMiddleware,

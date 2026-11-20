@@ -36,6 +36,7 @@ export const SuccessMessages = {
   ORDER_METRICS_RETRIEVED: "Order metrics retrieved successfully",
   ORDER_DETAILS_RETRIEVED: "Order details retrieved successfully",
   POSITIONS_RETRIEVED: "Positions retrieved successfully",
+  HOLDINGS_RETRIEVED: "Holdings retrieved successfully",
   POSITION_SQUARED_OFF: "Position squared off successfully",
   MARKET_STATUS_RETRIEVED: "Market status retrieved successfully",
 } as const;

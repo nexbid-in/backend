@@ -2,7 +2,7 @@ import { IPositionRepository } from "../../../domain/repositories/trading/IPosit
 import { ITradeRepository } from "../../../domain/repositories/trading/ITradeRepository";
 import { IMarketDataService } from "../../interface/services/IMarketDataService";
 import { GetPositionsResponseDTO, PositionResponseDTO, PortfolioSummaryDTO } from "../../dto/trading/PositionDTOs";
-import { PositionSide } from "../../../domain/entities/trading/Position";
+import { PositionSide, ProductType } from "../../../domain/entities/trading/Position";
 import { MarketHoursService } from "../../services/trading/MarketHoursService";
 import { IGetPositionsUseCase } from "../../interface/use-cases/trading/IGetPositionsUseCase";
 
@@ -34,7 +34,9 @@ export class GetPositionsUseCase implements IGetPositionsUseCase {
     totalRealizedPnL = +totalRealizedPnL.toFixed(2);
 
     const sessionPositions = allPositions.filter(
-      (pos) => pos.isOpen() || pos.updatedAt >= startOfTodayIst
+      (pos) =>
+        pos.productType === ProductType.MIS &&
+        (pos.isOpen() || pos.updatedAt >= startOfTodayIst)
     );
 
     let totalInvestment = 0;

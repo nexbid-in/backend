@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { GetPositionsUseCase } from "../../../../application/use-cases/trading/GetPositionsUseCase";
+import { GetHoldingsUseCase } from "../../../../application/use-cases/trading/GetHoldingsUseCase";
 import { SquareOffPositionUseCase } from "../../../../application/use-cases/trading/SquareOffPositionUseCase";
 import {
   getPositionsQuerySchema,
@@ -14,6 +15,7 @@ import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 export class PortfolioController {
   constructor(
     private readonly getPositionsUseCase: GetPositionsUseCase,
+    private readonly getHoldingsUseCase: GetHoldingsUseCase,
     private readonly squareOffUseCase: SquareOffPositionUseCase
   ) {}
 
@@ -32,6 +34,26 @@ export class PortfolioController {
         res,
         HttpStatus.OK,
         SuccessMessages.POSITIONS_RETRIEVED,
+        result
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getHoldings(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new AppError(ErrorCodes.UNAUTHORIZED);
+      }
+
+      const result = await this.getHoldingsUseCase.execute(userId);
+
+      ApiResponse.success(
+        res,
+        HttpStatus.OK,
+        SuccessMessages.HOLDINGS_RETRIEVED,
         result
       );
     } catch (error) {
