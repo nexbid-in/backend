@@ -32,7 +32,7 @@ export const cancelOrderParamsSchema = z.object({
 });
 
 export const getPositionsQuerySchema = z.object({
-  filter: z.enum(["OPEN", "ALL"]).default("ALL"),
+  filter: z.enum(["OPEN", "ALL", "CLOSED"]).default("ALL"),
 });
 
 export const squareOffParamsSchema = z.object({

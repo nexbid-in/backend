@@ -13,7 +13,7 @@ export class GetPositionsUseCase implements IGetPositionsUseCase {
     private readonly marketDataService: IMarketDataService
   ) {}
 
-  async execute(userId: string, filter: "OPEN" | "ALL" = "ALL"): Promise<GetPositionsResponseDTO> {
+  async execute(userId: string, filter: "OPEN" | "ALL" | "CLOSED" = "ALL"): Promise<GetPositionsResponseDTO> {
     const startOfTodayIst = MarketHoursService.getStartOfTodayIst();
     const [allPositions, todayTrades] = await Promise.all([
       this.positionRepo.findAllPositionsByUserId(userId),
@@ -68,6 +68,8 @@ export class GetPositionsUseCase implements IGetPositionsUseCase {
     const positionsToReturn =
       filter === "OPEN"
         ? sessionPositions.filter((p) => p.isOpen())
+        : filter === "CLOSED"
+        ? sessionPositions.filter((p) => !p.isOpen())
         : sessionPositions;
 
     const mappedPositions: PositionResponseDTO[] = [];
