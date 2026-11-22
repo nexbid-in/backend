@@ -8,6 +8,7 @@ import { PlaceOrderRequestDTO } from "../../dto/trading/OrderDTOs";
 import { env } from "../../../infrastructure/config/env";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
+import { ErrorMessages } from "../../../presentation/http/constants/ErrorMessages";
 
 export class TradeValidationService {
   constructor(
@@ -18,9 +19,10 @@ export class TradeValidationService {
   async validateOrderPlacement(
     dto: PlaceOrderRequestDTO,
     cleanSymbol: string,
-    marketStatus: MarketStatusInfo
+    marketStatus: MarketStatusInfo,
+    existingStock?: Stock
   ): Promise<Stock> {
-    const stock = await this.stockRepo.findBySymbol(cleanSymbol);
+    const stock = existingStock ?? (await this.stockRepo.findBySymbol(cleanSymbol));
     if (!stock || !stock.isActive) {
       throw new AppError(ErrorCodes.STOCK_NOT_FOUND);
     }
@@ -33,7 +35,7 @@ export class TradeValidationService {
         if (marketStatus.isOpen) {
           throw new AppError(
             ErrorCodes.AMO_NOT_ALLOWED_DURING_MARKET,
-            "After Market Orders (AMO) cannot be placed during live market hours (09:15 AM - 03:30 PM IST). Please place a regular order."
+            ErrorMessages.AMO_NOT_ALLOWED_DURING_MARKET
           );
         }
       } else {
@@ -47,7 +49,7 @@ export class TradeValidationService {
         if (dto.productType === ProductType.MIS && !marketStatus.isMisAllowed) {
           throw new AppError(
             ErrorCodes.MIS_ORDER_CUTOFF_EXCEEDED,
-            "New intraday (MIS) orders are blocked after 03:20 PM IST due to auto-square-off cutoffs. Please place a CNC (Delivery) order or an AMO."
+            ErrorMessages.MIS_ORDER_CUTOFF_EXCEEDED
           );
         }
       }
@@ -63,7 +65,7 @@ export class TradeValidationService {
       if (!holding || holding.side !== PositionSide.LONG || holding.quantity < dto.quantity) {
         throw new AppError(
           ErrorCodes.SHORT_SELLING_NOT_ALLOWED_IN_CNC,
-          "Short selling is only permitted under MIS (Intraday) product type"
+          ErrorMessages.SHORT_SELLING_NOT_ALLOWED_IN_CNC
         );
       }
     }

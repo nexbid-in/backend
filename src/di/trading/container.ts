@@ -58,6 +58,7 @@ export const orderExecutionService = new OrderExecutionService(
 
 export const placeOrderUseCase = new PlaceOrderUseCase(
   orderRepository,
+  stockRepository,
   tradeValidationService,
   orderPricingService,
   orderMarginService,

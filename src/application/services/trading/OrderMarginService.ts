@@ -60,4 +60,16 @@ export class OrderMarginService {
 
     return requiredMargin;
   }
+
+  async releaseMargin(userId: string, amount: number): Promise<void> {
+    if (amount <= 0) {
+      return;
+    }
+    const wallet = await this.walletRepo.findByUserId(userId);
+    if (!wallet) {
+      return;
+    }
+    wallet.releaseMargin(amount);
+    await this.walletRepo.update(wallet);
+  }
 }

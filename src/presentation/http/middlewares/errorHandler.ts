@@ -36,9 +36,10 @@ export const errorHandler = (
     if (err.code === ErrorCodes.ACCOUNT_BLOCKED) {
       clearAuthCookies(res);
     }
-    
+
     const mapping = HttpErrorMap[err.code];
-    return ApiResponse.error(res, mapping.status, err.code, mapping.message);
+    const message = err.message && err.message.trim() !== "" ? err.message : mapping.message;
+    return ApiResponse.error(res, mapping.status, err.code, message);
   }
 
   logger.error({ err }, "Unhandled error");

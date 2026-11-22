@@ -28,7 +28,7 @@ export const getOrdersQuerySchema = z.object({
 });
 
 export const cancelOrderParamsSchema = z.object({
-  id: z.string().uuid("Invalid order ID format"),
+  id: z.string().trim().min(1, "Invalid order ID format"),
 });
 
 export const getPositionsQuerySchema = z.object({
