@@ -7,6 +7,7 @@ export type StockPersistenceDTO = {
   exchange: string;
   sector: string | null;
   type: InstrumentType;
+  feedSymbol: string | null;
   isActive: boolean;
   isTradable: boolean;
   createdAt: Date;

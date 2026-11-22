@@ -166,6 +166,26 @@ export const HttpErrorMap: Record<
     message: ErrorMessages.STOCK_NOT_TRADABLE,
   },
 
+  [ErrorCodes.STOCK_SYMBOL_ALREADY_EXISTS]: {
+    status: HttpStatus.CONFLICT,
+    message: ErrorMessages.STOCK_SYMBOL_ALREADY_EXISTS,
+  },
+
+  [ErrorCodes.STOCK_FEED_SYMBOL_ALREADY_EXISTS]: {
+    status: HttpStatus.CONFLICT,
+    message: ErrorMessages.STOCK_FEED_SYMBOL_ALREADY_EXISTS,
+  },
+
+  [ErrorCodes.CANNOT_DELETE_STOCK_WITH_ORDERS]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.CANNOT_DELETE_STOCK_WITH_ORDERS,
+  },
+
+  [ErrorCodes.INDEX_CANNOT_BE_TRADABLE]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.INDEX_CANNOT_BE_TRADABLE,
+  },
+
   [ErrorCodes.ORDER_CANNOT_BE_CANCELLED]: {
     status: HttpStatus.BAD_REQUEST,
     message: ErrorMessages.ORDER_CANNOT_BE_CANCELLED,

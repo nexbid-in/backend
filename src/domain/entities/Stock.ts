@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { AppError } from "../../shared/errors/AppError";
 import { ErrorCodes } from "../../shared/errors/ErrorCodes";
 
@@ -9,12 +10,13 @@ export const InstrumentType = {
 export type InstrumentType = (typeof InstrumentType)[keyof typeof InstrumentType];
 
 export interface StockProps {
-  id: string;
+  id?: string;
   symbol: string;
   name: string;
   exchange?: string;
   sector?: string | null;
   type?: InstrumentType;
+  feedSymbol?: string | null;
   isActive?: boolean;
   isTradable?: boolean;
   createdAt?: Date;
@@ -30,6 +32,7 @@ export class Stock {
       exchange: string;
       sector: string | null;
       type: InstrumentType;
+      feedSymbol: string | null;
       isActive: boolean;
       isTradable: boolean;
       createdAt: Date;
@@ -38,19 +41,21 @@ export class Stock {
   ) {}
 
   static create(props: StockProps): Stock {
-    if (!props.id || !props.symbol || !props.name) {
+    if (!props.symbol || !props.name) {
       throw new AppError(ErrorCodes.VALIDATION_FAILED);
     }
 
+    const id = props.id ?? crypto.randomUUID();
     const type = props.type ?? InstrumentType.EQUITY;
 
     return new Stock({
-      id: props.id,
+      id,
       symbol: props.symbol.toUpperCase().trim(),
       name: props.name.trim(),
       exchange: props.exchange ?? "NSE",
       sector: props.sector ?? null,
       type,
+      feedSymbol: props.feedSymbol ? props.feedSymbol.toUpperCase().trim() : null,
       isActive: props.isActive ?? true,
       isTradable: type === InstrumentType.INDEX ? false : (props.isTradable ?? true),
       createdAt: props.createdAt ?? new Date(),
@@ -64,8 +69,47 @@ export class Stock {
   get exchange(): string { return this.props.exchange; }
   get sector(): string | null { return this.props.sector; }
   get type(): InstrumentType { return this.props.type; }
+  get feedSymbol(): string | null { return this.props.feedSymbol; }
   get isActive(): boolean { return this.props.isActive; }
   get isTradable(): boolean { return this.props.isTradable; }
   get createdAt(): Date { return this.props.createdAt; }
   get updatedAt(): Date { return this.props.updatedAt; }
+
+  updateStatus(isActive?: boolean, isTradable?: boolean): void {
+    if (isActive !== undefined) {
+      this.props.isActive = isActive;
+    }
+    if (isTradable !== undefined) {
+      this.props.isTradable = this.props.type === InstrumentType.INDEX ? false : isTradable;
+    }
+    this.props.updatedAt = new Date();
+  }
+
+  updateMetadata(data: {
+    name?: string;
+    exchange?: string;
+    sector?: string | null;
+    type?: InstrumentType;
+    feedSymbol?: string | null;
+  }): void {
+    if (data.name !== undefined) {
+      this.props.name = data.name.trim();
+    }
+    if (data.exchange !== undefined) {
+      this.props.exchange = data.exchange.toUpperCase().trim();
+    }
+    if (data.sector !== undefined) {
+      this.props.sector = data.sector ? data.sector.trim() : null;
+    }
+    if (data.type !== undefined) {
+      this.props.type = data.type;
+      if (data.type === InstrumentType.INDEX) {
+        this.props.isTradable = false;
+      }
+    }
+    if (data.feedSymbol !== undefined) {
+      this.props.feedSymbol = data.feedSymbol ? data.feedSymbol.toUpperCase().trim() : null;
+    }
+    this.props.updatedAt = new Date();
+  }
 }

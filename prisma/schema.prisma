@@ -146,10 +146,10 @@ model Stock {
   exchange       String          @default("NSE")
   sector         String?
   type           InstrumentType  @default(EQUITY)
+  feedSymbol     String?         @unique
 
-  // Status & Trading Permissions
-  isActive       Boolean         @default(true) // false = hidden from search & watchlists
-  isTradable     Boolean         @default(true) // false = view/chart only, buy/sell disabled (always false for INDEX)
+  isActive       Boolean         @default(true)
+  isTradable     Boolean         @default(true)
 
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -163,6 +163,7 @@ model Stock {
   @@index([name])
   @@index([type])
   @@index([isActive])
+  @@index([feedSymbol])
 }
 
 // =============================================================

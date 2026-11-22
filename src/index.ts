@@ -1,4 +1,3 @@
-/// <reference path="./types/express.d.ts" />
 import http from "http";
 import { createApp } from "./presentation/http/app";
 import { connectPrisma } from "./infrastructure/database/prisma";
@@ -12,8 +11,10 @@ import {
     autoSquareOffCron,
     amoDispatchCron,
     eodOrderExpiryCron,
+    stockRepository,
 } from "./di/trading/container";
 import { MarketWebSocketGateway } from "./infrastructure/websocket/MarketWebSocketGateway";
+import { MarketSymbolMapper } from "./infrastructure/external/market/MarketSymbolMapper";
 
 const startServer = async () => {
     try {
@@ -23,13 +24,16 @@ const startServer = async () => {
         await connectPrisma();
         await connectRedis();
 
+        const initialStocks = await stockRepository.findAll();
+        MarketSymbolMapper.init(initialStocks);
+
         new MarketWebSocketGateway(server, marketDataService);
         await eodOrderExpiryCron.expireStaleDayOrders();
         await orderMatchingEngine.start();
 
         const PORT = env.PORT;
         server.listen(PORT, () => {
-            logger.info(`Server is running at http://localhost:${PORT}`);
+            logger.info(`Server is running on port ${PORT}`);
             paymentReconciliationCron.start();
             fyersTokenRefreshCron.start();
             autoSquareOffCron.start();
@@ -51,6 +55,3 @@ process.on("unhandledRejection", (reason: unknown) => {
 });
 
 void startServer();
-
-
-
