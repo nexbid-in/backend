@@ -50,7 +50,6 @@ export class MarketWebSocketGateway {
                         const fyersSym = MarketSymbolMapper.toFyersSymbol(rawSym);
 
                         if (message.action === "subscribe") {
-                            // Record timestamp to protect against rapid unmount/remount ghost unsubscribes
                             timestamps?.set(cleanSym, Date.now());
 
                             userSubs?.add(rawSym);
@@ -59,7 +58,6 @@ export class MarketWebSocketGateway {
                             userSubs?.add(cleanSym.replace(/\s+/g, ""));
                             userSubs?.add(rawSym.replace(/\s+/g, ""));
 
-                            // Cancel any pending broker unsubscribe for this symbol
                             const pendingTimer = this.brokerUnsubscribeTimers.get(cleanSym);
                             if (pendingTimer) {
                                 clearTimeout(pendingTimer);
@@ -83,7 +81,6 @@ export class MarketWebSocketGateway {
                                 void this.marketService.subscribe([cleanSym]);
                             }
 
-                            // Emit instant quote if cached
                             void (async () => {
                                 try {
                                     const quote = await this.marketService.getQuote(cleanSym);
@@ -120,14 +117,13 @@ export class MarketWebSocketGateway {
                                         );
                                     }
                                 } catch {
-                                    // non-fatal
+                                    /* ignore */
                                 }
                             })();
                         } else if (message.action === "unsubscribe") {
                             const lastSubscribed = timestamps?.get(cleanSym) ?? 0;
                             const elapsedMs = Date.now() - lastSubscribed;
 
-                            // Suppress rapid ghost unsubscribes (e.g. React 18 StrictMode or route transition race within 1500ms)
                             if (elapsedMs < 1500) {
                                 logger.warn(
                                     { rawSym, cleanSym, elapsedMs },
@@ -152,8 +148,6 @@ export class MarketWebSocketGateway {
                                     "Client unsubscribed from market feed"
                                 );
 
-                                // Only unsubscribe from upstream broker if NO clients on server need it,
-                                // debounced by 5 seconds to survive rapid tab switching
                                 if (remainingCount === 0) {
                                     const timer = setTimeout(() => {
                                         const current = this.symbolSubscribers.get(cleanSym);
@@ -207,7 +201,6 @@ export class MarketWebSocketGateway {
             });
         });
 
-        // Listen to broker/mock ticks and broadcast to subscribed frontend rooms
         this.marketService.onTick((tick) => {
             const payload = JSON.stringify({
                 type: "TICK",

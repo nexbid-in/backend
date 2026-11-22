@@ -1,21 +1,15 @@
 import { Wallet } from "../../../domain/entities/Wallet";
-import { WalletPersistenceDTO, DecimalLike } from "../../dto/internal/WalletPersistenceDTO";
-
-function toNum(val: DecimalLike): number {
-  if (typeof val === "number") return val;
-  if (typeof val === "string") return parseFloat(val);
-  return val.toNumber();
-}
+import { WalletPersistenceDTO } from "../../dto/internal/WalletPersistenceDTO";
 
 export class WalletPersistenceMapper {
   static toPrisma(wallet: Wallet): WalletPersistenceDTO {
     return {
       id: wallet.id,
       userId: wallet.userId,
-      balance: wallet.balance,
-      usedMargin: wallet.usedMargin,
-      totalVirtualBought: wallet.totalVirtualBought,
-      totalRealSpent: wallet.totalRealSpent,
+      balance: wallet.balance.toString(),
+      usedMargin: wallet.usedMargin.toString(),
+      totalVirtualBought: wallet.totalVirtualBought.toString(),
+      totalRealSpent: wallet.totalRealSpent.toString(),
       status: wallet.status,
       createdAt: wallet.createdAt,
       updatedAt: wallet.updatedAt,
@@ -26,10 +20,10 @@ export class WalletPersistenceMapper {
     return Wallet.create({
       id: raw.id,
       userId: raw.userId,
-      balance: toNum(raw.balance),
-      usedMargin: toNum(raw.usedMargin),
-      totalVirtualBought: toNum(raw.totalVirtualBought),
-      totalRealSpent: toNum(raw.totalRealSpent),
+      balance: raw.balance.toString(),
+      usedMargin: raw.usedMargin.toString(),
+      totalVirtualBought: raw.totalVirtualBought.toString(),
+      totalRealSpent: raw.totalRealSpent.toString(),
       status: raw.status,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,

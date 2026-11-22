@@ -8,7 +8,7 @@ export const createAuthMiddleware = (
   tokenService: IAuthTokenService,
   userActivityService?: IUserActivityService
 ) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
     try {
       const cookies = req.cookies as Record<string, string | undefined> | undefined;
       const token = cookies?.accessToken;

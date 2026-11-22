@@ -32,16 +32,11 @@ const REVERSE_INDEX_MAP: Record<string, string> = {
 };
 
 const EQUITY_ALIAS_MAP: Record<string, string> = {
-  // Corporate demergers, restructuring & official NSE ticker renames
-  // Tata Motors Limited -> TMCV (priced ~404.20 on Fyers)
   TATAMOTORS: "NSE:TMCV-EQ",
   TMCV: "NSE:TMCV-EQ",
-
-  // Tata Motors Passenger Vehicles Ltd -> TMPV (priced ~276.70 on Fyers)
   TMPV: "NSE:TMPV-EQ",
   TATAMTRDVR: "NSE:TMPV-EQ",
   TATAMOTORSPASSENGER: "NSE:TMPV-EQ",
-
   ZOMATO: "NSE:ETERNAL-EQ",
   ETERNAL: "NSE:ETERNAL-EQ",
   ICICIPRULI: "NSE:ICICILIFE-EQ",
@@ -62,23 +57,19 @@ export class MarketSymbolMapper {
   static toFyersSymbol(symbol: string): string {
     const raw = symbol.toUpperCase().trim();
 
-    // 1. Direct index map lookup (e.g. "NIFTY 50" -> "NSE:NIFTY50-INDEX")
     if (INDEX_MAP[raw]) {
       return INDEX_MAP[raw];
     }
 
-    // 2. Normalized spaces index lookup (e.g. "NIFTY  50" -> "NSE:NIFTY50-INDEX")
     const spaceless = raw.replace(/\s+/g, "");
     if (INDEX_MAP[spaceless]) {
       return INDEX_MAP[spaceless];
     }
 
-    // 3. Equity alias lookup (e.g. "TATAMOTORS" -> "NSE:TMPV-EQ")
     if (EQUITY_ALIAS_MAP[spaceless]) {
       return EQUITY_ALIAS_MAP[spaceless];
     }
 
-    // 4. Strip exchange prefix and check alias if already prefixed
     if (raw.startsWith("NSE:") || raw.startsWith("BSE:")) {
       const cleanBase = raw.replace(/^(NSE|BSE):/, "").replace(/-EQ$/, "").replace(/-INDEX$/, "");
       if (INDEX_MAP[cleanBase]) {
@@ -90,7 +81,6 @@ export class MarketSymbolMapper {
       return raw;
     }
 
-    // 5. Default equity format
     return `NSE:${spaceless}-EQ`;
   }
 

@@ -106,7 +106,6 @@ export const HttpErrorMap: Record<
     message: ErrorMessages.NEW_PASSWORD_SAME_AS_CURRENT,
   },
 
-  // Wallet
   [ErrorCodes.WALLET_NOT_FOUND]: {
     status: HttpStatus.NOT_FOUND,
     message: ErrorMessages.WALLET_NOT_FOUND,
@@ -162,5 +161,59 @@ export const HttpErrorMap: Record<
     message: ErrorMessages.MARKET_DATA_SERVICE_UNAVAILABLE,
   },
 
+  [ErrorCodes.STOCK_NOT_TRADABLE]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.STOCK_NOT_TRADABLE,
+  },
+
+  [ErrorCodes.ORDER_CANNOT_BE_CANCELLED]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.ORDER_CANNOT_BE_CANCELLED,
+  },
+
+  [ErrorCodes.POSITION_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: ErrorMessages.POSITION_NOT_FOUND,
+  },
+
+  [ErrorCodes.POSITION_ALREADY_CLOSED]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.POSITION_ALREADY_CLOSED,
+  },
+
+  [ErrorCodes.SHORT_SELLING_NOT_ALLOWED_IN_CNC]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.SHORT_SELLING_NOT_ALLOWED_IN_CNC,
+  },
+
+  [ErrorCodes.INSUFFICIENT_HOLDINGS]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.INSUFFICIENT_HOLDINGS,
+  },
+
+  [ErrorCodes.INVALID_ORDER_QUANTITY]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.INVALID_ORDER_QUANTITY,
+  },
+
+  [ErrorCodes.INVALID_ORDER_PRICE]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.INVALID_ORDER_PRICE,
+  },
+
+  [ErrorCodes.MARKET_CLOSED]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.MARKET_CLOSED,
+  },
+
+  [ErrorCodes.MIS_ORDER_CUTOFF_EXCEEDED]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.MIS_ORDER_CUTOFF_EXCEEDED,
+  },
+
+  [ErrorCodes.AMO_NOT_ALLOWED_DURING_MARKET]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.AMO_NOT_ALLOWED_DURING_MARKET,
+  },
 };
 

@@ -8,7 +8,7 @@ export const setAuthCookies = (res: Response, accessToken: string, refreshToken?
     httpOnly: true,
     secure: IS_PROD,
     sameSite: "strict",
-    maxAge: 15 * 60 * 1000, // 15 minutes
+    maxAge: 15 * 60 * 1000,
   });
 
   if (refreshToken) {
@@ -16,7 +16,7 @@ export const setAuthCookies = (res: Response, accessToken: string, refreshToken?
       httpOnly: true,
       secure: IS_PROD,
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
   }
 

@@ -1,8 +1,5 @@
 
 export const ErrorMessages = {
-  // ==========================================
-  // Authentication & Authorization
-  // ==========================================
   UNAUTHORIZED: "Please log in to access this resource.",
   FORBIDDEN: "You do not have permission to perform this action.",
   INVALID_AUTH_HEADER: "Invalid authorization header",
@@ -13,9 +10,6 @@ export const ErrorMessages = {
   INVALID_CURRENT_PASSWORD: "Current password is incorrect.",
   NEW_PASSWORD_SAME_AS_CURRENT: "New password cannot be the same as current password.",
 
-  // ==========================================
-  // Registration & OTP
-  // ==========================================
   INVALID_EMAIL: "Invalid email address",
   EMAIL_ALREADY_EXISTS: "An account with this email already exists.",
   FAILED_TO_SEND_OTP: "Failed to send verification code.",
@@ -24,22 +18,13 @@ export const ErrorMessages = {
   OTP_TOO_MANY_ATTEMPTS: "Too many incorrect attempts. Please request a new verification code.",
   OTP_RATE_LIMIT_EXCEEDED: "Too many requests. Please try again in 15 minutes.",
 
-  // ==========================================
-  // Validation
-  // ==========================================
   VALIDATION_FAILED: "Validation failed",
   INVALID_JSON: "Invalid JSON payload format",
 
-  // ==========================================
-  // System & Generic
-  // ==========================================
   NOT_FOUND: "Resource not found",
   INTERNAL_SERVER_ERROR: "Internal server error",
   USER_ID_GENERATION_FAILED: "Failed to generate a unique user ID. Please try again.",
 
-  // ==========================================
-  // Wallet & Payment
-  // ==========================================
   WALLET_NOT_FOUND: "Wallet not found for this user.",
   WALLET_FROZEN: "Wallet is frozen or suspended.",
   INSUFFICIENT_FUNDS: "Insufficient funds / available margin.",
@@ -47,16 +32,22 @@ export const ErrorMessages = {
   PAYMENT_VERIFICATION_FAILED: "Payment verification failed. Invalid signature.",
   ORDER_NOT_FOUND: "Payment order not found.",
 
-  // ==========================================
-  // Stock & Watchlist
-  // ==========================================
   STOCK_NOT_FOUND: "Stock not found or is currently inactive.",
   STOCK_ALREADY_IN_WATCHLIST: "Stock is already in your watchlist.",
   WATCHLIST_ITEM_NOT_FOUND: "Watchlist item not found.",
   WATCHLIST_LIMIT_EXCEEDED: "Watchlist limit reached. Maximum 100 stocks allowed per user.",
 
-  // ==========================================
-  // Market Data
-  // ==========================================
   MARKET_DATA_SERVICE_UNAVAILABLE: "Market data service is temporarily unavailable. Please retry shortly.",
+
+  STOCK_NOT_TRADABLE: "This instrument is not eligible for trading.",
+  ORDER_CANNOT_BE_CANCELLED: "Only pending orders can be cancelled.",
+  POSITION_NOT_FOUND: "Position not found.",
+  POSITION_ALREADY_CLOSED: "Position is already squared off.",
+  SHORT_SELLING_NOT_ALLOWED_IN_CNC: "Short selling is only allowed under MIS (Intraday) product type.",
+  INSUFFICIENT_HOLDINGS: "Insufficient stock holdings to execute CNC delivery sell order.",
+  INVALID_ORDER_QUANTITY: "Order quantity must be at least 1.",
+  INVALID_ORDER_PRICE: "Limit price must be greater than zero.",
+  MARKET_CLOSED: "Indian Stock Exchange (NSE/BSE) is currently closed. Regular trading hours are Mon-Fri 09:15 AM to 03:30 PM IST. You can place an After Market Order (AMO).",
+  MIS_ORDER_CUTOFF_EXCEEDED: "New intraday (MIS) orders are blocked after 03:20 PM IST due to auto-square-off cutoffs.",
+  AMO_NOT_ALLOWED_DURING_MARKET: "After Market Orders (AMO) cannot be placed during live market hours (09:15 AM - 03:30 PM IST).",
 } as const;

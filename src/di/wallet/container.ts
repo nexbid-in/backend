@@ -15,17 +15,23 @@ import { ReconcilePendingOrdersUseCase } from "../../application/use-cases/walle
 import { PaymentReconciliationCron } from "../../infrastructure/cron/PaymentReconciliationCron";
 import { WalletController } from "../../presentation/http/controllers/wallet/WalletController";
 
-// Repositories & Services
+import { WalletTopupSettlementService } from "../../application/services/wallet/WalletTopupSettlementService";
+import { BusinessIdGenerator } from "../../infrastructure/services/idGenerator/BusinessIdGenerator";
+
 const walletRepository = new WalletRepository();
 const walletTransactionRepository = new WalletTransactionRepository();
 const paymentOrderRepository = new PaymentOrderRepository();
 const userRepository = new UserRepository();
+const idGenerator = new BusinessIdGenerator();
 const paymentGatewayService = new RazorpayService(
   env.RAZORPAY_KEY_ID,
   env.RAZORPAY_KEY_SECRET
 );
 
-// Use Cases
+const walletTopupSettlementService = new WalletTopupSettlementService(
+  walletRepository
+);
+
 const getWalletOverviewUseCase = new GetWalletOverviewUseCase(
   walletRepository,
   userRepository,
@@ -42,13 +48,15 @@ const createTopupOrderUseCase = new CreateTopupOrderUseCase(
   walletRepository,
   paymentOrderRepository,
   paymentGatewayService,
+  idGenerator,
   env.VIRTUAL_CURRENCY_RATE
 );
 
 const verifyTopupPaymentUseCase = new VerifyTopupPaymentUseCase(
   walletRepository,
   paymentOrderRepository,
-  paymentGatewayService
+  paymentGatewayService,
+  walletTopupSettlementService
 );
 
 const failTopupPaymentUseCase = new FailTopupPaymentUseCase(
@@ -63,7 +71,8 @@ const getTopupHistoryUseCase = new GetTopupHistoryUseCase(
 const reconcilePendingOrdersUseCase = new ReconcilePendingOrdersUseCase(
   paymentOrderRepository,
   walletRepository,
-  paymentGatewayService
+  paymentGatewayService,
+  walletTopupSettlementService
 );
 
 export const paymentReconciliationCron = new PaymentReconciliationCron(

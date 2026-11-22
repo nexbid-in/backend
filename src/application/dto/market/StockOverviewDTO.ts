@@ -25,10 +25,25 @@ export interface StockRange52WDTO {
   low: number;
 }
 
-export interface StockPerformanceReturnsDTO {
+export interface StockPerformanceAnchorsDTO {
+  oneDay: number | null;
   oneWeek: number | null;
   oneMonth: number | null;
+  threeMonths: number | null;
+  sixMonths: number | null;
+  ytd: number | null;
   oneYear: number | null;
+}
+
+export interface StockPerformanceReturnsDTO {
+  oneDay: number | null;
+  oneWeek: number | null;
+  oneMonth: number | null;
+  threeMonths: number | null;
+  sixMonths: number | null;
+  ytd: number | null;
+  oneYear: number | null;
+  anchors: StockPerformanceAnchorsDTO;
 }
 
 export interface StockOverviewResponseDTO {

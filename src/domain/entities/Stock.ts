@@ -52,7 +52,6 @@ export class Stock {
       sector: props.sector ?? null,
       type,
       isActive: props.isActive ?? true,
-      // Rule: Indices are NEVER tradable in the equity cash/delivery segment
       isTradable: type === InstrumentType.INDEX ? false : (props.isTradable ?? true),
       createdAt: props.createdAt ?? new Date(),
       updatedAt: props.updatedAt ?? new Date(),

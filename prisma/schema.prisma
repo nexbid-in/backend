@@ -39,6 +39,9 @@ model User {
   walletTransactions WalletTransaction[]
   paymentOrders      PaymentOrder[]
   watchlistItems     WatchlistItem[]
+  orders             Order[]
+  positions          Position[]
+  trades             Trade[]
 }
 
 // =============================================================
@@ -152,6 +155,9 @@ model Stock {
   updatedAt      DateTime        @updatedAt
 
   watchlistItems WatchlistItem[]
+  orders         Order[]
+  positions      Position[]
+  trades         Trade[]
 
   @@index([symbol])
   @@index([name])
@@ -177,3 +183,133 @@ model WatchlistItem {
   @@unique([userId, stockId])
   @@index([userId])
 }
+
+// =============================================================
+// 8. TRADING & ORDER MANAGEMENT
+// =============================================================
+
+enum OrderSide {
+  BUY
+  SELL
+}
+
+enum OrderType {
+  MARKET
+  LIMIT
+  SL
+  SL_M
+}
+
+enum ProductType {
+  CNC
+  MIS
+}
+
+enum OrderStatus {
+  PENDING
+  EXECUTED
+  CANCELLED
+  REJECTED
+}
+
+enum PositionSide {
+  LONG
+  SHORT
+  CLOSED
+}
+
+model Order {
+  id              String       @id @default(uuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stockId         String
+  stock           Stock        @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  symbol          String
+
+  side            OrderSide
+  orderType       OrderType    @default(MARKET)
+  productType     ProductType  @default(MIS)
+  status          OrderStatus  @default(PENDING)
+
+  quantity        Int
+  filledQuantity  Int          @default(0)
+
+  price           Decimal?     @db.Decimal(12, 2)
+  averagePrice    Decimal?     @db.Decimal(12, 2)
+  triggerPrice    Decimal?     @db.Decimal(12, 2)
+
+  rejectionReason String?
+  blockedMargin   Decimal      @default(0.00) @db.Decimal(15, 2)
+  isAmo           Boolean      @default(false)
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  trades          Trade[]
+
+  @@index([userId, status])
+  @@index([symbol, status])
+  @@index([status, isAmo])
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+// =============================================================
+// 9. PORTFOLIO POSITIONS
+// =============================================================
+
+model Position {
+  id              String        @id @default(uuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stockId         String
+  stock           Stock         @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  symbol          String
+
+  productType     ProductType   @default(MIS)
+  side            PositionSide  @default(LONG)
+
+  quantity        Int           @default(0) // Net open quantity (always positive)
+  buyQty          Int           @default(0)
+  buyAmount       Decimal       @default(0.00) @db.Decimal(15, 2)
+  sellQty         Int           @default(0)
+  sellAmount      Decimal       @default(0.00) @db.Decimal(15, 2)
+
+  averagePrice    Decimal       @default(0.00) @db.Decimal(12, 2)
+  realizedPnL     Decimal       @default(0.00) @db.Decimal(15, 2)
+  blockedMargin   Decimal       @default(0.00) @db.Decimal(15, 2)
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([userId, symbol, productType])
+  @@index([userId, side])
+}
+
+// =============================================================
+// 10. TRADE EXECUTIONS LEDGER
+// =============================================================
+
+model Trade {
+  id          String      @id @default(uuid())
+  orderId     String
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stockId     String
+  stock       Stock       @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  symbol      String
+
+  side        OrderSide
+  productType ProductType
+  quantity    Int
+  price       Decimal     @db.Decimal(12, 2)
+  tradeValue  Decimal     @db.Decimal(15, 2)
+  realizedPnL Decimal     @default(0.00) @db.Decimal(15, 2)
+
+  executedAt  DateTime    @default(now())
+
+  @@index([userId, executedAt(sort: Desc)])
+  @@index([userId, symbol, productType, executedAt(sort: Desc)])
+  @@index([orderId])
+}
+

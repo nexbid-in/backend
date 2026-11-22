@@ -1,0 +1,122 @@
+import { Request, Response, NextFunction } from "express";
+import { IPlaceOrderUseCase } from "../../../../application/interface/use-cases/trading/IPlaceOrderUseCase";
+import { IGetOrdersUseCase } from "../../../../application/interface/use-cases/trading/IGetOrdersUseCase";
+import { ICancelOrderUseCase } from "../../../../application/interface/use-cases/trading/ICancelOrderUseCase";
+import { MarketHoursService } from "../../../../application/services/trading/MarketHoursService";
+import { env } from "../../../../infrastructure/config/env";
+import {
+  placeOrderSchema,
+  getOrdersQuerySchema,
+  cancelOrderParamsSchema,
+} from "../../validators/OrderValidator";
+import { ApiResponse } from "../../utils/ApiResponse";
+import { HttpStatus } from "../../constants/HttpStatus";
+import { SuccessMessages } from "../../constants/SuccessMessages";
+import { AppError } from "../../../../shared/errors/AppError";
+import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
+
+export class OrderController {
+  constructor(
+    private readonly placeOrderUseCase: IPlaceOrderUseCase,
+    private readonly getOrdersUseCase: IGetOrdersUseCase,
+    private readonly cancelOrderUseCase: ICancelOrderUseCase
+  ) {}
+
+  async placeOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new AppError(ErrorCodes.UNAUTHORIZED);
+      }
+
+      const body = placeOrderSchema.parse(req.body);
+
+      const order = await this.placeOrderUseCase.execute({
+        userId,
+        symbol: body.symbol,
+        side: body.side,
+        orderType: body.orderType,
+        productType: body.productType,
+        quantity: body.quantity,
+        price: body.price,
+        triggerPrice: body.triggerPrice,
+        isAmo: body.isAmo,
+      });
+
+      ApiResponse.success(
+        res,
+        HttpStatus.CREATED,
+        order.isAmo ? SuccessMessages.AMO_ORDER_PLACED : SuccessMessages.ORDER_PLACED,
+        order
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  getMarketStatus(_req: Request, res: Response, next: NextFunction): void {
+    try {
+      const status = MarketHoursService.getMarketStatus(env.ENFORCE_MARKET_HOURS);
+      ApiResponse.success(
+        res,
+        HttpStatus.OK,
+        SuccessMessages.MARKET_STATUS_RETRIEVED,
+        status
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getOrders(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new AppError(ErrorCodes.UNAUTHORIZED);
+      }
+
+      const query = getOrdersQuerySchema.parse(req.query);
+
+      const orders = await this.getOrdersUseCase.execute({
+        userId,
+        status: query.status,
+        scope: query.scope,
+      });
+
+      ApiResponse.success(
+        res,
+        HttpStatus.OK,
+        SuccessMessages.ORDERS_RETRIEVED,
+        orders
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async cancelOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new AppError(ErrorCodes.UNAUTHORIZED);
+      }
+
+      const params = cancelOrderParamsSchema.parse(req.params);
+
+      const order = await this.cancelOrderUseCase.execute({
+        userId,
+        orderId: params.id,
+      });
+
+      ApiResponse.success(
+        res,
+        HttpStatus.OK,
+        SuccessMessages.ORDER_CANCELLED,
+        order
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+}
+

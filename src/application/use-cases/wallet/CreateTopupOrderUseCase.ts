@@ -7,6 +7,7 @@ import { IUserRepository } from "../../../domain/repositories/user/IUserReposito
 import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
 import { IPaymentOrderRepository } from "../../../domain/repositories/payment/IPaymentOrderRepository";
 import { IPaymentGatewayService } from "../../interface/services/IPaymentGatewayService";
+import { IIdGenerator } from "../../interface/services/IIdGenerator";
 import { PaymentOrder, PaymentStatus } from "../../../domain/entities/PaymentOrder";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
@@ -17,6 +18,7 @@ export class CreateTopupOrderUseCase implements ICreateTopupOrderUseCase {
     private readonly _walletRepo: IWalletRepository,
     private readonly _paymentOrderRepo: IPaymentOrderRepository,
     private readonly _paymentGateway: IPaymentGatewayService,
+    private readonly _idGenerator: IIdGenerator,
     private readonly _virtualCurrencyRate: number = 10
   ) {}
 
@@ -36,8 +38,7 @@ export class CreateTopupOrderUseCase implements ICreateTopupOrderUseCase {
     }
 
     const virtualAmount = data.realAmount * this._virtualCurrencyRate;
-    const randomSuffix = Math.floor(100000 + Math.random() * 900000);
-    const internalOrderId = `TOP-${randomSuffix}`;
+    const internalOrderId = this._idGenerator.generate("TOP");
 
     const amountInPaise = Math.round(data.realAmount * 100);
 

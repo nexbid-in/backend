@@ -41,14 +41,33 @@ export class WalletRepository implements IWalletRepository {
         update: {},
         create: {
           userId,
-          balance: 0,
-          usedMargin: 0,
-          totalVirtualBought: 0,
-          totalRealSpent: 0,
+          balance: "0.00",
+          usedMargin: "0.00",
+          totalVirtualBought: "0.00",
+          totalRealSpent: "0.00",
           status: "ACTIVE",
         },
       });
       return WalletPersistenceMapper.toDomain(raw);
+    } catch (error) {
+      handlePrismaError(error);
+    }
+  }
+
+  async update(wallet: Wallet): Promise<void> {
+    try {
+      const data = WalletPersistenceMapper.toPrisma(wallet);
+      await prisma.wallet.update({
+        where: { id: data.id },
+        data: {
+          balance: data.balance.toString(),
+          usedMargin: data.usedMargin.toString(),
+          totalVirtualBought: data.totalVirtualBought.toString(),
+          totalRealSpent: data.totalRealSpent.toString(),
+          status: data.status,
+          updatedAt: data.updatedAt,
+        },
+      });
     } catch (error) {
       handlePrismaError(error);
     }
@@ -63,20 +82,18 @@ export class WalletRepository implements IWalletRepository {
       const txData = WalletTransactionPersistenceMapper.toPrisma(transaction);
 
       await prisma.$transaction(async (tx) => {
-        // 1. Update wallet state
         await tx.wallet.update({
           where: { id: walletData.id },
           data: {
-            balance: Number(walletData.balance),
-            usedMargin: Number(walletData.usedMargin),
-            totalVirtualBought: Number(walletData.totalVirtualBought),
-            totalRealSpent: Number(walletData.totalRealSpent),
+            balance: walletData.balance.toString(),
+            usedMargin: walletData.usedMargin.toString(),
+            totalVirtualBought: walletData.totalVirtualBought.toString(),
+            totalRealSpent: walletData.totalRealSpent.toString(),
             status: walletData.status,
             updatedAt: walletData.updatedAt,
           },
         });
 
-        // 2. Insert ledger transaction
         await tx.walletTransaction.create({
           data: {
             id: txData.id,
@@ -84,8 +101,8 @@ export class WalletRepository implements IWalletRepository {
             userId: txData.userId,
             referenceId: txData.referenceId,
             type: txData.type,
-            amount: Number(txData.amount),
-            balanceAfter: Number(txData.balanceAfter),
+            amount: txData.amount.toString(),
+            balanceAfter: txData.balanceAfter.toString(),
             description: txData.description,
             metadata: (txData.metadata as Prisma.InputJsonValue) ?? Prisma.JsonNull,
             createdAt: txData.createdAt,
@@ -108,7 +125,6 @@ export class WalletRepository implements IWalletRepository {
       const orderData = PaymentOrderPersistenceMapper.toPrisma(paymentOrder);
 
       await prisma.$transaction(async (tx) => {
-        // 1. Update PaymentOrder status & paymentId
         await tx.paymentOrder.update({
           where: { id: orderData.id },
           data: {
@@ -118,18 +134,16 @@ export class WalletRepository implements IWalletRepository {
           },
         });
 
-        // 2. Update Wallet balance & metrics
         await tx.wallet.update({
           where: { id: walletData.id },
           data: {
-            balance: Number(walletData.balance),
-            totalVirtualBought: Number(walletData.totalVirtualBought),
-            totalRealSpent: Number(walletData.totalRealSpent),
+            balance: walletData.balance.toString(),
+            totalVirtualBought: walletData.totalVirtualBought.toString(),
+            totalRealSpent: walletData.totalRealSpent.toString(),
             updatedAt: walletData.updatedAt,
           },
         });
 
-        // 3. Write immutable ledger record
         await tx.walletTransaction.create({
           data: {
             id: txData.id,
@@ -137,8 +151,8 @@ export class WalletRepository implements IWalletRepository {
             userId: txData.userId,
             referenceId: txData.referenceId,
             type: txData.type,
-            amount: Number(txData.amount),
-            balanceAfter: Number(txData.balanceAfter),
+            amount: txData.amount.toString(),
+            balanceAfter: txData.balanceAfter.toString(),
             description: txData.description,
             metadata: (txData.metadata as Prisma.InputJsonValue) ?? Prisma.JsonNull,
             createdAt: txData.createdAt,

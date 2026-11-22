@@ -17,14 +17,12 @@ export class PaymentReconciliationCron {
       "Initializing Payment Reconciliation Cron"
     );
 
-    // Run once shortly after server startup to resolve any past abandoned orders
     setTimeout(() => {
       this.runJob().catch((err) => {
         logger.error({ error: err }, "Error running initial payment reconciliation job");
       });
     }, 5000);
 
-    // Schedule periodic execution
     cron.schedule(this._cronSchedule, async () => {
       await this.runJob();
     });

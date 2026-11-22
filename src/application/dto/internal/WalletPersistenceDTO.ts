@@ -1,6 +1,6 @@
 import { WalletStatus } from "../../../domain/entities/Wallet";
 
-export type DecimalLike = number | string | { toNumber(): number };
+export type DecimalLike = number | string | { toString(): string; toNumber?(): number };
 
 export type WalletPersistenceDTO = {
   id: string;

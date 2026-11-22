@@ -28,7 +28,7 @@ export const createApp = () => {
 
     app.use(ApiRoutes.BASE, appRoutes);
 
-    app.use((req, res) => {
+    app.use((_req, res) => {
         return ApiResponse.error(res, HttpStatus.NOT_FOUND, ErrorCodes.NOT_FOUND, "Route not found");
     });
 

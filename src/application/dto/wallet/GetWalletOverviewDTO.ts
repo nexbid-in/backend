@@ -4,6 +4,7 @@ export type GetWalletOverviewRequestDTO = {
 
 export type GetWalletOverviewResponseDTO = {
   balance: number;
+  availableMargin: number;
   usedMargin: number;
   totalVirtualMoneyBought: number;
   totalRealMoneyUsed: number;

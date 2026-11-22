@@ -10,7 +10,6 @@ const redis = new IORedis({
   lazyConnect: true,
 });
 
-// Attach a listener to prevent EventEmitter unhandled error event crashes
 redis.on("error", (err: Error) => {
   if (redis.status !== "connecting") {
     logger.error({ err }, "Redis error");

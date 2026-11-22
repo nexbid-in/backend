@@ -23,7 +23,6 @@ import { GoogleAuthUseCase } from "../../application/use-cases/auth/GoogleAuthUs
 import { AuthController } from "../../presentation/http/controllers/auth/AuthController";
 import { createAuthMiddleware } from "../../presentation/http/middlewares/authMiddleware";
 
-// Repositories & Services
 const userRepository = new UserRepository();
 const redisOtpSessionService = new RedisOtpSessionService();
 const otpService = new OtpService();
@@ -43,7 +42,6 @@ const redisUserActivityService = new RedisUserActivityService(
   userRepository
 );
 
-// Use Cases
 const registerUserUseCase = new RegisterUserUseCase(
   userRepository,
   redisOtpSessionService,
@@ -106,7 +104,6 @@ const googleAuthUseCase = new GoogleAuthUseCase(
   authTokenService
 );
 
-// Exports
 export const authMiddleware = createAuthMiddleware(
   authTokenService,
   redisUserActivityService

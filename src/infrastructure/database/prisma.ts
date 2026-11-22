@@ -7,10 +7,7 @@ import { env } from "../config/env";
 
 const connectionString = env.DATABASE_URL;
 
-// 1. Create a PostgreSQL connection pool
 const pool = new Pool({ connectionString });
-
-// 2. Pass the pool to the Prisma adapter
 const adapter = new PrismaPg(pool);
 
 export const prisma = new PrismaClient({
@@ -20,7 +17,6 @@ export const prisma = new PrismaClient({
 
 export async function connectPrisma(): Promise<void> {
   try {
-    // 3. Connect and verify with a simple query to ensure the DB is reachable
     await prisma.$connect();
     await prisma.$queryRaw`SELECT 1`;
     logger.info("Prisma connected");

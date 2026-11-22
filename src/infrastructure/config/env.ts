@@ -1,7 +1,6 @@
 import { z } from "zod";
 import dotenv from "dotenv";
 
-// Load environment variables from .env file
 dotenv.config();
 
 const envSchema = z.object({
@@ -38,6 +37,11 @@ const envSchema = z.object({
     RAZORPAY_KEY_ID: z.string().min(1, "RAZORPAY_KEY_ID is required"),
     RAZORPAY_KEY_SECRET: z.string().min(1, "RAZORPAY_KEY_SECRET is required"),
 
+    ENFORCE_MARKET_HOURS: z
+        .string()
+        .default("false")
+        .transform((val) => val === "true"),
+
     MARKET_DATA_PROVIDER: z.enum(["mock", "fyers"]).default("mock"),
     FYERS_APP_ID: z.string().optional(),
     FYERS_SECRET_KEY: z.string().optional(),
@@ -48,7 +52,6 @@ const envSchema = z.object({
     FYERS_REDIRECT_URI: z.string().default("https://trade.fyers.in/api-login/redirect-uri/index.html"),
 });
 
-// Validate the process.env against the schema
 const parsedEnv = envSchema.safeParse(process.env);
 
 if (!parsedEnv.success) {
