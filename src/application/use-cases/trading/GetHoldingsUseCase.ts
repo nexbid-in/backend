@@ -24,7 +24,11 @@ export class GetHoldingsUseCase implements IGetHoldingsUseCase {
     );
 
     const exitedCncPositions = allPositions.filter(
-      (pos) => pos.productType === ProductType.CNC && pos.quantity === 0 && pos.sellQty > 0
+      (pos) =>
+        pos.productType === ProductType.CNC &&
+        pos.quantity === 0 &&
+        pos.sellQty > 0 &&
+        pos.updatedAt >= startOfTodayIst
     );
 
     let totalInvested = 0;
