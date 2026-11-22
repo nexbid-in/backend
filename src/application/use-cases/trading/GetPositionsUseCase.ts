@@ -24,12 +24,14 @@ export class GetPositionsUseCase implements IGetPositionsUseCase {
     let totalRealizedPnL = 0;
 
     for (const trade of todayTrades) {
-      const key = `${trade.symbol}:${trade.productType}`;
-      todayRealizedByKey.set(
-        key,
-        +((todayRealizedByKey.get(key) ?? 0) + trade.realizedPnL).toFixed(2)
-      );
-      totalRealizedPnL += trade.realizedPnL;
+      if (trade.productType === ProductType.MIS) {
+        const key = `${trade.symbol}:${trade.productType}`;
+        todayRealizedByKey.set(
+          key,
+          +((todayRealizedByKey.get(key) ?? 0) + trade.realizedPnL).toFixed(2)
+        );
+        totalRealizedPnL += trade.realizedPnL;
+      }
     }
     totalRealizedPnL = +totalRealizedPnL.toFixed(2);
 

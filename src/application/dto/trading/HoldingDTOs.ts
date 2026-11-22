@@ -13,6 +13,7 @@ export interface HoldingItemDTO {
   dayChangePercentage: number;
   dayPnL: number;
   isBoughtToday: boolean;
+  isExited?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,9 +26,11 @@ export interface HoldingsSummaryDTO {
   todayPnL: number;
   todayPnLPercentage: number;
   holdingsCount: number;
+  exitedCount?: number;
 }
 
 export interface GetHoldingsResponseDTO {
   holdings: HoldingItemDTO[];
+  exitedHoldings: HoldingItemDTO[];
   summary: HoldingsSummaryDTO;
 }

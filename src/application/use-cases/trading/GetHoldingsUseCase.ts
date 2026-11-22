@@ -23,6 +23,10 @@ export class GetHoldingsUseCase implements IGetHoldingsUseCase {
       (pos) => pos.productType === ProductType.CNC && pos.quantity > 0
     );
 
+    const exitedCncPositions = allPositions.filter(
+      (pos) => pos.productType === ProductType.CNC && pos.quantity === 0 && pos.sellQty > 0
+    );
+
     let totalInvested = 0;
     let totalCurrentValue = 0;
     let totalTodayPnL = 0;
@@ -80,6 +84,49 @@ export class GetHoldingsUseCase implements IGetHoldingsUseCase {
       });
     }
 
+    const mappedExitedHoldings: HoldingItemDTO[] = [];
+
+    for (const pos of exitedCncPositions) {
+      const quote = await this.marketDataService.getQuote(pos.symbol);
+      const currentLtp =
+        quote?.ltp && quote.ltp > 0
+          ? quote.ltp
+          : pos.sellQty > 0
+          ? +(pos.sellAmount / pos.sellQty).toFixed(2)
+          : pos.averagePrice;
+      const buyAvgPrice =
+        pos.buyQty > 0 ? +(pos.buyAmount / pos.buyQty).toFixed(2) : pos.averagePrice;
+      const investedAmount = pos.buyAmount;
+      const currentValue = pos.sellAmount;
+      const totalPnL = pos.realizedPnL;
+      const totalPnLPercentage =
+        investedAmount > 0 ? +((totalPnL / investedAmount) * 100).toFixed(2) : 0;
+      const dayChange = quote?.change ?? 0;
+      const dayChangePercentage = quote?.changePercent ?? 0;
+      const dayPnL = totalPnL;
+      const isBoughtToday = pos.createdAt >= startOfTodayIst;
+
+      mappedExitedHoldings.push({
+        id: pos.id,
+        stockId: pos.stockId,
+        symbol: pos.symbol,
+        quantity: pos.sellQty,
+        buyAvgPrice,
+        currentLtp,
+        investedAmount,
+        currentValue,
+        totalPnL,
+        totalPnLPercentage,
+        dayChange,
+        dayChangePercentage,
+        dayPnL,
+        isBoughtToday,
+        isExited: true,
+        createdAt: pos.createdAt,
+        updatedAt: pos.updatedAt,
+      });
+    }
+
     totalInvested = +totalInvested.toFixed(2);
     totalCurrentValue = +totalCurrentValue.toFixed(2);
     totalTodayPnL = +totalTodayPnL.toFixed(2);
@@ -98,10 +145,12 @@ export class GetHoldingsUseCase implements IGetHoldingsUseCase {
       todayPnL: totalTodayPnL,
       todayPnLPercentage,
       holdingsCount: cncHoldings.length,
+      exitedCount: exitedCncPositions.length,
     };
 
     return {
       holdings: mappedHoldings,
+      exitedHoldings: mappedExitedHoldings,
       summary,
     };
   }
