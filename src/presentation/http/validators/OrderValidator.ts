@@ -55,3 +55,22 @@ export const getPnlQuerySchema = z.object({
       return upper as "ALL" | "CNC" | "MIS";
     }),
 });
+
+export const getTradebookQuerySchema = z.object({
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional(),
+  symbol: z.string().trim().min(1).optional(),
+  segment: z
+    .enum(["ALL", "CNC", "MIS", "COMBINED", "DELIVERY", "INTRADAY"])
+    .default("ALL")
+    .transform((val) => {
+      const upper = val.toUpperCase();
+      if (upper === "COMBINED") return "ALL";
+      if (upper === "DELIVERY") return "CNC";
+      if (upper === "INTRADAY") return "MIS";
+      return upper as "ALL" | "CNC" | "MIS";
+    }),
+  side: z.enum(["ALL", "BUY", "SELL"]).default("ALL"),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});

@@ -3,10 +3,12 @@ import { GetPositionsUseCase } from "../../../../application/use-cases/trading/G
 import { GetHoldingsUseCase } from "../../../../application/use-cases/trading/GetHoldingsUseCase";
 import { SquareOffPositionUseCase } from "../../../../application/use-cases/trading/SquareOffPositionUseCase";
 import { GetPnlStatementUseCase } from "../../../../application/use-cases/trading/GetPnlStatementUseCase";
+import { GetTradebookUseCase } from "../../../../application/use-cases/trading/GetTradebookUseCase";
 import {
   getPositionsQuerySchema,
   squareOffParamsSchema,
   getPnlQuerySchema,
+  getTradebookQuerySchema,
 } from "../../validators/OrderValidator";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { HttpStatus } from "../../constants/HttpStatus";
@@ -19,7 +21,8 @@ export class PortfolioController {
     private readonly getPositionsUseCase: GetPositionsUseCase,
     private readonly getHoldingsUseCase: GetHoldingsUseCase,
     private readonly squareOffUseCase: SquareOffPositionUseCase,
-    private readonly getPnlStatementUseCase: GetPnlStatementUseCase
+    private readonly getPnlStatementUseCase: GetPnlStatementUseCase,
+    private readonly getTradebookUseCase: GetTradebookUseCase
   ) {}
 
   async getPositions(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -79,6 +82,28 @@ export class PortfolioController {
         res,
         HttpStatus.OK,
         SuccessMessages.PNL_STATEMENT_RETRIEVED,
+        result
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getTradebook(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new AppError(ErrorCodes.UNAUTHORIZED);
+      }
+
+      const query = getTradebookQuerySchema.parse(req.query);
+
+      const result = await this.getTradebookUseCase.execute(userId, query);
+
+      ApiResponse.success(
+        res,
+        HttpStatus.OK,
+        SuccessMessages.TRADEBOOK_RETRIEVED,
         result
       );
     } catch (error) {

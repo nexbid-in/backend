@@ -23,6 +23,12 @@ router.get(
   portfolioController.getPnlStatement.bind(portfolioController)
 );
 
+router.get(
+  ApiRoutes.PORTFOLIO.TRADEBOOK,
+  authMiddleware,
+  portfolioController.getTradebook.bind(portfolioController)
+);
+
 router.post(
   ApiRoutes.PORTFOLIO.SQUARE_OFF,
   authMiddleware,
