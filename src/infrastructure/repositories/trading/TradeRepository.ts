@@ -65,11 +65,38 @@ export class TradeRepository
           userId,
           ...(options?.symbol ? { symbol: options.symbol.toUpperCase().trim() } : {}),
           ...(options?.productType ? { productType: options.productType } : {}),
+          ...(options?.side ? { side: options.side } : {}),
           ...(executedAtFilter ? { executedAt: executedAtFilter } : {}),
         },
-        orderBy: { executedAt: "desc" },
+        orderBy: { executedAt: options?.orderBy ?? "desc" },
+        ...(options?.skip !== undefined ? { skip: options.skip } : {}),
+        ...(options?.take !== undefined ? { take: options.take } : {}),
       });
       return raw.map((r) => TradePersistenceMapper.toDomain(r));
+    } catch (error) {
+      handlePrismaError(error);
+    }
+  }
+
+  async countByUserId(userId: string, options?: TradeFilterOptions): Promise<number> {
+    try {
+      const executedAtFilter: Prisma.DateTimeFilter | undefined =
+        options?.from || options?.to
+          ? {
+              ...(options.from ? { gte: options.from } : {}),
+              ...(options.to ? { lte: options.to } : {}),
+            }
+          : undefined;
+
+      return await prisma.trade.count({
+        where: {
+          userId,
+          ...(options?.symbol ? { symbol: options.symbol.toUpperCase().trim() } : {}),
+          ...(options?.productType ? { productType: options.productType } : {}),
+          ...(options?.side ? { side: options.side } : {}),
+          ...(executedAtFilter ? { executedAt: executedAtFilter } : {}),
+        },
+      });
     } catch (error) {
       handlePrismaError(error);
     }
