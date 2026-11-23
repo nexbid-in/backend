@@ -16,10 +16,10 @@ import { OrderSide, ProductType } from "../../../domain/entities/trading/Order";
 import { Money } from "../../../domain/value-objects/Money";
 import { Trade } from "../../../domain/entities/trading/Trade";
 
-interface BuyLotTracker {
+interface LotTracker {
   trade: Trade;
-  buyDate: Date;
-  buyPrice: Money;
+  entryDate: Date;
+  entryPrice: Money;
   remainingQty: number;
   originalQty: number;
 }
@@ -102,7 +102,28 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
     let totalGst = Money.zero();
     let totalAllCharges = Money.zero();
 
-    const symbolSummaries: PnlSymbolSummaryDTO[] = [];
+    interface ScripAccumulator {
+      symbol: string;
+      exchange: string;
+      productTypes: Set<ProductType>;
+      closedQty: number;
+      openQty: number;
+      buyTurnover: Money;
+      sellTurnover: Money;
+      grossRealizedPnL: Money;
+      brokerage: Money;
+      stt: Money;
+      exchangeCharges: Money;
+      sebiCharges: Money;
+      stampDuty: Money;
+      gst: Money;
+      totalCharges: Money;
+      unrealizedPnL: Money;
+      currentLtp: number;
+      legs: PnlFifoLegDTO[];
+    }
+
+    const symbolMap = new Map<string, ScripAccumulator>();
 
     // 6. Execute FIFO matching per scrip ("SYMBOL:PRODUCT_TYPE")
     for (const [scripKey, trades] of tradesByScrip.entries()) {
@@ -110,7 +131,8 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
       const productType = productTypeStr as ProductType;
       const exchange = stockExchangeMap.get(symbol) ?? "NSE";
 
-      const buyQueue: BuyLotTracker[] = [];
+      const buyQueue: LotTracker[] = [];
+      const sellQueue: LotTracker[] = [];
       const closedLegs: PnlFifoLegDTO[] = [];
       const openLegs: PnlFifoLegDTO[] = [];
 
@@ -129,49 +151,155 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
 
       for (const t of trades) {
         if (t.side === OrderSide.BUY) {
-          buyQueue.push({
-            trade: t,
-            buyDate: t.executedAt,
-            buyPrice: t.price,
-            remainingQty: t.quantity,
-            originalQty: t.quantity,
-          });
+          let buyQtyRemaining = t.quantity;
+          const buyPrice = t.price;
+          const buyDate = t.executedAt;
+
+          // 1. If we have open SHORT lots, this BUY covers them!
+          while (buyQtyRemaining > 0 && sellQueue.length > 0) {
+            const shortLot = sellQueue[0];
+            const matchedQty = Math.min(shortLot.remainingQty, buyQtyRemaining);
+
+            const lotSellValue = shortLot.entryPrice.multiply(matchedQty);
+            const lotBuyValue = buyPrice.multiply(matchedQty);
+            // In short trades: Profit = SellPrice - BuyPrice
+            const lotGrossPnL = lotSellValue.subtract(lotBuyValue);
+
+            const sellFraction = matchedQty / shortLot.originalQty;
+            const buyFraction = matchedQty / t.quantity;
+
+            const legBrokerage = shortLot.trade.brokerage
+              .multiply(sellFraction)
+              .add(t.brokerage.multiply(buyFraction));
+            const legStt = shortLot.trade.stt
+              .multiply(sellFraction)
+              .add(t.stt.multiply(buyFraction));
+            const legExchange = shortLot.trade.exchangeTurnoverCharges
+              .multiply(sellFraction)
+              .add(t.exchangeTurnoverCharges.multiply(buyFraction));
+            const legSebi = shortLot.trade.sebiCharges
+              .multiply(sellFraction)
+              .add(t.sebiCharges.multiply(buyFraction));
+            const legStamp = shortLot.trade.stampDuty
+              .multiply(sellFraction)
+              .add(t.stampDuty.multiply(buyFraction));
+            const legGst = shortLot.trade.gst
+              .multiply(sellFraction)
+              .add(t.gst.multiply(buyFraction));
+            const legTotalCharges = shortLot.trade.totalCharges
+              .multiply(sellFraction)
+              .add(t.totalCharges.multiply(buyFraction));
+
+            const legNetPnL = lotGrossPnL.subtract(legTotalCharges);
+
+            const isWithinDateRange =
+              (!query.from || buyDate >= query.from) &&
+              (!query.to || buyDate <= query.to);
+
+            if (isWithinDateRange) {
+              const closedLeg: PnlFifoLegDTO = {
+                status: "Closed",
+                productType,
+                buyDate: buyDate.toISOString().split("T")[0],
+                sellDate: shortLot.entryDate.toISOString().split("T")[0],
+                quantity: matchedQty,
+                buyPrice: buyPrice.toNumber(),
+                sellPrice: shortLot.entryPrice.toNumber(),
+                isLtp: false,
+                tradePnL: lotGrossPnL.toNumber(),
+                charges: {
+                  brokerage: legBrokerage.toNumber(),
+                  stt: legStt.toNumber(),
+                  exchangeTurnoverCharges: legExchange.toNumber(),
+                  sebiCharges: legSebi.toNumber(),
+                  stampDuty: legStamp.toNumber(),
+                  gst: legGst.toNumber(),
+                  totalCharges: legTotalCharges.toNumber(),
+                },
+                netPnL: legNetPnL.toNumber(),
+              };
+
+              closedLegs.push(closedLeg);
+
+              scripClosedQty += matchedQty;
+              scripBuyTurnover = scripBuyTurnover.add(lotBuyValue);
+              scripSellTurnover = scripSellTurnover.add(lotSellValue);
+              scripGrossPnL = scripGrossPnL.add(lotGrossPnL);
+
+              scripBrokerage = scripBrokerage.add(legBrokerage);
+              scripStt = scripStt.add(legStt);
+              scripExchangeCharges = scripExchangeCharges.add(legExchange);
+              scripSebiCharges = scripSebiCharges.add(legSebi);
+              scripStampDuty = scripStampDuty.add(legStamp);
+              scripGst = scripGst.add(legGst);
+              scripTotalCharges = scripTotalCharges.add(legTotalCharges);
+
+              const dayKey = buyDate.toISOString().split("T")[0];
+              const dayEntry = dailyPnlMap.get(dayKey) ?? {
+                gross: Money.zero(),
+                net: Money.zero(),
+                count: 0,
+              };
+              dayEntry.gross = dayEntry.gross.add(lotGrossPnL);
+              dayEntry.net = dayEntry.net.add(legNetPnL);
+              dayEntry.count += 1;
+              dailyPnlMap.set(dayKey, dayEntry);
+            }
+
+            shortLot.remainingQty -= matchedQty;
+            buyQtyRemaining -= matchedQty;
+
+            if (shortLot.remainingQty === 0) {
+              sellQueue.shift();
+            }
+          }
+
+          // 2. If leftover quantity remains, it opens or adds to a LONG position
+          if (buyQtyRemaining > 0) {
+            buyQueue.push({
+              trade: t,
+              entryDate: t.executedAt,
+              entryPrice: t.price,
+              remainingQty: buyQtyRemaining,
+              originalQty: t.quantity,
+            });
+          }
         } else if (t.side === OrderSide.SELL) {
           let sellQtyRemaining = t.quantity;
           const sellPrice = t.price;
           const sellDate = t.executedAt;
 
+          // 1. If we have open LONG lots, this SELL closes them!
           while (sellQtyRemaining > 0 && buyQueue.length > 0) {
-            const buyLot = buyQueue[0];
-            const matchedQty = Math.min(buyLot.remainingQty, sellQtyRemaining);
+            const longLot = buyQueue[0];
+            const matchedQty = Math.min(longLot.remainingQty, sellQtyRemaining);
 
-            const lotBuyValue = buyLot.buyPrice.multiply(matchedQty);
+            const lotBuyValue = longLot.entryPrice.multiply(matchedQty);
             const lotSellValue = sellPrice.multiply(matchedQty);
             const lotGrossPnL = lotSellValue.subtract(lotBuyValue);
 
-            // Proportional charge allocation
-            const buyFraction = matchedQty / buyLot.originalQty;
+            const buyFraction = matchedQty / longLot.originalQty;
             const sellFraction = matchedQty / t.quantity;
 
-            const legBrokerage = buyLot.trade.brokerage
+            const legBrokerage = longLot.trade.brokerage
               .multiply(buyFraction)
               .add(t.brokerage.multiply(sellFraction));
-            const legStt = buyLot.trade.stt
+            const legStt = longLot.trade.stt
               .multiply(buyFraction)
               .add(t.stt.multiply(sellFraction));
-            const legExchange = buyLot.trade.exchangeTurnoverCharges
+            const legExchange = longLot.trade.exchangeTurnoverCharges
               .multiply(buyFraction)
               .add(t.exchangeTurnoverCharges.multiply(sellFraction));
-            const legSebi = buyLot.trade.sebiCharges
+            const legSebi = longLot.trade.sebiCharges
               .multiply(buyFraction)
               .add(t.sebiCharges.multiply(sellFraction));
-            const legStamp = buyLot.trade.stampDuty
+            const legStamp = longLot.trade.stampDuty
               .multiply(buyFraction)
               .add(t.stampDuty.multiply(sellFraction));
-            const legGst = buyLot.trade.gst
+            const legGst = longLot.trade.gst
               .multiply(buyFraction)
               .add(t.gst.multiply(sellFraction));
-            const legTotalCharges = buyLot.trade.totalCharges
+            const legTotalCharges = longLot.trade.totalCharges
               .multiply(buyFraction)
               .add(t.totalCharges.multiply(sellFraction));
 
@@ -185,10 +313,10 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
               const closedLeg: PnlFifoLegDTO = {
                 status: "Closed",
                 productType,
-                buyDate: buyLot.buyDate.toISOString().split("T")[0],
+                buyDate: longLot.entryDate.toISOString().split("T")[0],
                 sellDate: sellDate.toISOString().split("T")[0],
                 quantity: matchedQty,
-                buyPrice: buyLot.buyPrice.toNumber(),
+                buyPrice: longLot.entryPrice.toNumber(),
                 sellPrice: sellPrice.toNumber(),
                 isLtp: false,
                 tradePnL: lotGrossPnL.toNumber(),
@@ -206,7 +334,6 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
 
               closedLegs.push(closedLeg);
 
-              // Accumulate scrip totals
               scripClosedQty += matchedQty;
               scripBuyTurnover = scripBuyTurnover.add(lotBuyValue);
               scripSellTurnover = scripSellTurnover.add(lotSellValue);
@@ -220,7 +347,6 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
               scripGst = scripGst.add(legGst);
               scripTotalCharges = scripTotalCharges.add(legTotalCharges);
 
-              // Daily heatmap accumulation
               const dayKey = sellDate.toISOString().split("T")[0];
               const dayEntry = dailyPnlMap.get(dayKey) ?? {
                 gross: Money.zero(),
@@ -233,17 +359,28 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
               dailyPnlMap.set(dayKey, dayEntry);
             }
 
-            buyLot.remainingQty -= matchedQty;
+            longLot.remainingQty -= matchedQty;
             sellQtyRemaining -= matchedQty;
 
-            if (buyLot.remainingQty === 0) {
+            if (longLot.remainingQty === 0) {
               buyQueue.shift();
             }
+          }
+
+          // 2. If leftover quantity remains, it opens or adds to a SHORT position
+          if (sellQtyRemaining > 0) {
+            sellQueue.push({
+              trade: t,
+              entryDate: t.executedAt,
+              entryPrice: t.price,
+              remainingQty: sellQtyRemaining,
+              originalQty: t.quantity,
+            });
           }
         }
       }
 
-      // 7. Evaluate remaining open buy lots
+      // 7. Evaluate remaining open lots (Long in buyQueue or Short in sellQueue)
       let scripOpenQty = 0;
       let scripUnrealizedPnL = Money.zero();
 
@@ -252,13 +389,18 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
         (p) => p.symbol.toUpperCase().trim() === symbol && p.productType === productType && p.isOpen()
       );
       const fallbackPrice =
-        buyQueue.length > 0 ? buyQueue[0].buyPrice.toNumber() : openPosition?.averagePrice ?? 0;
+        buyQueue.length > 0
+          ? buyQueue[0].entryPrice.toNumber()
+          : sellQueue.length > 0
+          ? sellQueue[0].entryPrice.toNumber()
+          : openPosition?.averagePrice ?? 0;
       const currentLtp = quote?.ltp && quote.ltp > 0 ? quote.ltp : fallbackPrice;
       const ltpMoney = Money.of(currentLtp);
 
+      // Open Long lots
       for (const openLot of buyQueue) {
         if (openLot.remainingQty > 0) {
-          const lotCost = openLot.buyPrice.multiply(openLot.remainingQty);
+          const lotCost = openLot.entryPrice.multiply(openLot.remainingQty);
           const lotCurrent = ltpMoney.multiply(openLot.remainingQty);
           const lotUnrealized = lotCurrent.subtract(lotCost);
 
@@ -268,10 +410,44 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
           openLegs.push({
             status: "Open",
             productType,
-            buyDate: openLot.buyDate.toISOString().split("T")[0],
+            buyDate: openLot.entryDate.toISOString().split("T")[0],
             sellDate: null,
             quantity: openLot.remainingQty,
-            buyPrice: openLot.buyPrice.toNumber(),
+            buyPrice: openLot.entryPrice.toNumber(),
+            sellPrice: currentLtp,
+            isLtp: true,
+            tradePnL: lotUnrealized.toNumber(),
+            charges: {
+              brokerage: 0,
+              stt: 0,
+              exchangeTurnoverCharges: 0,
+              sebiCharges: 0,
+              stampDuty: 0,
+              gst: 0,
+              totalCharges: 0,
+            },
+            netPnL: lotUnrealized.toNumber(),
+          });
+        }
+      }
+
+      // Open Short lots
+      for (const openLot of sellQueue) {
+        if (openLot.remainingQty > 0) {
+          const lotSellVal = openLot.entryPrice.multiply(openLot.remainingQty);
+          const lotCurrentCost = ltpMoney.multiply(openLot.remainingQty);
+          const lotUnrealized = lotSellVal.subtract(lotCurrentCost);
+
+          scripOpenQty -= openLot.remainingQty;
+          scripUnrealizedPnL = scripUnrealizedPnL.add(lotUnrealized);
+
+          openLegs.push({
+            status: "Open",
+            productType,
+            buyDate: openLot.entryDate.toISOString().split("T")[0],
+            sellDate: null,
+            quantity: openLot.remainingQty,
+            buyPrice: openLot.entryPrice.toNumber(),
             sellPrice: currentLtp,
             isLtp: true,
             tradePnL: lotUnrealized.toNumber(),
@@ -303,52 +479,103 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
         selectedLegs = [...closedLegs, ...openLegs];
       }
 
-      // Check whether this symbol should be included under the active filter
-      const shouldInclude =
-        pnlView === "REALIZED"
-          ? scripClosedQty > 0
-          : pnlView === "UNREALIZED"
-          ? scripOpenQty > 0
-          : scripClosedQty > 0 || scripOpenQty > 0;
-
-      if (shouldInclude) {
-        symbolSummaries.push({
+      // Accumulate into symbolMap to combine CNC & MIS into a single row per symbol
+      let symbolAcc = symbolMap.get(symbol);
+      if (!symbolAcc) {
+        symbolAcc = {
           symbol,
           exchange,
-          productType,
-          quantity: scripClosedQty,
-          buyAvg,
-          buyValue: scripBuyTurnover.toNumber(),
-          sellAvg,
-          sellValue: scripSellTurnover.toNumber(),
-          grossRealizedPnL: scripGrossPnL.toNumber(),
-          charges: scripTotalCharges.toNumber(),
-          netRealizedPnL: scripNetRealizedPnL.toNumber(),
-          chargesBreakdown: {
-            brokerage: scripBrokerage.toNumber(),
-            stt: scripStt.toNumber(),
-            exchangeTurnoverCharges: scripExchangeCharges.toNumber(),
-            sebiCharges: scripSebiCharges.toNumber(),
-            stampDuty: scripStampDuty.toNumber(),
-            gst: scripGst.toNumber(),
-            totalCharges: scripTotalCharges.toNumber(),
-          },
-          unrealizedPnL: scripUnrealizedPnL.toNumber(),
-          openQuantity: scripOpenQty,
+          productTypes: new Set([productType]),
+          closedQty: scripClosedQty,
+          openQty: Math.abs(scripOpenQty),
+          buyTurnover: scripBuyTurnover,
+          sellTurnover: scripSellTurnover,
+          grossRealizedPnL: scripGrossPnL,
+          brokerage: scripBrokerage,
+          stt: scripStt,
+          exchangeCharges: scripExchangeCharges,
+          sebiCharges: scripSebiCharges,
+          stampDuty: scripStampDuty,
+          gst: scripGst,
+          totalCharges: scripTotalCharges,
+          unrealizedPnL: scripUnrealizedPnL,
           currentLtp,
           legs: selectedLegs,
-        });
+        };
+        symbolMap.set(symbol, symbolAcc);
+      } else {
+        symbolAcc.productTypes.add(productType);
+        symbolAcc.closedQty += scripClosedQty;
+        symbolAcc.openQty += Math.abs(scripOpenQty);
+        symbolAcc.buyTurnover = symbolAcc.buyTurnover.add(scripBuyTurnover);
+        symbolAcc.sellTurnover = symbolAcc.sellTurnover.add(scripSellTurnover);
+        symbolAcc.grossRealizedPnL = symbolAcc.grossRealizedPnL.add(scripGrossPnL);
+        symbolAcc.brokerage = symbolAcc.brokerage.add(scripBrokerage);
+        symbolAcc.stt = symbolAcc.stt.add(scripStt);
+        symbolAcc.exchangeCharges = symbolAcc.exchangeCharges.add(scripExchangeCharges);
+        symbolAcc.sebiCharges = symbolAcc.sebiCharges.add(scripSebiCharges);
+        symbolAcc.stampDuty = symbolAcc.stampDuty.add(scripStampDuty);
+        symbolAcc.gst = symbolAcc.gst.add(scripGst);
+        symbolAcc.totalCharges = symbolAcc.totalCharges.add(scripTotalCharges);
+        symbolAcc.unrealizedPnL = symbolAcc.unrealizedPnL.add(scripUnrealizedPnL);
+        if (currentLtp > 0) symbolAcc.currentLtp = currentLtp;
+        symbolAcc.legs.push(...selectedLegs);
+      }
 
-        // Accumulate overall totals
-        totalRealizedGross = totalRealizedGross.add(scripGrossPnL);
-        totalUnrealized = totalUnrealized.add(scripUnrealizedPnL);
-        totalBrokerage = totalBrokerage.add(scripBrokerage);
-        totalStt = totalStt.add(scripStt);
-        totalExchangeCharges = totalExchangeCharges.add(scripExchangeCharges);
-        totalSebiCharges = totalSebiCharges.add(scripSebiCharges);
-        totalStampDuty = totalStampDuty.add(scripStampDuty);
-        totalGst = totalGst.add(scripGst);
-        totalAllCharges = totalAllCharges.add(scripTotalCharges);
+      // Accumulate overall totals
+      totalRealizedGross = totalRealizedGross.add(scripGrossPnL);
+      totalUnrealized = totalUnrealized.add(scripUnrealizedPnL);
+      totalBrokerage = totalBrokerage.add(scripBrokerage);
+      totalStt = totalStt.add(scripStt);
+      totalExchangeCharges = totalExchangeCharges.add(scripExchangeCharges);
+      totalSebiCharges = totalSebiCharges.add(scripSebiCharges);
+      totalStampDuty = totalStampDuty.add(scripStampDuty);
+      totalGst = totalGst.add(scripGst);
+      totalAllCharges = totalAllCharges.add(scripTotalCharges);
+    }
+
+    // Build unified 1-row-per-symbol summaries
+    const symbolSummaries: PnlSymbolSummaryDTO[] = [];
+    for (const acc of symbolMap.values()) {
+      const shouldInclude =
+        pnlView === "REALIZED"
+          ? acc.closedQty > 0
+          : pnlView === "UNREALIZED"
+          ? acc.openQty > 0
+          : acc.closedQty > 0 || acc.openQty > 0;
+
+      if (shouldInclude) {
+        const netRealizedPnL = acc.grossRealizedPnL.subtract(acc.totalCharges);
+        const buyAvg = acc.closedQty > 0 ? acc.buyTurnover.divide(acc.closedQty).toNumber() : 0;
+        const sellAvg = acc.closedQty > 0 ? acc.sellTurnover.divide(acc.closedQty).toNumber() : 0;
+        const productType = acc.productTypes.size === 1 ? Array.from(acc.productTypes)[0] : undefined;
+
+        symbolSummaries.push({
+          symbol: acc.symbol,
+          exchange: acc.exchange,
+          productType,
+          quantity: acc.closedQty,
+          buyAvg,
+          buyValue: acc.buyTurnover.toNumber(),
+          sellAvg,
+          sellValue: acc.sellTurnover.toNumber(),
+          grossRealizedPnL: acc.grossRealizedPnL.toNumber(),
+          charges: acc.totalCharges.toNumber(),
+          netRealizedPnL: netRealizedPnL.toNumber(),
+          chargesBreakdown: {
+            brokerage: acc.brokerage.toNumber(),
+            stt: acc.stt.toNumber(),
+            exchangeTurnoverCharges: acc.exchangeCharges.toNumber(),
+            sebiCharges: acc.sebiCharges.toNumber(),
+            stampDuty: acc.stampDuty.toNumber(),
+            gst: acc.gst.toNumber(),
+            totalCharges: acc.totalCharges.toNumber(),
+          },
+          unrealizedPnL: acc.unrealizedPnL.toNumber(),
+          openQuantity: acc.openQty,
+          currentLtp: acc.currentLtp,
+          legs: acc.legs,
+        });
       }
     }
 

@@ -60,7 +60,7 @@ export interface PnlFifoLegDTO {
 export interface PnlSymbolSummaryDTO {
   symbol: string;
   exchange: string;         // e.g. "NSE"
-  productType: ProductType; // "CNC" | "MIS"
+  productType?: ProductType; // "CNC" | "MIS" (omitted/optional when blended across segments)
   quantity: number;         // Matched closed quantity
   buyAvg: number;
   buyValue: number;
