@@ -37,7 +37,13 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
     query: PnlStatementQueryDTO
   ): Promise<GetPnlStatementResponseDTO> {
     const pnlView = query.pnlType ?? "COMBINED";
-    const segmentFilter = query.segment ?? "ALL";
+    const segmentRaw = query.segment ?? "ALL";
+    const segmentFilter: "ALL" | "CNC" | "MIS" =
+      segmentRaw === "COMBINED" || segmentRaw === "ALL"
+        ? "ALL"
+        : segmentRaw === "DELIVERY" || segmentRaw === "CNC"
+        ? "CNC"
+        : "MIS";
 
     // 1. Fetch historical trades up to `to` date filtered optionally by segment
     const allUserTrades = await this.tradeRepo.findByUserId(userId, {

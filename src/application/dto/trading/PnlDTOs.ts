@@ -1,7 +1,7 @@
 import { ProductType } from "../../../domain/entities/trading/Order";
 
 export type PnlViewType = "COMBINED" | "REALIZED" | "UNREALIZED";
-export type PnlSegment = "ALL" | "CNC" | "MIS";
+export type PnlSegment = "ALL" | "CNC" | "MIS" | "COMBINED" | "DELIVERY" | "INTRADAY";
 
 export interface PnlStatementQueryDTO {
   from?: Date;
