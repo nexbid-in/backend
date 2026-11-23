@@ -43,5 +43,6 @@ export const getPnlQuerySchema = z.object({
   from: z.coerce.date().optional(),
   to: z.coerce.date().optional(),
   symbol: z.string().trim().min(1).optional(),
-  productType: z.nativeEnum(ProductType).optional(),
+  pnlType: z.enum(["COMBINED", "REALIZED", "UNREALIZED"]).default("COMBINED"),
+  segment: z.enum(["ALL", "CNC", "MIS"]).default("ALL"),
 });

@@ -121,6 +121,7 @@ export const getHoldingsUseCase = new GetHoldingsUseCase(
 export const getPnlStatementUseCase = new GetPnlStatementUseCase(
   tradeRepository,
   positionRepository,
+  stockRepository,
   marketDataService
 );
 
