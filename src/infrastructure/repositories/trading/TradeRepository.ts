@@ -34,6 +34,13 @@ export class TradeRepository
           price: data.price,
           tradeValue: data.tradeValue,
           realizedPnL: data.realizedPnL,
+          brokerage: data.brokerage ?? 0,
+          stt: data.stt ?? 0,
+          exchangeTurnoverCharges: data.exchangeTurnoverCharges ?? 0,
+          sebiCharges: data.sebiCharges ?? 0,
+          stampDuty: data.stampDuty ?? 0,
+          gst: data.gst ?? 0,
+          totalCharges: data.totalCharges ?? 0,
           executedAt: data.executedAt,
         },
       });
@@ -68,4 +75,3 @@ export class TradeRepository
     }
   }
 }
-

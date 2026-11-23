@@ -77,6 +77,7 @@ export const ApiRoutes = {
     BASE: "/portfolio",
     POSITIONS: "/positions",
     HOLDINGS: "/holdings",
+    PNL: "/pnl",
     SQUARE_OFF: "/positions/:id/square-off",
   },
 } as const;

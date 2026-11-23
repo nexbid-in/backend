@@ -14,6 +14,7 @@ import { GetOrdersUseCase } from "../../application/use-cases/trading/GetOrdersU
 import { CancelOrderUseCase } from "../../application/use-cases/trading/CancelOrderUseCase";
 import { GetPositionsUseCase } from "../../application/use-cases/trading/GetPositionsUseCase";
 import { GetHoldingsUseCase } from "../../application/use-cases/trading/GetHoldingsUseCase";
+import { GetPnlStatementUseCase } from "../../application/use-cases/trading/GetPnlStatementUseCase";
 import { SquareOffPositionUseCase } from "../../application/use-cases/trading/SquareOffPositionUseCase";
 import { AutoSquareOffCron } from "../../infrastructure/cron/AutoSquareOffCron";
 import { AmoDispatchCron } from "../../infrastructure/cron/AmoDispatchCron";
@@ -117,9 +118,17 @@ export const getHoldingsUseCase = new GetHoldingsUseCase(
   marketDataService
 );
 
+export const getPnlStatementUseCase = new GetPnlStatementUseCase(
+  tradeRepository,
+  positionRepository,
+  stockRepository,
+  marketDataService
+);
+
 export const portfolioController = new PortfolioController(
   getPositionsUseCase,
   getHoldingsUseCase,
-  squareOffPositionUseCase
+  squareOffPositionUseCase,
+  getPnlStatementUseCase
 );
 

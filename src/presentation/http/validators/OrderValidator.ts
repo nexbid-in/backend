@@ -38,3 +38,20 @@ export const getPositionsQuerySchema = z.object({
 export const squareOffParamsSchema = z.object({
   id: z.string().uuid("Invalid position ID format"),
 });
+
+export const getPnlQuerySchema = z.object({
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional(),
+  symbol: z.string().trim().min(1).optional(),
+  pnlType: z.enum(["COMBINED", "REALIZED", "UNREALIZED"]).default("COMBINED"),
+  segment: z
+    .enum(["ALL", "CNC", "MIS", "COMBINED", "DELIVERY", "INTRADAY"])
+    .default("ALL")
+    .transform((val) => {
+      const upper = val.toUpperCase();
+      if (upper === "COMBINED") return "ALL";
+      if (upper === "DELIVERY") return "CNC";
+      if (upper === "INTRADAY") return "MIS";
+      return upper as "ALL" | "CNC" | "MIS";
+    }),
+});

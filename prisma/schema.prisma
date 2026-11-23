@@ -307,6 +307,15 @@ model Trade {
   tradeValue  Decimal     @db.Decimal(15, 2)
   realizedPnL Decimal     @default(0.00) @db.Decimal(15, 2)
 
+  // Regulatory & Brokerage Charges (Indian Stock Broker Standards)
+  brokerage               Decimal     @default(0.00) @db.Decimal(12, 2)
+  stt                     Decimal     @default(0.00) @db.Decimal(12, 2)
+  exchangeTurnoverCharges Decimal     @default(0.00) @db.Decimal(12, 2)
+  sebiCharges             Decimal     @default(0.00) @db.Decimal(12, 2)
+  stampDuty               Decimal     @default(0.00) @db.Decimal(12, 2)
+  gst                     Decimal     @default(0.00) @db.Decimal(12, 2)
+  totalCharges            Decimal     @default(0.00) @db.Decimal(12, 2)
+
   executedAt  DateTime    @default(now())
 
   @@index([userId, executedAt(sort: Desc)])

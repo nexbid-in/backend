@@ -12,6 +12,7 @@ import { IIdGenerator } from "../../interface/services/IIdGenerator";
 import { env } from "../../../infrastructure/config/env";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
+import { Money } from "../../../domain/value-objects/Money";
 
 export class SquareOffPositionUseCase implements ISquareOffPositionUseCase {
   constructor(
@@ -82,9 +83,9 @@ export class SquareOffPositionUseCase implements ISquareOffPositionUseCase {
       symbol: finalPosition.symbol,
       productType: finalPosition.productType,
     });
-    const realizedPnL = +todayTrades
-      .reduce((sum, trade) => sum + trade.realizedPnL, 0)
-      .toFixed(2);
+    const realizedPnL = todayTrades
+      .reduce((sum, trade) => sum.add(trade.realizedPnL), Money.zero())
+      .toNumber();
     const unrealizedPnL = finalPosition.calculateUnrealizedPnL(exitPrice);
 
     return {

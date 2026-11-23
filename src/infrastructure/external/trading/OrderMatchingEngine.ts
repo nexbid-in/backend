@@ -8,7 +8,9 @@ import { MarketHoursService } from "../../../application/services/trading/Market
 import { Order, OrderSide, ProductType } from "../../../domain/entities/trading/Order";
 import { Position, PositionSide } from "../../../domain/entities/trading/Position";
 import { Trade } from "../../../domain/entities/trading/Trade";
+import { TradeChargesCalculator } from "../../../domain/services/trading/TradeChargesCalculator";
 import { WalletTransaction } from "../../../domain/entities/WalletTransaction";
+import { Money } from "../../../domain/value-objects/Money";
 import { MarketTick } from "../../../domain/entities/market/MarketTick";
 import { logger } from "../../logging/logger";
 
@@ -130,6 +132,17 @@ export class OrderMatchingEngine {
       await this.positionRepo.update(position);
     }
 
+    const fillPriceMoney = Money.of(fillPrice);
+    const tradeValueMoney = fillPriceMoney.multiply(order.quantity);
+    const incrementalPnLMoney = Money.of(incrementalPnL);
+
+    const charges = TradeChargesCalculator.calculate(
+      order.side,
+      order.productType,
+      order.quantity,
+      fillPriceMoney
+    );
+
     const trade = Trade.create({
       id: crypto.randomUUID(),
       orderId: order.id,
@@ -139,9 +152,10 @@ export class OrderMatchingEngine {
       side: order.side,
       productType: order.productType,
       quantity: order.quantity,
-      price: fillPrice,
-      tradeValue: +(fillPrice * order.quantity).toFixed(2),
-      realizedPnL: incrementalPnL,
+      price: fillPriceMoney,
+      tradeValue: tradeValueMoney,
+      realizedPnL: incrementalPnLMoney,
+      charges,
       executedAt: order.updatedAt,
     });
     await this.tradeRepo.save(trade);
@@ -150,7 +164,7 @@ export class OrderMatchingEngine {
 
     if (order.productType === ProductType.CNC) {
       if (order.side === OrderSide.BUY) {
-        const totalCost = +(fillPrice * order.quantity).toFixed(2);
+        const totalCost = tradeValueMoney.add(charges.total);
         wallet.debitTradeCost(totalCost);
 
         const tx = WalletTransaction.create({
@@ -159,14 +173,14 @@ export class OrderMatchingEngine {
           userId: wallet.userId,
           referenceId: order.id,
           type: "BUY",
-          amount: -totalCost,
+          amount: totalCost.multiply(-1),
           balanceAfter: wallet.balance,
-          description: `CNC Buy ${order.quantity} shares of ${order.symbol} @ ₹${fillPrice}`,
+          description: `CNC Buy ${order.quantity} shares of ${order.symbol} @ ₹${fillPriceMoney.toString()} (Charges: ₹${charges.total.toString()})`,
         });
         await this.walletRepo.saveWithTransaction(wallet, tx);
       } else {
-        const proceeds = +(fillPrice * order.quantity).toFixed(2);
-        wallet.creditTradeProceeds(proceeds);
+        const netProceeds = tradeValueMoney.subtract(charges.total);
+        wallet.creditTradeProceeds(netProceeds);
 
         const tx = WalletTransaction.create({
           id: crypto.randomUUID(),
@@ -174,17 +188,18 @@ export class OrderMatchingEngine {
           userId: wallet.userId,
           referenceId: order.id,
           type: "SELL",
-          amount: proceeds,
+          amount: netProceeds,
           balanceAfter: wallet.balance,
-          description: `CNC Sell ${order.quantity} shares of ${order.symbol} @ ₹${fillPrice}`,
+          description: `CNC Sell ${order.quantity} shares of ${order.symbol} @ ₹${fillPriceMoney.toString()} (Charges: ₹${charges.total.toString()})`,
         });
         await this.walletRepo.saveWithTransaction(wallet, tx);
       }
     } else if (order.productType === ProductType.MIS) {
       if (isClosingPosition && closedQty > 0) {
-        const marginReleased = +((closedQty * prevAvgPrice) / 5).toFixed(2);
+        const marginReleased = Money.of(prevAvgPrice).multiply(closedQty).divide(5);
+        const netRealizedPnL = incrementalPnLMoney.subtract(charges.total);
 
-        wallet.settlePosition(marginReleased, incrementalPnL);
+        wallet.settlePosition(marginReleased, netRealizedPnL);
 
         const tx = WalletTransaction.create({
           id: crypto.randomUUID(),
@@ -192,26 +207,42 @@ export class OrderMatchingEngine {
           userId: wallet.userId,
           referenceId: order.id,
           type: order.side === OrderSide.BUY ? "BUY" : "SELL",
-          amount: incrementalPnL,
+          amount: netRealizedPnL,
           balanceAfter: wallet.balance,
-          description: `MIS Square-off ${closedQty} ${order.symbol} @ ₹${fillPrice} (Realized P&L: ₹${
-            incrementalPnL >= 0 ? "+" : ""
-          }${incrementalPnL})`,
+          description: `MIS Square-off ${closedQty} ${order.symbol} @ ₹${fillPriceMoney.toString()} (Net Realized P&L: ₹${
+            netRealizedPnL.isGreaterThanOrEqual(Money.zero()) ? "+" : ""
+          }${netRealizedPnL.toString()}, Charges: ₹${charges.total.toString()})`,
         });
         await this.walletRepo.saveWithTransaction(wallet, tx);
       } else {
-        const actualRequiredMargin = +((order.quantity * fillPrice) / 5).toFixed(2);
-        const diff = +(order.blockedMargin - actualRequiredMargin).toFixed(2);
+        const actualRequiredMargin = fillPriceMoney.multiply(order.quantity).divide(5);
+        const blockedMarginMoney = Money.of(order.blockedMargin);
+        const diff = blockedMarginMoney.subtract(actualRequiredMargin);
 
-        if (diff > 0) {
+        if (diff.isPositive()) {
           wallet.releaseMargin(diff);
           await this.walletRepo.update(wallet);
-        } else if (diff < 0) {
-          const extra = Math.abs(diff);
+        } else if (diff.isNegative()) {
+          const extra = diff.multiply(-1);
           if (wallet.canDebit(extra)) {
             wallet.blockMargin(extra);
             await this.walletRepo.update(wallet);
           }
+        }
+
+        if (charges.total.isPositive() && wallet.canDebit(charges.total)) {
+          wallet.debitTradeCost(charges.total);
+          const feeTx = WalletTransaction.create({
+            id: crypto.randomUUID(),
+            walletId: wallet.id,
+            userId: wallet.userId,
+            referenceId: `${order.id}-CHG`,
+            type: order.side === OrderSide.BUY ? "BUY" : "SELL",
+            amount: charges.total.multiply(-1),
+            balanceAfter: wallet.balance,
+            description: `MIS Trade Charges for ${order.quantity} ${order.symbol} @ ₹${fillPriceMoney.toString()} (Charges: ₹${charges.total.toString()})`,
+          });
+          await this.walletRepo.saveWithTransaction(wallet, feeTx);
         }
       }
     }

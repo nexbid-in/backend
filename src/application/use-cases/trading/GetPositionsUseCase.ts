@@ -5,6 +5,7 @@ import { GetPositionsResponseDTO, PositionResponseDTO, PortfolioSummaryDTO } fro
 import { PositionSide, ProductType } from "../../../domain/entities/trading/Position";
 import { MarketHoursService } from "../../services/trading/MarketHoursService";
 import { IGetPositionsUseCase } from "../../interface/use-cases/trading/IGetPositionsUseCase";
+import { Money } from "../../../domain/value-objects/Money";
 
 export class GetPositionsUseCase implements IGetPositionsUseCase {
   constructor(
@@ -20,20 +21,17 @@ export class GetPositionsUseCase implements IGetPositionsUseCase {
       this.tradeRepo.findByUserId(userId, { from: startOfTodayIst }),
     ]);
 
-    const todayRealizedByKey = new Map<string, number>();
-    let totalRealizedPnL = 0;
+    const todayRealizedByKey = new Map<string, Money>();
+    let totalRealizedPnL = Money.zero();
 
     for (const trade of todayTrades) {
       if (trade.productType === ProductType.MIS) {
         const key = `${trade.symbol}:${trade.productType}`;
-        todayRealizedByKey.set(
-          key,
-          +((todayRealizedByKey.get(key) ?? 0) + trade.realizedPnL).toFixed(2)
-        );
-        totalRealizedPnL += trade.realizedPnL;
+        const prev = todayRealizedByKey.get(key) ?? Money.zero();
+        todayRealizedByKey.set(key, prev.add(trade.realizedPnL));
+        totalRealizedPnL = totalRealizedPnL.add(trade.realizedPnL);
       }
     }
-    totalRealizedPnL = +totalRealizedPnL.toFixed(2);
 
     const sessionPositions = allPositions.filter(
       (pos) =>
@@ -81,7 +79,7 @@ export class GetPositionsUseCase implements IGetPositionsUseCase {
       const currentLtp = quote?.ltp && quote.ltp > 0 ? quote.ltp : pos.averagePrice;
 
       const unrealizedPnL = pos.calculateUnrealizedPnL(currentLtp);
-      const realizedPnL = todayRealizedByKey.get(`${pos.symbol}:${pos.productType}`) ?? 0;
+      const realizedPnL = todayRealizedByKey.get(`${pos.symbol}:${pos.productType}`)?.toNumber() ?? 0;
       const totalPnL = +(realizedPnL + unrealizedPnL).toFixed(2);
       const totalCost = +(pos.averagePrice * pos.quantity).toFixed(2);
       const pnlPercentage =
@@ -111,7 +109,8 @@ export class GetPositionsUseCase implements IGetPositionsUseCase {
       });
     }
 
-    const netPnL = +(totalUnrealizedPnL + totalRealizedPnL).toFixed(2);
+    const realizedPnLNum = totalRealizedPnL.toNumber();
+    const netPnL = +(totalUnrealizedPnL + realizedPnLNum).toFixed(2);
     const overallReturn =
       totalInvestment > 0 ? +((netPnL / totalInvestment) * 100).toFixed(2) : 0;
 
@@ -119,7 +118,7 @@ export class GetPositionsUseCase implements IGetPositionsUseCase {
       totalInvestment: +totalInvestment.toFixed(2),
       currentPortfolioValue: +currentPortfolioValue.toFixed(2),
       totalUnrealizedPnL: +totalUnrealizedPnL.toFixed(2),
-      totalRealizedPnL: +totalRealizedPnL.toFixed(2),
+      totalRealizedPnL: realizedPnLNum,
       netPnL,
       overallReturnPercentage: overallReturn,
       positionsCount: {
