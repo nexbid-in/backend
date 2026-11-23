@@ -15,6 +15,12 @@ export interface TradePersistenceDTO {
   price: DecimalLike;
   tradeValue: DecimalLike;
   realizedPnL: DecimalLike;
+  brokerage?: DecimalLike;
+  stt?: DecimalLike;
+  exchangeTurnoverCharges?: DecimalLike;
+  sebiCharges?: DecimalLike;
+  stampDuty?: DecimalLike;
+  gst?: DecimalLike;
+  totalCharges?: DecimalLike;
   executedAt: Date;
 }
-

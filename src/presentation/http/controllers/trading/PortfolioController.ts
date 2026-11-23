@@ -2,9 +2,11 @@ import { Request, Response, NextFunction } from "express";
 import { GetPositionsUseCase } from "../../../../application/use-cases/trading/GetPositionsUseCase";
 import { GetHoldingsUseCase } from "../../../../application/use-cases/trading/GetHoldingsUseCase";
 import { SquareOffPositionUseCase } from "../../../../application/use-cases/trading/SquareOffPositionUseCase";
+import { GetPnlStatementUseCase } from "../../../../application/use-cases/trading/GetPnlStatementUseCase";
 import {
   getPositionsQuerySchema,
   squareOffParamsSchema,
+  getPnlQuerySchema,
 } from "../../validators/OrderValidator";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { HttpStatus } from "../../constants/HttpStatus";
@@ -16,7 +18,8 @@ export class PortfolioController {
   constructor(
     private readonly getPositionsUseCase: GetPositionsUseCase,
     private readonly getHoldingsUseCase: GetHoldingsUseCase,
-    private readonly squareOffUseCase: SquareOffPositionUseCase
+    private readonly squareOffUseCase: SquareOffPositionUseCase,
+    private readonly getPnlStatementUseCase: GetPnlStatementUseCase
   ) {}
 
   async getPositions(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -54,6 +57,28 @@ export class PortfolioController {
         res,
         HttpStatus.OK,
         SuccessMessages.HOLDINGS_RETRIEVED,
+        result
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getPnlStatement(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new AppError(ErrorCodes.UNAUTHORIZED);
+      }
+
+      const query = getPnlQuerySchema.parse(req.query);
+
+      const result = await this.getPnlStatementUseCase.execute(userId, query);
+
+      ApiResponse.success(
+        res,
+        HttpStatus.OK,
+        SuccessMessages.PNL_STATEMENT_RETRIEVED,
         result
       );
     } catch (error) {
