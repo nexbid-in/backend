@@ -175,7 +175,7 @@ export class OrderMatchingEngine {
           type: "BUY",
           amount: totalCost.multiply(-1),
           balanceAfter: wallet.balance,
-          description: `CNC Buy ${order.quantity} shares of ${order.symbol} @ ₹${fillPriceMoney} (Charges: ₹${charges.total})`,
+          description: `CNC Buy ${order.quantity} shares of ${order.symbol} @ ₹${fillPriceMoney.toString()} (Charges: ₹${charges.total.toString()})`,
         });
         await this.walletRepo.saveWithTransaction(wallet, tx);
       } else {
@@ -190,7 +190,7 @@ export class OrderMatchingEngine {
           type: "SELL",
           amount: netProceeds,
           balanceAfter: wallet.balance,
-          description: `CNC Sell ${order.quantity} shares of ${order.symbol} @ ₹${fillPriceMoney} (Charges: ₹${charges.total})`,
+          description: `CNC Sell ${order.quantity} shares of ${order.symbol} @ ₹${fillPriceMoney.toString()} (Charges: ₹${charges.total.toString()})`,
         });
         await this.walletRepo.saveWithTransaction(wallet, tx);
       }
@@ -209,9 +209,9 @@ export class OrderMatchingEngine {
           type: order.side === OrderSide.BUY ? "BUY" : "SELL",
           amount: netRealizedPnL,
           balanceAfter: wallet.balance,
-          description: `MIS Square-off ${closedQty} ${order.symbol} @ ₹${fillPriceMoney} (Net Realized P&L: ₹${
+          description: `MIS Square-off ${closedQty} ${order.symbol} @ ₹${fillPriceMoney.toString()} (Net Realized P&L: ₹${
             netRealizedPnL.isGreaterThanOrEqual(Money.zero()) ? "+" : ""
-          }${netRealizedPnL}, Charges: ₹${charges.total})`,
+          }${netRealizedPnL.toString()}, Charges: ₹${charges.total.toString()})`,
         });
         await this.walletRepo.saveWithTransaction(wallet, tx);
       } else {
@@ -240,7 +240,7 @@ export class OrderMatchingEngine {
             type: order.side === OrderSide.BUY ? "BUY" : "SELL",
             amount: charges.total.multiply(-1),
             balanceAfter: wallet.balance,
-            description: `MIS Trade Charges for ${order.quantity} ${order.symbol} @ ₹${fillPriceMoney} (Charges: ₹${charges.total})`,
+            description: `MIS Trade Charges for ${order.quantity} ${order.symbol} @ ₹${fillPriceMoney.toString()} (Charges: ₹${charges.total.toString()})`,
           });
           await this.walletRepo.saveWithTransaction(wallet, feeTx);
         }

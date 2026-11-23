@@ -43,20 +43,6 @@ export interface PnlSummaryDTO {
   chargesBreakdown: PnlChargesBreakdownDTO;
 }
 
-export interface PnlFifoLegDTO {
-  status: "Closed" | "Open";
-  productType: ProductType; // "CNC" | "MIS"
-  buyDate: string;          // ISO date or YYYY-MM-DD
-  sellDate: string | null;  // ISO date or null (displayed as "—" when Open)
-  quantity: number;
-  buyPrice: number;
-  sellPrice: number;        // Exit fill price if Closed, or current LTP if Open
-  isLtp: boolean;           // True if Open leg evaluated at market LTP
-  tradePnL: number;         // Realized P&L if Closed, Unrealized P&L if Open
-  charges: PnlChargesBreakdownDTO;
-  netPnL: number;           // tradePnL - totalCharges
-}
-
 export interface PnlSymbolSummaryDTO {
   symbol: string;
   exchange: string;         // e.g. "NSE"
