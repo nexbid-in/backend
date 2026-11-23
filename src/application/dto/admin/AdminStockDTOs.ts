@@ -41,10 +41,12 @@ export type PaginatedAdminStocksResponseDTO = {
   metrics: AdminStockMetricsDTO;
 };
 
+export type Exchange = "NSE" | "BSE";
+
 export type CreateStockDTO = {
   symbol: string;
   name: string;
-  exchange?: string;
+  exchange?: Exchange;
   sector?: string | null;
   type: InstrumentType;
   feedSymbol?: string | null;
@@ -61,7 +63,7 @@ export type UpdateStockStatusDTO = {
 export type UpdateStockDTO = {
   stockId: string;
   name?: string;
-  exchange?: string;
+  exchange?: Exchange;
   sector?: string | null;
   type?: InstrumentType;
   feedSymbol?: string | null;

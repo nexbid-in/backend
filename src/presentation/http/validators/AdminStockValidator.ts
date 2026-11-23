@@ -31,14 +31,7 @@ export const createStockSchema = z.object({
     .min(1, "Name is required")
     .max(100, "Name cannot exceed 100 characters")
     .trim(),
-  exchange: z
-    .string()
-    .min(1)
-    .max(20)
-    .trim()
-    .toUpperCase()
-    .default("NSE")
-    .optional(),
+  exchange: z.enum(["NSE", "BSE"]).default("NSE"),
   sector: z.string().max(100).trim().nullable().optional(),
   type: z.enum(["EQUITY", "INDEX"]).default("EQUITY"),
   feedSymbol: z.string().max(60).trim().toUpperCase().nullable().optional(),
@@ -53,7 +46,7 @@ export const updateStockStatusSchema = z.object({
 
 export const updateStockSchema = z.object({
   name: z.string().min(1).max(100).trim().optional(),
-  exchange: z.string().min(1).max(20).trim().toUpperCase().optional(),
+  exchange: z.enum(["NSE", "BSE"]).optional(),
   sector: z.string().max(100).trim().nullable().optional(),
   type: z.enum(["EQUITY", "INDEX"]).optional(),
   feedSymbol: z.string().max(60).trim().toUpperCase().nullable().optional(),
