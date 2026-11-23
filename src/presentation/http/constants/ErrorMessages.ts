@@ -40,6 +40,11 @@ export const ErrorMessages = {
   MARKET_DATA_SERVICE_UNAVAILABLE: "Market data service is temporarily unavailable. Please retry shortly.",
 
   STOCK_NOT_TRADABLE: "This instrument is not eligible for trading.",
+  STOCK_SYMBOL_ALREADY_EXISTS: "An instrument with this symbol already exists.",
+  STOCK_FEED_SYMBOL_ALREADY_EXISTS: "This feed symbol is already mapped to another instrument.",
+  CANNOT_DELETE_STOCK_WITH_ORDERS: "Cannot delete instrument with associated orders or trades. Deactivate it instead.",
+  INDEX_CANNOT_BE_TRADABLE: "Indices cannot be configured as tradable instruments.",
+  INVALID_BROKER_FEED_SYMBOL: "Instrument ticker was not recognized by exchange market feed. Please check spelling.",
   ORDER_CANNOT_BE_CANCELLED: "Only pending orders can be cancelled.",
   POSITION_NOT_FOUND: "Position not found.",
   POSITION_ALREADY_CLOSED: "Position is already squared off.",

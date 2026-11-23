@@ -469,6 +469,74 @@ export class FyersMarketService implements IMarketDataService {
     });
   }
 
+  async verifySymbol(symbol: string): Promise<{
+    valid: boolean;
+    ltp?: number;
+    description?: string;
+    exchange?: string;
+  }> {
+    const clean = MarketSymbolMapper.fromFyersSymbol(symbol.toUpperCase().trim());
+    const liveTick = this.latestTicks.get(clean);
+    if (liveTick && liveTick.ltp > 0) {
+      return {
+        valid: true,
+        ltp: liveTick.ltp,
+        description: clean,
+      };
+    }
+
+    const fyersSymbol = MarketSymbolMapper.toFyersSymbol(symbol);
+
+    try {
+      const token = await this.getAccessToken();
+      const response = await axios.get<{
+        s: string;
+        d?: Array<{
+          n: string;
+          s: string;
+          errmsg?: string;
+          v?: {
+            s?: string;
+            errmsg?: string;
+            lp?: number;
+            prev_close_price?: number;
+            description?: string;
+            exchange?: string;
+            short_name?: string;
+          };
+        }>;
+      }>("https://api-t1.fyers.in/data/quotes", {
+        params: { symbols: fyersSymbol },
+        headers: { Authorization: `${env.FYERS_APP_ID ?? ""}:${token}` },
+        timeout: 4000,
+      });
+
+      if (response.data?.s === "ok" && response.data.d && response.data.d.length > 0) {
+        const item = response.data.d[0];
+        const v = item.v;
+        if (
+          item.s === "ok" &&
+          v &&
+          v.s !== "error" &&
+          !v.errmsg &&
+          (typeof v.lp === "number" || typeof v.prev_close_price === "number")
+        ) {
+          const ltp = typeof v.lp === "number" ? v.lp : v.prev_close_price;
+          return {
+            valid: true,
+            ltp,
+            description: v.description ?? v.short_name,
+            exchange: v.exchange,
+          };
+        }
+      }
+
+      return { valid: false };
+    } catch {
+      return { valid: false };
+    }
+  }
+
   async getMarketDepth(symbol: string): Promise<Partial<MarketQuote> | null> {
     const clean = MarketSymbolMapper.fromFyersSymbol(symbol.toUpperCase().trim());
     const fyersSymbol = MarketSymbolMapper.toFyersSymbol(clean);

@@ -12,6 +12,13 @@ export interface IMarketDataService {
 
     getQuote(symbol: string): Promise<MarketQuote | null>;
 
+    verifySymbol?(symbol: string): Promise<{
+        valid: boolean;
+        ltp?: number;
+        description?: string;
+        exchange?: string;
+    }>;
+
     getMarketDepth?(symbol: string): Promise<Partial<MarketQuote> | null>;
 
     subscribe(symbols: string[]): Promise<void>;

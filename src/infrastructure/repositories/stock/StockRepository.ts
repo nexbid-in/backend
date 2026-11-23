@@ -5,6 +5,8 @@ import {
   IStockRepository,
   StockSearchOptions,
   StockSearchResult,
+  AdminStockFilters,
+  AdminStockMetrics,
 } from "../../../domain/repositories/stock/IStockRepository";
 import { Stock } from "../../../domain/entities/Stock";
 import { StockPersistenceDTO } from "../../../application/dto/internal/StockPersistenceDTO";
@@ -36,6 +38,29 @@ export class StockRepository
       });
       if (!raw) return null;
       return StockPersistenceMapper.toDomain(raw);
+    } catch (error) {
+      handlePrismaError(error);
+    }
+  }
+
+  async findByFeedSymbol(feedSymbol: string): Promise<Stock | null> {
+    try {
+      const raw = await prisma.stock.findUnique({
+        where: { feedSymbol: feedSymbol.toUpperCase().trim() },
+      });
+      if (!raw) return null;
+      return StockPersistenceMapper.toDomain(raw);
+    } catch (error) {
+      handlePrismaError(error);
+    }
+  }
+
+  async findAll(): Promise<Stock[]> {
+    try {
+      const raw = await prisma.stock.findMany({
+        orderBy: { symbol: "asc" },
+      });
+      return raw.map((r) => StockPersistenceMapper.toDomain(r));
     } catch (error) {
       handlePrismaError(error);
     }
@@ -143,5 +168,144 @@ export class StockRepository
       return idx !== -1 ? idx : 50;
     }
     return 100;
+  }
+
+  async findAdminStocks(filters: AdminStockFilters): Promise<{
+    stocks: Stock[];
+    total: number;
+    metrics: AdminStockMetrics;
+    orderCounts: Record<string, number>;
+  }> {
+    try {
+      const page = filters.page && filters.page > 0 ? filters.page : 1;
+      const limit = filters.limit && filters.limit > 0 ? Math.min(filters.limit, 100) : 20;
+      const skip = (page - 1) * limit;
+
+      const where: Prisma.StockWhereInput = {};
+
+      if (filters.query?.trim()) {
+        const q = filters.query.trim();
+        where.OR = [
+          { symbol: { contains: q, mode: "insensitive" } },
+          { name: { contains: q, mode: "insensitive" } },
+          { feedSymbol: { contains: q, mode: "insensitive" } },
+        ];
+      }
+
+      if (filters.type && filters.type !== "ALL") {
+        where.type = filters.type;
+      }
+
+      if (filters.isActive !== undefined) {
+        where.isActive = filters.isActive;
+      }
+
+      if (filters.isTradable !== undefined) {
+        where.isTradable = filters.isTradable;
+      }
+
+      const [rawStocks, total, totalStocks, activeStocks, tradableStocks] =
+        await Promise.all([
+          prisma.stock.findMany({
+            where,
+            orderBy: [{ type: "asc" }, { symbol: "asc" }],
+            skip,
+            take: limit,
+          }),
+          prisma.stock.count({ where }),
+          prisma.stock.count(),
+          prisma.stock.count({ where: { isActive: true } }),
+          prisma.stock.count({ where: { isTradable: true } }),
+        ]);
+
+      const stockIds = rawStocks.map((s) => s.id);
+      const orderCountsRaw = await prisma.order.groupBy({
+        by: ["stockId"],
+        where: { stockId: { in: stockIds } },
+        _count: { id: true },
+      });
+
+      const orderCounts: Record<string, number> = {};
+      for (const item of orderCountsRaw) {
+        orderCounts[item.stockId] = item._count.id;
+      }
+
+      return {
+        stocks: rawStocks.map((r) => StockPersistenceMapper.toDomain(r)),
+        total,
+        metrics: {
+          totalStocks,
+          activeStocks,
+          tradableStocks,
+        },
+        orderCounts,
+      };
+    } catch (error) {
+      handlePrismaError(error);
+    }
+  }
+
+  async save(stock: Stock): Promise<Stock> {
+    try {
+      const data = StockPersistenceMapper.toPrisma(stock);
+      const raw = await prisma.stock.create({
+        data: {
+          id: data.id,
+          symbol: data.symbol,
+          name: data.name,
+          exchange: data.exchange,
+          sector: data.sector,
+          type: data.type,
+          feedSymbol: data.feedSymbol,
+          isActive: data.isActive,
+          isTradable: data.isTradable,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+        },
+      });
+      return StockPersistenceMapper.toDomain(raw);
+    } catch (error) {
+      handlePrismaError(error);
+    }
+  }
+
+  async update(stock: Stock): Promise<Stock> {
+    try {
+      const data = StockPersistenceMapper.toPrisma(stock);
+      const raw = await prisma.stock.update({
+        where: { id: data.id },
+        data: {
+          name: data.name,
+          exchange: data.exchange,
+          sector: data.sector,
+          type: data.type,
+          feedSymbol: data.feedSymbol,
+          isActive: data.isActive,
+          isTradable: data.isTradable,
+          updatedAt: new Date(),
+        },
+      });
+      return StockPersistenceMapper.toDomain(raw);
+    } catch (error) {
+      handlePrismaError(error);
+    }
+  }
+
+  async delete(id: string): Promise<boolean> {
+    try {
+      await prisma.stock.delete({ where: { id } });
+      return true;
+    } catch (error) {
+      handlePrismaError(error);
+    }
+  }
+
+  async countOrdersByStockId(stockId: string): Promise<number> {
+    try {
+      const count = await prisma.order.count({ where: { stockId } });
+      return count;
+    } catch (error) {
+      handlePrismaError(error);
+    }
   }
 }
