@@ -22,7 +22,6 @@ export interface AdminStockFilters {
   type?: "ALL" | "EQUITY" | "INDEX";
   isActive?: boolean;
   isTradable?: boolean;
-  sector?: string;
   page?: number;
   limit?: number;
 }
@@ -31,7 +30,6 @@ export interface AdminStockMetrics {
   totalStocks: number;
   activeStocks: number;
   tradableStocks: number;
-  totalSectors: number;
 }
 
 export interface IStockRepository {

@@ -204,11 +204,7 @@ export class StockRepository
         where.isTradable = filters.isTradable;
       }
 
-      if (filters.sector?.trim()) {
-        where.sector = { equals: filters.sector.trim(), mode: "insensitive" };
-      }
-
-      const [rawStocks, total, totalStocks, activeStocks, tradableStocks, distinctSectors] =
+      const [rawStocks, total, totalStocks, activeStocks, tradableStocks] =
         await Promise.all([
           prisma.stock.findMany({
             where,
@@ -220,11 +216,6 @@ export class StockRepository
           prisma.stock.count(),
           prisma.stock.count({ where: { isActive: true } }),
           prisma.stock.count({ where: { isTradable: true } }),
-          prisma.stock.findMany({
-            where: { sector: { not: null } },
-            select: { sector: true },
-            distinct: ["sector"],
-          }),
         ]);
 
       const stockIds = rawStocks.map((s) => s.id);
@@ -246,7 +237,6 @@ export class StockRepository
           totalStocks,
           activeStocks,
           tradableStocks,
-          totalSectors: distinctSectors.length,
         },
         orderCounts,
       };

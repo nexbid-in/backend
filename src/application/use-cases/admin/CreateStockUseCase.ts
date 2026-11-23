@@ -84,7 +84,7 @@ export class CreateStockUseCase implements ICreateStockUseCase {
       isTradable: saved.isTradable,
       createdAt: saved.createdAt,
       updatedAt: saved.updatedAt,
-      orderCount: 0,
+      canDelete: true,
     };
   }
 }

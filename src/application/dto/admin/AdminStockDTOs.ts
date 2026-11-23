@@ -7,7 +7,6 @@ export type AdminStocksQueryDTO = {
   type?: "ALL" | InstrumentType;
   isActive?: boolean;
   isTradable?: boolean;
-  sector?: string;
 };
 
 export type AdminStockItemDTO = {
@@ -22,14 +21,13 @@ export type AdminStockItemDTO = {
   isTradable: boolean;
   createdAt: Date;
   updatedAt: Date;
-  orderCount: number;
+  canDelete: boolean;
 };
 
 export type AdminStockMetricsDTO = {
   totalStocks: number;
   activeStocks: number;
   tradableStocks: number;
-  totalSectors: number;
 };
 
 export type PaginatedAdminStocksResponseDTO = {

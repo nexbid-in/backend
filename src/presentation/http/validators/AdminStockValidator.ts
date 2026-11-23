@@ -17,7 +17,6 @@ export const getAdminStocksSchema = z.object({
       if (val === "false" || val === false) return false;
       return undefined;
     }, z.boolean().optional()),
-  sector: z.string().optional(),
 });
 
 export const createStockSchema = z.object({

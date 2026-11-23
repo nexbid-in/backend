@@ -83,7 +83,7 @@ export class UpdateStockUseCase implements IUpdateStockUseCase {
       isTradable: updated.isTradable,
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
-      orderCount,
+      canDelete: orderCount === 0,
     };
   }
 }

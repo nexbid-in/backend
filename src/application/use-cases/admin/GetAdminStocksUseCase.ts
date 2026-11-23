@@ -18,7 +18,6 @@ export class GetAdminStocksUseCase implements IGetAdminStocksUseCase {
         type: query.type,
         isActive: query.isActive,
         isTradable: query.isTradable,
-        sector: query.sector,
         page: query.page,
         limit: query.limit,
       });
@@ -35,7 +34,7 @@ export class GetAdminStocksUseCase implements IGetAdminStocksUseCase {
       isTradable: s.isTradable,
       createdAt: s.createdAt,
       updatedAt: s.updatedAt,
-      orderCount: orderCounts[s.id] || 0,
+      canDelete: (orderCounts[s.id] || 0) === 0,
     }));
 
     return {
