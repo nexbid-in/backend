@@ -1,36 +1,3 @@
-const DEFAULT_INDEX_MAP: Record<string, string> = {
-  "NIFTY 50": "NSE:NIFTY50-INDEX",
-  "NIFTY50": "NSE:NIFTY50-INDEX",
-  "NIFTY": "NSE:NIFTY50-INDEX",
-  "BANKNIFTY": "NSE:NIFTYBANK-INDEX",
-  "NIFTY BANK": "NSE:NIFTYBANK-INDEX",
-  "NIFTY IT": "NSE:NIFTYIT-INDEX",
-  "NIFTYIT": "NSE:NIFTYIT-INDEX",
-  "NIFTY AUTO": "NSE:NIFTYAUTO-INDEX",
-  "NIFTYAUTO": "NSE:NIFTYAUTO-INDEX",
-  "NIFTY PHARMA": "NSE:NIFTYPHARMA-INDEX",
-  "NIFTYPHARMA": "NSE:NIFTYPHARMA-INDEX",
-  "NIFTY METAL": "NSE:NIFTYMETAL-INDEX",
-  "NIFTYMETAL": "NSE:NIFTYMETAL-INDEX",
-  "NIFTY FMCG": "NSE:NIFTYFMCG-INDEX",
-  "NIFTYFMCG": "NSE:NIFTYFMCG-INDEX",
-  "NIFTY MIDCAP 50": "NSE:NIFTYMIDCAP50-INDEX",
-  "NIFTYMIDCAP50": "NSE:NIFTYMIDCAP50-INDEX",
-  "SENSEX": "BSE:SENSEX-INDEX",
-};
-
-const DEFAULT_REVERSE_INDEX_MAP: Record<string, string> = {
-  "NSE:NIFTY50-INDEX": "NIFTY 50",
-  "NSE:NIFTYBANK-INDEX": "BANKNIFTY",
-  "NSE:NIFTYIT-INDEX": "NIFTY IT",
-  "NSE:NIFTYAUTO-INDEX": "NIFTY AUTO",
-  "NSE:NIFTYPHARMA-INDEX": "NIFTY PHARMA",
-  "NSE:NIFTYMETAL-INDEX": "NIFTY METAL",
-  "NSE:NIFTYFMCG-INDEX": "NIFTY FMCG",
-  "NSE:NIFTYMIDCAP50-INDEX": "NIFTY MIDCAP 50",
-  "BSE:SENSEX-INDEX": "SENSEX",
-};
-
 export class MarketSymbolMapper {
   private static symbolToFeedMap = new Map<string, string>();
   private static feedToSymbolMap = new Map<string, string>();
@@ -38,13 +5,6 @@ export class MarketSymbolMapper {
   static init(stocks: Array<{ symbol: string; feedSymbol?: string | null }>): void {
     this.symbolToFeedMap.clear();
     this.feedToSymbolMap.clear();
-
-    for (const [sym, feed] of Object.entries(DEFAULT_INDEX_MAP)) {
-      this.symbolToFeedMap.set(sym.toUpperCase(), feed.toUpperCase());
-    }
-    for (const [feed, sym] of Object.entries(DEFAULT_REVERSE_INDEX_MAP)) {
-      this.feedToSymbolMap.set(feed.toUpperCase(), sym.toUpperCase());
-    }
 
     for (const stock of stocks) {
       if (stock.feedSymbol) {
@@ -96,13 +56,6 @@ export class MarketSymbolMapper {
       return raw;
     }
 
-    if (DEFAULT_INDEX_MAP[raw]) {
-      return DEFAULT_INDEX_MAP[raw];
-    }
-    if (DEFAULT_INDEX_MAP[spaceless]) {
-      return DEFAULT_INDEX_MAP[spaceless];
-    }
-
     return `NSE:${spaceless}-EQ`;
   }
 
@@ -115,13 +68,6 @@ export class MarketSymbolMapper {
     }
     if (this.feedToSymbolMap.has(raw)) {
       return this.feedToSymbolMap.get(raw)!;
-    }
-
-    if (DEFAULT_REVERSE_INDEX_MAP[upper]) {
-      return DEFAULT_REVERSE_INDEX_MAP[upper];
-    }
-    if (DEFAULT_REVERSE_INDEX_MAP[raw]) {
-      return DEFAULT_REVERSE_INDEX_MAP[raw];
     }
 
     return upper
