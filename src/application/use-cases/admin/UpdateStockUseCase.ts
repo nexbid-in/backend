@@ -1,5 +1,6 @@
 import { InstrumentType } from "../../../domain/entities/Stock";
 import { IStockRepository } from "../../../domain/repositories/stock/IStockRepository";
+import { IMarketDataService } from "../../interface/services/IMarketDataService";
 import {
   UpdateStockDTO,
   AdminStockItemDTO,
@@ -10,7 +11,10 @@ import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 import { MarketSymbolMapper } from "../../../infrastructure/external/market/MarketSymbolMapper";
 
 export class UpdateStockUseCase implements IUpdateStockUseCase {
-  constructor(private readonly stockRepo: IStockRepository) {}
+  constructor(
+    private readonly stockRepo: IStockRepository,
+    private readonly marketDataService: IMarketDataService
+  ) {}
 
   async execute(dto: UpdateStockDTO): Promise<AdminStockItemDTO> {
     const stock = await this.stockRepo.findById(dto.stockId);
@@ -30,6 +34,16 @@ export class UpdateStockUseCase implements IUpdateStockUseCase {
           ErrorCodes.STOCK_FEED_SYMBOL_ALREADY_EXISTS,
           "This feed symbol is already mapped to another instrument."
         );
+      }
+
+      if (this.marketDataService.verifySymbol) {
+        const verification = await this.marketDataService.verifySymbol(newFeedSymbol);
+        if (!verification.valid) {
+          throw new AppError(
+            ErrorCodes.INVALID_BROKER_FEED_SYMBOL,
+            `Instrument ticker '${newFeedSymbol}' was not recognized by the exchange feed. Please check symbol spelling.`
+          );
+        }
       }
     }
 

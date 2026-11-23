@@ -186,6 +186,11 @@ export const HttpErrorMap: Record<
     message: ErrorMessages.INDEX_CANNOT_BE_TRADABLE,
   },
 
+  [ErrorCodes.INVALID_BROKER_FEED_SYMBOL]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: ErrorMessages.INVALID_BROKER_FEED_SYMBOL,
+  },
+
   [ErrorCodes.ORDER_CANNOT_BE_CANCELLED]: {
     status: HttpStatus.BAD_REQUEST,
     message: ErrorMessages.ORDER_CANNOT_BE_CANCELLED,

@@ -30,6 +30,7 @@ export const SuccessMessages = {
   ADMIN_STOCK_STATUS_UPDATED: "Instrument status updated successfully",
   ADMIN_STOCK_UPDATED: "Instrument updated successfully",
   ADMIN_STOCK_DELETED: "Instrument deleted successfully",
+  ADMIN_STOCK_VERIFIED: "Instrument ticker verified successfully",
   WATCHLIST_RETRIEVED: "Watchlist retrieved successfully",
   WATCHLIST_ITEM_ADDED: "Stock added to watchlist successfully",
   WATCHLIST_ITEM_REMOVED: "Stock removed from watchlist successfully",

@@ -63,3 +63,14 @@ export const updateStockSchema = z.object({
 export const stockIdParamSchema = z.object({
   stockId: z.string().min(1, "Stock ID is required"),
 });
+
+export const verifyStockSchema = z.object({
+  symbol: z
+    .string()
+    .min(1, "Symbol is required")
+    .max(30, "Symbol cannot exceed 30 characters")
+    .trim()
+    .toUpperCase(),
+  feedSymbol: z.string().max(60).trim().toUpperCase().nullable().optional(),
+  type: z.enum(["EQUITY", "INDEX"]).optional(),
+});

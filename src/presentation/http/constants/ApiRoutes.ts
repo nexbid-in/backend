@@ -32,6 +32,7 @@ export const ApiRoutes = {
     CANCEL_ORDER: "/orders/:orderId/cancel",
     STOCKS: "/stocks",
     CREATE_STOCK: "/stocks",
+    VERIFY_STOCK: "/stocks/verify",
     UPDATE_STOCK_STATUS: "/stocks/:stockId/status",
     UPDATE_STOCK: "/stocks/:stockId",
     DELETE_STOCK: "/stocks/:stockId",

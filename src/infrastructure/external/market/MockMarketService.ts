@@ -247,6 +247,35 @@ export class MockMarketService implements IMarketDataService {
     return Promise.resolve();
   }
 
+  async verifySymbol(symbol: string): Promise<{
+    valid: boolean;
+    ltp?: number;
+    description?: string;
+    exchange?: string;
+  }> {
+    const clean = this.cleanSymbol(symbol);
+    if (BASELINE_PRICES[clean] !== undefined) {
+      return Promise.resolve({
+        valid: true,
+        ltp: BASELINE_PRICES[clean],
+        description: clean,
+        exchange: "NSE",
+      });
+    }
+
+    const spaceless = clean.replace(/\s+/g, "");
+    if (BASELINE_PRICES[spaceless] !== undefined) {
+      return Promise.resolve({
+        valid: true,
+        ltp: BASELINE_PRICES[spaceless],
+        description: clean,
+        exchange: "NSE",
+      });
+    }
+
+    return Promise.resolve({ valid: false });
+  }
+
   onTick(callback: (tick: MarketTick) => void): void {
     this.tickCallbacks.push(callback);
   }

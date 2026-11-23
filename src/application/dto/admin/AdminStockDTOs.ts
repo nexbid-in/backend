@@ -72,3 +72,19 @@ export type UpdateStockDTO = {
 export type DeleteStockDTO = {
   stockId: string;
 };
+
+export type VerifyStockSymbolDTO = {
+  symbol: string;
+  feedSymbol?: string | null;
+  type?: InstrumentType;
+};
+
+export type VerifyStockSymbolResponseDTO = {
+  valid: boolean;
+  symbol: string;
+  resolvedFeedSymbol: string;
+  ltp?: number;
+  description?: string;
+  exchange?: string;
+  message: string;
+};

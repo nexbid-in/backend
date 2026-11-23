@@ -4,6 +4,7 @@ import { ICreateStockUseCase } from "../../../../application/interface/use-cases
 import { IUpdateStockStatusUseCase } from "../../../../application/interface/use-cases/admin/IUpdateStockStatusUseCase";
 import { IUpdateStockUseCase } from "../../../../application/interface/use-cases/admin/IUpdateStockUseCase";
 import { IDeleteStockUseCase } from "../../../../application/interface/use-cases/admin/IDeleteStockUseCase";
+import { IVerifyStockSymbolUseCase } from "../../../../application/interface/use-cases/admin/IVerifyStockSymbolUseCase";
 import { HttpStatus } from "../../constants/HttpStatus";
 import { SuccessMessages } from "../../constants/SuccessMessages";
 import { ApiResponse } from "../../utils/ApiResponse";
@@ -13,6 +14,7 @@ import {
   updateStockStatusSchema,
   updateStockSchema,
   stockIdParamSchema,
+  verifyStockSchema,
 } from "../../validators/AdminStockValidator";
 
 export class AdminStockController {
@@ -21,7 +23,8 @@ export class AdminStockController {
     private readonly createStockUseCase: ICreateStockUseCase,
     private readonly updateStockStatusUseCase: IUpdateStockStatusUseCase,
     private readonly updateStockUseCase: IUpdateStockUseCase,
-    private readonly deleteStockUseCase: IDeleteStockUseCase
+    private readonly deleteStockUseCase: IDeleteStockUseCase,
+    private readonly verifyStockSymbolUseCase: IVerifyStockSymbolUseCase
   ) {}
 
   async getStocks(req: Request, res: Response, next: NextFunction) {
@@ -32,6 +35,21 @@ export class AdminStockController {
         res,
         HttpStatus.OK,
         SuccessMessages.ADMIN_STOCKS_RETRIEVED,
+        result
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async verifyStock(req: Request, res: Response, next: NextFunction) {
+    try {
+      const validatedBody = verifyStockSchema.parse(req.body);
+      const result = await this.verifyStockSymbolUseCase.execute(validatedBody);
+      return ApiResponse.success(
+        res,
+        HttpStatus.OK,
+        SuccessMessages.ADMIN_STOCK_VERIFIED,
         result
       );
     } catch (error) {

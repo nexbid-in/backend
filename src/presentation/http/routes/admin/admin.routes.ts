@@ -66,6 +66,13 @@ router.post(
   adminStockController.createStock.bind(adminStockController)
 );
 
+router.post(
+  ApiRoutes.ADMIN.VERIFY_STOCK,
+  authMiddleware,
+  requireRole(["ADMIN"]),
+  adminStockController.verifyStock.bind(adminStockController)
+);
+
 router.patch(
   ApiRoutes.ADMIN.UPDATE_STOCK_STATUS,
   authMiddleware,
