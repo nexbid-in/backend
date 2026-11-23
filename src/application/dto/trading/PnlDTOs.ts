@@ -73,7 +73,6 @@ export interface PnlSymbolSummaryDTO {
   unrealizedPnL: number;    // MTM on open quantity
   openQuantity: number;     // Open inventory still holding
   currentLtp: number;
-  legs: PnlFifoLegDTO[];    // Granular FIFO trade breakdown
 }
 
 export interface GetPnlStatementResponseDTO {

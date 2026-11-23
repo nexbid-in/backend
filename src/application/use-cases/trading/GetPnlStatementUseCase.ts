@@ -10,7 +10,6 @@ import {
   PnlHeatmapSummaryDTO,
   PnlHeatmapDayDTO,
   PnlSymbolSummaryDTO,
-  PnlFifoLegDTO,
 } from "../../dto/trading/PnlDTOs";
 import { OrderSide, ProductType } from "../../../domain/entities/trading/Order";
 import { Money } from "../../../domain/value-objects/Money";
@@ -120,7 +119,6 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
       totalCharges: Money;
       unrealizedPnL: Money;
       currentLtp: number;
-      legs: PnlFifoLegDTO[];
     }
 
     const symbolMap = new Map<string, ScripAccumulator>();
@@ -133,8 +131,6 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
 
       const buyQueue: LotTracker[] = [];
       const sellQueue: LotTracker[] = [];
-      const closedLegs: PnlFifoLegDTO[] = [];
-      const openLegs: PnlFifoLegDTO[] = [];
 
       let scripClosedQty = 0;
       let scripBuyTurnover = Money.zero();
@@ -197,30 +193,6 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
               (!query.to || buyDate <= query.to);
 
             if (isWithinDateRange) {
-              const closedLeg: PnlFifoLegDTO = {
-                status: "Closed",
-                productType,
-                buyDate: buyDate.toISOString().split("T")[0],
-                sellDate: shortLot.entryDate.toISOString().split("T")[0],
-                quantity: matchedQty,
-                buyPrice: buyPrice.toNumber(),
-                sellPrice: shortLot.entryPrice.toNumber(),
-                isLtp: false,
-                tradePnL: lotGrossPnL.toNumber(),
-                charges: {
-                  brokerage: legBrokerage.toNumber(),
-                  stt: legStt.toNumber(),
-                  exchangeTurnoverCharges: legExchange.toNumber(),
-                  sebiCharges: legSebi.toNumber(),
-                  stampDuty: legStamp.toNumber(),
-                  gst: legGst.toNumber(),
-                  totalCharges: legTotalCharges.toNumber(),
-                },
-                netPnL: legNetPnL.toNumber(),
-              };
-
-              closedLegs.push(closedLeg);
-
               scripClosedQty += matchedQty;
               scripBuyTurnover = scripBuyTurnover.add(lotBuyValue);
               scripSellTurnover = scripSellTurnover.add(lotSellValue);
@@ -310,30 +282,6 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
               (!query.to || sellDate <= query.to);
 
             if (isWithinDateRange) {
-              const closedLeg: PnlFifoLegDTO = {
-                status: "Closed",
-                productType,
-                buyDate: longLot.entryDate.toISOString().split("T")[0],
-                sellDate: sellDate.toISOString().split("T")[0],
-                quantity: matchedQty,
-                buyPrice: longLot.entryPrice.toNumber(),
-                sellPrice: sellPrice.toNumber(),
-                isLtp: false,
-                tradePnL: lotGrossPnL.toNumber(),
-                charges: {
-                  brokerage: legBrokerage.toNumber(),
-                  stt: legStt.toNumber(),
-                  exchangeTurnoverCharges: legExchange.toNumber(),
-                  sebiCharges: legSebi.toNumber(),
-                  stampDuty: legStamp.toNumber(),
-                  gst: legGst.toNumber(),
-                  totalCharges: legTotalCharges.toNumber(),
-                },
-                netPnL: legNetPnL.toNumber(),
-              };
-
-              closedLegs.push(closedLeg);
-
               scripClosedQty += matchedQty;
               scripBuyTurnover = scripBuyTurnover.add(lotBuyValue);
               scripSellTurnover = scripSellTurnover.add(lotSellValue);
@@ -406,28 +354,6 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
 
           scripOpenQty += openLot.remainingQty;
           scripUnrealizedPnL = scripUnrealizedPnL.add(lotUnrealized);
-
-          openLegs.push({
-            status: "Open",
-            productType,
-            buyDate: openLot.entryDate.toISOString().split("T")[0],
-            sellDate: null,
-            quantity: openLot.remainingQty,
-            buyPrice: openLot.entryPrice.toNumber(),
-            sellPrice: currentLtp,
-            isLtp: true,
-            tradePnL: lotUnrealized.toNumber(),
-            charges: {
-              brokerage: 0,
-              stt: 0,
-              exchangeTurnoverCharges: 0,
-              sebiCharges: 0,
-              stampDuty: 0,
-              gst: 0,
-              totalCharges: 0,
-            },
-            netPnL: lotUnrealized.toNumber(),
-          });
         }
       }
 
@@ -440,43 +366,7 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
 
           scripOpenQty -= openLot.remainingQty;
           scripUnrealizedPnL = scripUnrealizedPnL.add(lotUnrealized);
-
-          openLegs.push({
-            status: "Open",
-            productType,
-            buyDate: openLot.entryDate.toISOString().split("T")[0],
-            sellDate: null,
-            quantity: openLot.remainingQty,
-            buyPrice: openLot.entryPrice.toNumber(),
-            sellPrice: currentLtp,
-            isLtp: true,
-            tradePnL: lotUnrealized.toNumber(),
-            charges: {
-              brokerage: 0,
-              stt: 0,
-              exchangeTurnoverCharges: 0,
-              sebiCharges: 0,
-              stampDuty: 0,
-              gst: 0,
-              totalCharges: 0,
-            },
-            netPnL: lotUnrealized.toNumber(),
-          });
         }
-      }
-
-      const scripNetRealizedPnL = scripGrossPnL.subtract(scripTotalCharges);
-      const buyAvg = scripClosedQty > 0 ? scripBuyTurnover.divide(scripClosedQty).toNumber() : 0;
-      const sellAvg = scripClosedQty > 0 ? scripSellTurnover.divide(scripClosedQty).toNumber() : 0;
-
-      // Select legs based on pnlType filter
-      let selectedLegs: PnlFifoLegDTO[] = [];
-      if (pnlView === "REALIZED") {
-        selectedLegs = closedLegs;
-      } else if (pnlView === "UNREALIZED") {
-        selectedLegs = openLegs;
-      } else {
-        selectedLegs = [...closedLegs, ...openLegs];
       }
 
       // Accumulate into symbolMap to combine CNC & MIS into a single row per symbol
@@ -500,7 +390,6 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
           totalCharges: scripTotalCharges,
           unrealizedPnL: scripUnrealizedPnL,
           currentLtp,
-          legs: selectedLegs,
         };
         symbolMap.set(symbol, symbolAcc);
       } else {
@@ -519,7 +408,6 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
         symbolAcc.totalCharges = symbolAcc.totalCharges.add(scripTotalCharges);
         symbolAcc.unrealizedPnL = symbolAcc.unrealizedPnL.add(scripUnrealizedPnL);
         if (currentLtp > 0) symbolAcc.currentLtp = currentLtp;
-        symbolAcc.legs.push(...selectedLegs);
       }
 
       // Accumulate overall totals
@@ -574,7 +462,6 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
           unrealizedPnL: acc.unrealizedPnL.toNumber(),
           openQuantity: acc.openQty,
           currentLtp: acc.currentLtp,
-          legs: acc.legs,
         });
       }
     }
