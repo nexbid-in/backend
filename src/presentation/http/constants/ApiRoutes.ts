@@ -81,4 +81,9 @@ export const ApiRoutes = {
     TRADEBOOK: "/tradebook",
     SQUARE_OFF: "/positions/:id/square-off",
   },
+
+  DASHBOARD: {
+    BASE: "/dashboard",
+    OVERVIEW: "/overview",
+  },
 } as const;
