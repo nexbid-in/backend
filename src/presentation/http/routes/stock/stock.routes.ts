@@ -11,10 +11,4 @@ router.get(
   stockController.search.bind(stockController)
 );
 
-router.get(
-  "/",
-  authMiddleware,
-  stockController.search.bind(stockController)
-);
-
 export default router;

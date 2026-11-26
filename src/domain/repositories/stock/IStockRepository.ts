@@ -10,11 +10,6 @@ export interface StockSearchOptions {
 export interface StockSearchResult {
   stocks: Stock[];
   total: number;
-  counts: {
-    all: number;
-    equities: number;
-    indices: number;
-  };
 }
 
 export interface AdminStockFilters {

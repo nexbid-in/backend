@@ -26,14 +26,7 @@ export type PaginationDTO = {
   hasMore: boolean;
 };
 
-export type CountsDTO = {
-  all: number;
-  equities: number;
-  indices: number;
-};
-
 export type SearchStocksResponseDTO = {
   stocks: StockItemDTO[];
   pagination: PaginationDTO;
-  counts: CountsDTO;
 };

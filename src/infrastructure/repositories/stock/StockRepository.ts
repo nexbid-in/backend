@@ -89,21 +89,12 @@ export class StockRepository
         where: baseWhere,
       });
 
-      const allMatchingStocks = rawStocks.map((raw) => StockPersistenceMapper.toDomain(raw));
+      let filtered = rawStocks.map((raw) => StockPersistenceMapper.toDomain(raw));
 
-      const equitiesCount = allMatchingStocks.filter((s) => s.type === "EQUITY").length;
-      const indicesCount = allMatchingStocks.filter((s) => s.type === "INDEX").length;
-      const counts = {
-        all: allMatchingStocks.length,
-        equities: equitiesCount,
-        indices: indicesCount,
-      };
-
-      let filtered = allMatchingStocks;
       if (type === "EQUITY") {
-        filtered = allMatchingStocks.filter((s) => s.type === "EQUITY");
+        filtered = filtered.filter((s) => s.type === "EQUITY");
       } else if (type === "INDEX") {
-        filtered = allMatchingStocks.filter((s) => s.type === "INDEX");
+        filtered = filtered.filter((s) => s.type === "INDEX");
       }
 
       const PRIORITY_BENCHMARKS = [
@@ -144,7 +135,6 @@ export class StockRepository
       return {
         stocks: paginatedStocks,
         total,
-        counts,
       };
     } catch (error) {
       handlePrismaError(error);

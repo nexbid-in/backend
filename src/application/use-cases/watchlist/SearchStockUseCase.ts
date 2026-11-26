@@ -29,7 +29,6 @@ export class SearchStocksUseCase implements ISearchStocksUseCase {
         totalPages,
         hasMore,
       },
-      counts: result.counts,
     };
   }
 }
