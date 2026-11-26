@@ -15,12 +15,85 @@ import { OrderSide, ProductType } from "../../../domain/entities/trading/Order";
 import { Money } from "../../../domain/value-objects/Money";
 import { Trade } from "../../../domain/entities/trading/Trade";
 
+interface LotChargesTracker {
+  brokerage: Money;
+  stt: Money;
+  exchangeTurnoverCharges: Money;
+  sebiCharges: Money;
+  stampDuty: Money;
+  gst: Money;
+  totalCharges: Money;
+}
+
 interface LotTracker {
   trade: Trade;
   entryDate: Date;
   entryPrice: Money;
   remainingQty: number;
   originalQty: number;
+  remainingCharges: LotChargesTracker;
+}
+
+function createChargesTracker(trade: Trade): LotChargesTracker {
+  return {
+    brokerage: trade.brokerage,
+    stt: trade.stt,
+    exchangeTurnoverCharges: trade.exchangeTurnoverCharges,
+    sebiCharges: trade.sebiCharges,
+    stampDuty: trade.stampDuty,
+    gst: trade.gst,
+    totalCharges: trade.totalCharges,
+  };
+}
+
+function allocateChargesFromTracker(
+  tracker: LotChargesTracker,
+  trade: Trade,
+  matchedQty: number,
+  remainingQty: number,
+  originalQty: number
+): LotChargesTracker {
+  const isFinal = matchedQty === remainingQty;
+  if (isFinal) {
+    const allocated: LotChargesTracker = {
+      brokerage: tracker.brokerage,
+      stt: tracker.stt,
+      exchangeTurnoverCharges: tracker.exchangeTurnoverCharges,
+      sebiCharges: tracker.sebiCharges,
+      stampDuty: tracker.stampDuty,
+      gst: tracker.gst,
+      totalCharges: tracker.totalCharges,
+    };
+    tracker.brokerage = Money.zero();
+    tracker.stt = Money.zero();
+    tracker.exchangeTurnoverCharges = Money.zero();
+    tracker.sebiCharges = Money.zero();
+    tracker.stampDuty = Money.zero();
+    tracker.gst = Money.zero();
+    tracker.totalCharges = Money.zero();
+    return allocated;
+  }
+
+  const fraction = matchedQty / originalQty;
+  const allocated: LotChargesTracker = {
+    brokerage: trade.brokerage.multiply(fraction),
+    stt: trade.stt.multiply(fraction),
+    exchangeTurnoverCharges: trade.exchangeTurnoverCharges.multiply(fraction),
+    sebiCharges: trade.sebiCharges.multiply(fraction),
+    stampDuty: trade.stampDuty.multiply(fraction),
+    gst: trade.gst.multiply(fraction),
+    totalCharges: trade.totalCharges.multiply(fraction),
+  };
+
+  tracker.brokerage = tracker.brokerage.subtract(allocated.brokerage);
+  tracker.stt = tracker.stt.subtract(allocated.stt);
+  tracker.exchangeTurnoverCharges = tracker.exchangeTurnoverCharges.subtract(allocated.exchangeTurnoverCharges);
+  tracker.sebiCharges = tracker.sebiCharges.subtract(allocated.sebiCharges);
+  tracker.stampDuty = tracker.stampDuty.subtract(allocated.stampDuty);
+  tracker.gst = tracker.gst.subtract(allocated.gst);
+  tracker.totalCharges = tracker.totalCharges.subtract(allocated.totalCharges);
+
+  return allocated;
 }
 
 export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
@@ -148,6 +221,7 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
       for (const t of trades) {
         if (t.side === OrderSide.BUY) {
           let buyQtyRemaining = t.quantity;
+          const buyChargesTracker = createChargesTracker(t);
           const buyPrice = t.price;
           const buyDate = t.executedAt;
 
@@ -161,30 +235,29 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
             // In short trades: Profit = SellPrice - BuyPrice
             const lotGrossPnL = lotSellValue.subtract(lotBuyValue);
 
-            const sellFraction = matchedQty / shortLot.originalQty;
-            const buyFraction = matchedQty / t.quantity;
+            const shortCharges = allocateChargesFromTracker(
+              shortLot.remainingCharges,
+              shortLot.trade,
+              matchedQty,
+              shortLot.remainingQty,
+              shortLot.originalQty
+            );
 
-            const legBrokerage = shortLot.trade.brokerage
-              .multiply(sellFraction)
-              .add(t.brokerage.multiply(buyFraction));
-            const legStt = shortLot.trade.stt
-              .multiply(sellFraction)
-              .add(t.stt.multiply(buyFraction));
-            const legExchange = shortLot.trade.exchangeTurnoverCharges
-              .multiply(sellFraction)
-              .add(t.exchangeTurnoverCharges.multiply(buyFraction));
-            const legSebi = shortLot.trade.sebiCharges
-              .multiply(sellFraction)
-              .add(t.sebiCharges.multiply(buyFraction));
-            const legStamp = shortLot.trade.stampDuty
-              .multiply(sellFraction)
-              .add(t.stampDuty.multiply(buyFraction));
-            const legGst = shortLot.trade.gst
-              .multiply(sellFraction)
-              .add(t.gst.multiply(buyFraction));
-            const legTotalCharges = shortLot.trade.totalCharges
-              .multiply(sellFraction)
-              .add(t.totalCharges.multiply(buyFraction));
+            const buyCharges = allocateChargesFromTracker(
+              buyChargesTracker,
+              t,
+              matchedQty,
+              buyQtyRemaining,
+              t.quantity
+            );
+
+            const legBrokerage = shortCharges.brokerage.add(buyCharges.brokerage);
+            const legStt = shortCharges.stt.add(buyCharges.stt);
+            const legExchange = shortCharges.exchangeTurnoverCharges.add(buyCharges.exchangeTurnoverCharges);
+            const legSebi = shortCharges.sebiCharges.add(buyCharges.sebiCharges);
+            const legStamp = shortCharges.stampDuty.add(buyCharges.stampDuty);
+            const legGst = shortCharges.gst.add(buyCharges.gst);
+            const legTotalCharges = shortCharges.totalCharges.add(buyCharges.totalCharges);
 
             const legNetPnL = lotGrossPnL.subtract(legTotalCharges);
 
@@ -234,10 +307,12 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
               entryPrice: t.price,
               remainingQty: buyQtyRemaining,
               originalQty: t.quantity,
+              remainingCharges: buyChargesTracker,
             });
           }
         } else if (t.side === OrderSide.SELL) {
           let sellQtyRemaining = t.quantity;
+          const sellChargesTracker = createChargesTracker(t);
           const sellPrice = t.price;
           const sellDate = t.executedAt;
 
@@ -250,30 +325,29 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
             const lotSellValue = sellPrice.multiply(matchedQty);
             const lotGrossPnL = lotSellValue.subtract(lotBuyValue);
 
-            const buyFraction = matchedQty / longLot.originalQty;
-            const sellFraction = matchedQty / t.quantity;
+            const longCharges = allocateChargesFromTracker(
+              longLot.remainingCharges,
+              longLot.trade,
+              matchedQty,
+              longLot.remainingQty,
+              longLot.originalQty
+            );
 
-            const legBrokerage = longLot.trade.brokerage
-              .multiply(buyFraction)
-              .add(t.brokerage.multiply(sellFraction));
-            const legStt = longLot.trade.stt
-              .multiply(buyFraction)
-              .add(t.stt.multiply(sellFraction));
-            const legExchange = longLot.trade.exchangeTurnoverCharges
-              .multiply(buyFraction)
-              .add(t.exchangeTurnoverCharges.multiply(sellFraction));
-            const legSebi = longLot.trade.sebiCharges
-              .multiply(buyFraction)
-              .add(t.sebiCharges.multiply(sellFraction));
-            const legStamp = longLot.trade.stampDuty
-              .multiply(buyFraction)
-              .add(t.stampDuty.multiply(sellFraction));
-            const legGst = longLot.trade.gst
-              .multiply(buyFraction)
-              .add(t.gst.multiply(sellFraction));
-            const legTotalCharges = longLot.trade.totalCharges
-              .multiply(buyFraction)
-              .add(t.totalCharges.multiply(sellFraction));
+            const sellCharges = allocateChargesFromTracker(
+              sellChargesTracker,
+              t,
+              matchedQty,
+              sellQtyRemaining,
+              t.quantity
+            );
+
+            const legBrokerage = longCharges.brokerage.add(sellCharges.brokerage);
+            const legStt = longCharges.stt.add(sellCharges.stt);
+            const legExchange = longCharges.exchangeTurnoverCharges.add(sellCharges.exchangeTurnoverCharges);
+            const legSebi = longCharges.sebiCharges.add(sellCharges.sebiCharges);
+            const legStamp = longCharges.stampDuty.add(sellCharges.stampDuty);
+            const legGst = longCharges.gst.add(sellCharges.gst);
+            const legTotalCharges = longCharges.totalCharges.add(sellCharges.totalCharges);
 
             const legNetPnL = lotGrossPnL.subtract(legTotalCharges);
 
@@ -323,6 +397,7 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
               entryPrice: t.price,
               remainingQty: sellQtyRemaining,
               originalQty: t.quantity,
+              remainingCharges: sellChargesTracker,
             });
           }
         }
