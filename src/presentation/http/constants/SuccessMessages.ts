@@ -47,4 +47,5 @@ export const SuccessMessages = {
   TRADEBOOK_RETRIEVED: "Tradebook retrieved successfully",
   POSITION_SQUARED_OFF: "Position squared off successfully",
   MARKET_STATUS_RETRIEVED: "Market status retrieved successfully",
+  DASHBOARD_OVERVIEW_RETRIEVED: "Dashboard overview retrieved successfully",
 } as const;

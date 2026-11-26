@@ -30,7 +30,6 @@ export class TradeChargesCalculator {
       return TradeCharges.zero();
     }
 
-    // Exact turnover using Money.multiply(quantity)
     const turnover = priceMoney.multiply(quantity);
     const turnoverDec = turnover.toDecimal();
 
@@ -45,7 +44,7 @@ export class TradeChargesCalculator {
       brokerage = Money.zero();
     }
 
-    // 2. STT: Indian tax law rounds STT to nearest rupee: Decimal.ROUND_HALF_UP
+    // 2. STT: Indian tax law rounds STT to nearest rupee
     let stt = Money.zero();
     if (productType === ProductType.CNC) {
       const sttDec = turnoverDec.times(this.STT_CNC_RATE).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
@@ -74,7 +73,6 @@ export class TradeChargesCalculator {
     const taxableAmount = brokerage.add(exchangeTurnoverCharges).add(sebiCharges);
     const gst = Money.of(taxableAmount.toDecimal().times(this.GST_RATE));
 
-    // Total charges via Money.add()
     const totalCharges = brokerage
       .add(stt)
       .add(exchangeTurnoverCharges)
