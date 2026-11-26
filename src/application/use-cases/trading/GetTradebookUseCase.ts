@@ -61,9 +61,21 @@ export class GetTradebookUseCase implements IGetTradebookUseCase {
     let totalBuyTurnover = Money.zero();
     let totalSellTurnover = Money.zero();
     let totalCharges = Money.zero();
+    let totalBrokerage = Money.zero();
+    let totalStt = Money.zero();
+    let totalExchangeCharges = Money.zero();
+    let totalSebiCharges = Money.zero();
+    let totalStampDuty = Money.zero();
+    let totalGst = Money.zero();
 
     for (const t of allMatchingTrades) {
       totalCharges = totalCharges.add(t.totalCharges);
+      totalBrokerage = totalBrokerage.add(t.brokerage);
+      totalStt = totalStt.add(t.stt);
+      totalExchangeCharges = totalExchangeCharges.add(t.exchangeTurnoverCharges);
+      totalSebiCharges = totalSebiCharges.add(t.sebiCharges);
+      totalStampDuty = totalStampDuty.add(t.stampDuty);
+      totalGst = totalGst.add(t.gst);
       if (t.side === OrderSide.BUY) {
         totalBuyTurnover = totalBuyTurnover.add(t.tradeValue);
       } else {
@@ -107,6 +119,15 @@ export class GetTradebookUseCase implements IGetTradebookUseCase {
         totalBuyTurnover: totalBuyTurnover.toNumber(),
         totalSellTurnover: totalSellTurnover.toNumber(),
         totalCharges: totalCharges.toNumber(),
+        chargesBreakdown: {
+          brokerage: totalBrokerage.toNumber(),
+          stt: totalStt.toNumber(),
+          exchangeTurnoverCharges: totalExchangeCharges.toNumber(),
+          sebiCharges: totalSebiCharges.toNumber(),
+          stampDuty: totalStampDuty.toNumber(),
+          gst: totalGst.toNumber(),
+          totalCharges: totalCharges.toNumber(),
+        },
       },
       pagination: {
         page,
