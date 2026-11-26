@@ -39,10 +39,6 @@ export interface TradebookItemDTO {
 
 export interface TradebookSummaryDTO {
   totalTrades: number;
-  buyTradesCount: number;
-  sellTradesCount: number;
-  totalBuyQty: number;
-  totalSellQty: number;
   totalBuyTurnover: number;
   totalSellTurnover: number;
   totalCharges: number;
