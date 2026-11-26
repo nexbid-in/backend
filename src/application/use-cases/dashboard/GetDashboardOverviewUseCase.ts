@@ -40,7 +40,7 @@ export class GetDashboardOverviewUseCase implements IGetDashboardOverviewUseCase
       throw new AppError(ErrorCodes.ACCOUNT_BLOCKED, "Account is blocked");
     }
 
-    // 2. Market Status (only currentIstTime & session needed by frontend clock header)
+    // 2. Market Status (seed time for header clock)
     const marketStatusInfo = MarketHoursService.getMarketStatus(env.ENFORCE_MARKET_HOURS);
 
     // 3. Margins & Capital
@@ -111,7 +111,7 @@ export class GetDashboardOverviewUseCase implements IGetDashboardOverviewUseCase
     let openPositionsCount = 0;
 
     for (const pos of sessionMisPositions) {
-      // Only fetch live quote for positions that are currently OPEN
+      // Only fetch live quote for active open positions
       if (pos.isOpen()) {
         openPositionsCount++;
         const quote = await this.marketDataService.getQuote(pos.symbol);
@@ -137,9 +137,7 @@ export class GetDashboardOverviewUseCase implements IGetDashboardOverviewUseCase
         isOpen: marketStatusInfo.isOpen,
         session: marketStatusInfo.session,
         currentIstTime: marketStatusInfo.currentIstTime,
-        statusText: "",
       },
-      indices: [],
       margins: {
         availableMargin,
         usedMargin,
@@ -155,24 +153,13 @@ export class GetDashboardOverviewUseCase implements IGetDashboardOverviewUseCase
         totalPnlPercentage,
         dayPnl: totalDayPnlNum,
         dayPnlPercentage: totalDayPnlPercentage,
-        allocation: [],
       },
       positions: {
         openPositionsCount,
         dayRealizedPnL: dayRealizedNum,
         dayUnrealizedPnL: dayUnrealizedNum,
         dayNetPnL,
-        recentPositions: sessionMisPositions.map((pos) => ({
-          id: pos.id,
-          symbol: pos.symbol,
-          productType: pos.productType,
-          side: pos.side,
-          quantity: pos.quantity,
-          averagePrice: pos.averagePrice,
-          ltp: pos.averagePrice,
-          unrealizedPnL: 0,
-          pnlPercentage: 0,
-        })),
+        sessionPositionsCount: sessionMisPositions.length,
       },
     };
   }
