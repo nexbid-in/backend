@@ -436,32 +436,18 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
         const netRealizedPnL = acc.grossRealizedPnL.subtract(acc.totalCharges);
         const buyAvg = acc.closedQty > 0 ? acc.buyTurnover.divide(acc.closedQty).toNumber() : 0;
         const sellAvg = acc.closedQty > 0 ? acc.sellTurnover.divide(acc.closedQty).toNumber() : 0;
-        const productType = acc.productTypes.size === 1 ? Array.from(acc.productTypes)[0] : undefined;
 
         symbolSummaries.push({
           symbol: acc.symbol,
           exchange: acc.exchange,
-          productType,
           quantity: acc.closedQty,
           buyAvg,
           buyValue: acc.buyTurnover.toNumber(),
           sellAvg,
           sellValue: acc.sellTurnover.toNumber(),
-          grossRealizedPnL: acc.grossRealizedPnL.toNumber(),
-          charges: acc.totalCharges.toNumber(),
           netRealizedPnL: netRealizedPnL.toNumber(),
-          chargesBreakdown: {
-            brokerage: acc.brokerage.toNumber(),
-            stt: acc.stt.toNumber(),
-            exchangeTurnoverCharges: acc.exchangeCharges.toNumber(),
-            sebiCharges: acc.sebiCharges.toNumber(),
-            stampDuty: acc.stampDuty.toNumber(),
-            gst: acc.gst.toNumber(),
-            totalCharges: acc.totalCharges.toNumber(),
-          },
           unrealizedPnL: acc.unrealizedPnL.toNumber(),
           openQuantity: acc.openQty,
-          currentLtp: acc.currentLtp,
         });
       }
     }
@@ -470,14 +456,12 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
     const heatmapDays: PnlHeatmapDayDTO[] = [];
     let greenDays = 0;
     let redDays = 0;
-    let neutralDays = 0;
 
     const sortedDates = Array.from(dailyPnlMap.keys()).sort();
     for (const d of sortedDates) {
       const entry = dailyPnlMap.get(d)!;
       if (entry.net.isPositive()) greenDays++;
       else if (entry.net.isNegative()) redDays++;
-      else neutralDays++;
 
       heatmapDays.push({
         date: d,
@@ -508,7 +492,6 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
     const heatmap: PnlHeatmapSummaryDTO = {
       greenDays,
       redDays,
-      neutralDays,
       days: heatmapDays,
     };
 
