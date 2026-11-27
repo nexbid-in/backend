@@ -5,6 +5,10 @@ import { WalletRepository } from "../../infrastructure/repositories/wallet/Walle
 import { StockRepository } from "../../infrastructure/repositories/stock/StockRepository";
 import { marketDataService, marketQuoteBatchService } from "../market/container";
 import { OrderMatchingEngine } from "../../infrastructure/external/trading/OrderMatchingEngine";
+import { MarginCalculatorService } from "../../application/services/trading/MarginCalculatorService";
+import { PositionFillService } from "../../application/services/trading/PositionFillService";
+import { OrderWalletSettlementService } from "../../application/services/trading/OrderWalletSettlementService";
+import { OrderTradeExecutionService } from "../../application/services/trading/OrderTradeExecutionService";
 import { TradeValidationService } from "../../application/services/trading/TradeValidationService";
 import { OrderPricingService } from "../../application/services/trading/OrderPricingService";
 import { OrderMarginService } from "../../application/services/trading/OrderMarginService";
@@ -12,6 +16,7 @@ import { OrderExecutionService } from "../../application/services/trading/OrderE
 import { OrderRejectionService } from "../../application/services/trading/OrderRejectionService";
 import { OrderCancellationService } from "../../application/services/trading/OrderCancellationService";
 import { env } from "../../infrastructure/config/env";
+import { logger } from "../../infrastructure/logging/logger";
 import { HttpErrorMap } from "../../presentation/http/constants/HttpErrorMap";
 import { PlaceOrderUseCase } from "../../application/use-cases/trading/PlaceOrderUseCase";
 import { GetOrdersUseCase } from "../../application/use-cases/trading/GetOrdersUseCase";
@@ -36,12 +41,28 @@ export const walletRepository = new WalletRepository();
 export const stockRepository = new StockRepository();
 export const idGenerator = new BusinessIdGenerator();
 
+export const marginCalculatorService = new MarginCalculatorService();
+export const positionFillService = new PositionFillService(
+  positionRepository,
+  marginCalculatorService
+);
+export const orderWalletSettlementService = new OrderWalletSettlementService(
+  walletRepository,
+  marginCalculatorService
+);
+export const orderTradeExecutionService = new OrderTradeExecutionService(
+  orderRepository,
+  tradeRepository,
+  positionFillService,
+  orderWalletSettlementService,
+  logger
+);
+
 export const orderMatchingEngine = new OrderMatchingEngine(
   orderRepository,
-  positionRepository,
-  tradeRepository,
-  walletRepository,
-  marketDataService
+  marketDataService,
+  orderTradeExecutionService,
+  logger
 );
 
 export const tradeValidationService = new TradeValidationService(
@@ -55,7 +76,8 @@ export const orderPricingService = new OrderPricingService(
 
 export const orderMarginService = new OrderMarginService(
   positionRepository,
-  walletRepository
+  walletRepository,
+  marginCalculatorService
 );
 
 export const orderExecutionService = new OrderExecutionService(

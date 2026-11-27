@@ -10,7 +10,8 @@ import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 export class OrderMarginService {
   constructor(
     private readonly positionRepo: IPositionRepository,
-    private readonly walletRepo: IWalletRepository
+    private readonly walletRepo: IWalletRepository,
+    private readonly marginCalculator: MarginCalculatorService = new MarginCalculatorService()
   ) {}
 
   async validateAndHoldMargin(
@@ -32,7 +33,7 @@ export class OrderMarginService {
 
     let requiredMargin = 0;
     if (!isCoveringPosition) {
-      requiredMargin = MarginCalculatorService.calculateRequiredMargin(
+      requiredMargin = this.marginCalculator.calculateRequiredMargin(
         dto.productType,
         dto.quantity,
         referencePrice
