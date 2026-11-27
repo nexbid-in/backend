@@ -1,6 +1,6 @@
 import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRepository";
 import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
-import { OrderMatchingEngine } from "../../../infrastructure/external/trading/OrderMatchingEngine";
+import { IOrderMatchingEngine } from "../../interface/services/IOrderMatchingEngine";
 import { OrderResponseMapper } from "../../mapper/trading/OrderResponseMapper";
 import { AdminCancelOrderDTO } from "../../dto/admin/AdminOrderDTOs";
 import { OrderResponseDTO } from "../../dto/trading/OrderDTOs";
@@ -12,7 +12,7 @@ export class AdminCancelOrderUseCase implements IAdminCancelOrderUseCase {
   constructor(
     private readonly orderRepo: IOrderRepository,
     private readonly walletRepo: IWalletRepository,
-    private readonly matchingEngine: OrderMatchingEngine
+    private readonly matchingEngine: IOrderMatchingEngine
   ) {}
 
   async execute(dto: AdminCancelOrderDTO): Promise<OrderResponseDTO> {

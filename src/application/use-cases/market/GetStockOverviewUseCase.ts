@@ -36,7 +36,7 @@ export class GetStockOverviewUseCase implements IGetStockOverviewUseCase {
 
     const stock = await this._stockRepository.findBySymbol(cleanSymbol);
     if (!stock) {
-      throw new AppError(ErrorCodes.STOCK_NOT_FOUND, `Stock '${cleanSymbol}' not found`);
+      throw new AppError(ErrorCodes.STOCK_NOT_FOUND);
     }
 
     const [quote, depth] = await Promise.all([

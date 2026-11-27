@@ -9,6 +9,9 @@ import { TradeValidationService } from "../../application/services/trading/Trade
 import { OrderPricingService } from "../../application/services/trading/OrderPricingService";
 import { OrderMarginService } from "../../application/services/trading/OrderMarginService";
 import { OrderExecutionService } from "../../application/services/trading/OrderExecutionService";
+import { OrderRejectionService } from "../../application/services/trading/OrderRejectionService";
+import { env } from "../../infrastructure/config/env";
+import { HttpErrorMap } from "../../presentation/http/constants/HttpErrorMap";
 import { PlaceOrderUseCase } from "../../application/use-cases/trading/PlaceOrderUseCase";
 import { GetOrdersUseCase } from "../../application/use-cases/trading/GetOrdersUseCase";
 import { CancelOrderUseCase } from "../../application/use-cases/trading/CancelOrderUseCase";
@@ -58,6 +61,15 @@ export const orderExecutionService = new OrderExecutionService(
   marketDataService
 );
 
+export const orderRejectionService = new OrderRejectionService(
+  orderRepository,
+  orderMarginService,
+  idGenerator,
+  {
+    resolve: (code) => HttpErrorMap[code]?.message,
+  }
+);
+
 export const placeOrderUseCase = new PlaceOrderUseCase(
   orderRepository,
   stockRepository,
@@ -65,7 +77,9 @@ export const placeOrderUseCase = new PlaceOrderUseCase(
   orderPricingService,
   orderMarginService,
   orderExecutionService,
-  idGenerator
+  orderRejectionService,
+  idGenerator,
+  env.ENFORCE_MARKET_HOURS
 );
 
 export const getOrdersUseCase = new GetOrdersUseCase(orderRepository);
@@ -86,9 +100,10 @@ export const squareOffPositionUseCase = new SquareOffPositionUseCase(
   positionRepository,
   orderRepository,
   tradeRepository,
-  marketDataService,
+  orderPricingService,
   orderExecutionService,
-  idGenerator
+  idGenerator,
+  env.ENFORCE_MARKET_HOURS
 );
 
 export const autoSquareOffCron = new AutoSquareOffCron(

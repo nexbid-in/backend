@@ -39,11 +39,11 @@ export class GetDashboardOverviewUseCase
     ]);
 
     if (!user) {
-      throw new AppError(ErrorCodes.NOT_FOUND, "User not found");
+      throw new AppError(ErrorCodes.NOT_FOUND);
     }
 
     if (user.isBlocked) {
-      throw new AppError(ErrorCodes.ACCOUNT_BLOCKED, "Account is blocked");
+      throw new AppError(ErrorCodes.ACCOUNT_BLOCKED);
     }
 
     const marketStatus = MarketHoursService.getMarketStatus(

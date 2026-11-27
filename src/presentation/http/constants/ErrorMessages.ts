@@ -1,4 +1,3 @@
-
 export const ErrorMessages = {
   UNAUTHORIZED: "Please log in to access this resource.",
   FORBIDDEN: "You do not have permission to perform this action.",

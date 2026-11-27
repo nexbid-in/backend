@@ -1,57 +1,59 @@
-import { IPositionRepository } from "../../../domain/repositories/trading/IPositionRepository";
-import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRepository";
-import { ITradeRepository } from "../../../domain/repositories/trading/ITradeRepository";
-import { IMarketDataService } from "../../interface/services/IMarketDataService";
-import { MarketHoursService } from "../../services/trading/MarketHoursService";
-import { OrderExecutionService } from "../../services/trading/OrderExecutionService";
-import { Order, OrderSide, OrderType, OrderStatus } from "../../../domain/entities/trading/Order";
+import { Order, OrderSide, OrderStatus, OrderType } from "../../../domain/entities/trading/Order";
 import { PositionSide } from "../../../domain/entities/trading/Position";
-import { SquareOffPositionRequestDTO, PositionResponseDTO } from "../../dto/trading/PositionDTOs";
-import { ISquareOffPositionUseCase } from "../../interface/use-cases/trading/ISquareOffPositionUseCase";
-import { IIdGenerator } from "../../interface/services/IIdGenerator";
-import { env } from "../../../infrastructure/config/env";
+import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRepository";
+import { IPositionRepository } from "../../../domain/repositories/trading/IPositionRepository";
+import { ITradeRepository } from "../../../domain/repositories/trading/ITradeRepository";
+import { PositionsValuationCalculator } from "../../../domain/services/trading/PositionsValuationCalculator";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
-import { Money } from "../../../domain/value-objects/Money";
+import {
+  PositionResponseDTO,
+  SquareOffPositionRequestDTO,
+} from "../../dto/trading/PositionDTOs";
+import { IIdGenerator } from "../../interface/services/IIdGenerator";
+import { ISquareOffPositionUseCase } from "../../interface/use-cases/trading/ISquareOffPositionUseCase";
+import { PositionDTOMapper } from "../../mapper/trading/PositionDTOMapper";
+import { MarketHoursService } from "../../services/trading/MarketHoursService";
+import { OrderExecutionService } from "../../services/trading/OrderExecutionService";
+import { OrderPricingService } from "../../services/trading/OrderPricingService";
 
+/**
+ * Orchestrates closing an open position via an opposing market order,
+ * dispatching execution, and returning the updated position snapshot.
+ */
 export class SquareOffPositionUseCase implements ISquareOffPositionUseCase {
   constructor(
     private readonly positionRepo: IPositionRepository,
     private readonly orderRepo: IOrderRepository,
     private readonly tradeRepo: ITradeRepository,
-    private readonly marketDataService: IMarketDataService,
+    private readonly pricingService: OrderPricingService,
     private readonly executionService: OrderExecutionService,
-    private readonly idGenerator: IIdGenerator
+    private readonly idGenerator: IIdGenerator,
+    private readonly enforceMarketHours: boolean
   ) {}
 
   async execute(dto: SquareOffPositionRequestDTO): Promise<PositionResponseDTO> {
     const position = await this.positionRepo.findById(dto.positionId);
     if (!position || position.userId !== dto.userId) {
-      throw new AppError(ErrorCodes.POSITION_NOT_FOUND, "Position not found");
+      throw new AppError(ErrorCodes.POSITION_NOT_FOUND);
     }
 
     if (!position.isOpen()) {
-      throw new AppError(ErrorCodes.POSITION_ALREADY_CLOSED, "Position is already closed");
+      throw new AppError(ErrorCodes.POSITION_ALREADY_CLOSED);
     }
 
-    const marketStatus = MarketHoursService.getMarketStatus(env.ENFORCE_MARKET_HOURS);
-    const isAmo = env.ENFORCE_MARKET_HOURS ? !marketStatus.isOpen : false;
-
+    const marketStatus = MarketHoursService.getMarketStatus(
+      this.enforceMarketHours
+    );
+    const isAmo = this.enforceMarketHours ? !marketStatus.isOpen : false;
     const opposingSide =
       position.side === PositionSide.LONG ? OrderSide.SELL : OrderSide.BUY;
 
-    const quote = await this.marketDataService.getQuote(position.symbol);
-    let exitPrice: number;
-
-    if (opposingSide === OrderSide.SELL) {
-      exitPrice = quote?.bidPrice && quote.bidPrice > 0 ? quote.bidPrice : quote?.ltp ?? position.averagePrice;
-    } else {
-      exitPrice = quote?.askPrice && quote.askPrice > 0 ? quote.askPrice : quote?.ltp ?? position.averagePrice;
-    }
-
-    if (exitPrice <= 0) {
-      exitPrice = position.averagePrice;
-    }
+    const exitPrice = await this.pricingService.resolveMarketPrice(
+      position.symbol,
+      opposingSide,
+      position.averagePrice
+    );
 
     let squareOffOrder = Order.create({
       id: this.idGenerator.generate("ORD"),
@@ -75,32 +77,21 @@ export class SquareOffPositionUseCase implements ISquareOffPositionUseCase {
       marketStatus
     );
 
-    const updatedPosition = await this.positionRepo.findById(position.id);
-    const finalPosition = updatedPosition ?? position;
+    const [updatedPosition, todayTrades] = await Promise.all([
+      this.positionRepo.findById(position.id),
+      this.tradeRepo.findByUserId(dto.userId, {
+        from: MarketHoursService.getStartOfTodayIst(),
+        symbol: position.symbol,
+        productType: position.productType,
+      }),
+    ]);
 
-    const todayTrades = await this.tradeRepo.findByUserId(dto.userId, {
-      from: MarketHoursService.getStartOfTodayIst(),
-      symbol: finalPosition.symbol,
-      productType: finalPosition.productType,
-    });
-    const realizedPnL = todayTrades
-      .reduce((sum, trade) => sum.add(trade.realizedPnL), Money.zero())
-      .toNumber();
-    const unrealizedPnL = finalPosition.calculateUnrealizedPnL(exitPrice);
+    const evaluated = PositionsValuationCalculator.evaluateSinglePosition(
+      updatedPosition ?? position,
+      todayTrades,
+      exitPrice
+    );
 
-    return {
-      id: finalPosition.id,
-      symbol: finalPosition.symbol,
-      productType: finalPosition.productType,
-      side: finalPosition.side,
-      quantity: finalPosition.quantity,
-      averagePrice: finalPosition.averagePrice,
-      currentLtp: exitPrice,
-      unrealizedPnL,
-      realizedPnL,
-      totalPnL: +(realizedPnL + unrealizedPnL).toFixed(2),
-      pnlPercentage: 0,
-      updatedAt: finalPosition.updatedAt,
-    };
+    return PositionDTOMapper.toItemDTO(evaluated);
   }
 }

@@ -1,9 +1,12 @@
-import { IMarketDataService } from "../../interface/services/IMarketDataService";
-import { PlaceOrderRequestDTO } from "../../dto/trading/OrderDTOs";
 import { OrderSide, OrderType } from "../../../domain/entities/trading/Order";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
+import { PlaceOrderRequestDTO } from "../../dto/trading/OrderDTOs";
+import { IMarketDataService } from "../../interface/services/IMarketDataService";
 
+/**
+ * Resolves reference and execution prices for market and limit orders from live quotes.
+ */
 export class OrderPricingService {
   constructor(private readonly marketDataService: IMarketDataService) {}
 
@@ -18,24 +21,41 @@ export class OrderPricingService {
       return dto.price;
     }
 
-    const quote = await this.marketDataService.getQuote(cleanSymbol);
-    const bestAsk = quote?.askPrice ?? quote?.ltp ?? 0;
-    const bestBid = quote?.bidPrice ?? quote?.ltp ?? 0;
-
-    let referencePrice: number;
-    if (dto.side === OrderSide.BUY) {
-      referencePrice = bestAsk > 0 ? bestAsk : +(quote?.ltp ?? 100);
-    } else {
-      referencePrice = bestBid > 0 ? bestBid : +(quote?.ltp ?? 100);
-    }
+    const referencePrice = await this.resolveMarketPrice(
+      cleanSymbol,
+      dto.side,
+      100
+    );
 
     if (referencePrice <= 0) {
-      throw new AppError(
-        ErrorCodes.MARKET_DATA_SERVICE_UNAVAILABLE,
-        "Unable to determine current market price for order placement"
-      );
+      throw new AppError(ErrorCodes.MARKET_DATA_SERVICE_UNAVAILABLE);
     }
 
     return referencePrice;
+  }
+
+  /**
+   * Resolves the executable market price using best ask (BUY) or best bid (SELL),
+   * falling back to LTP and an optional caller-provided fallback price.
+   */
+  async resolveMarketPrice(
+    symbol: string,
+    side: OrderSide,
+    fallbackPrice = 0
+  ): Promise<number> {
+    const quote = await this.marketDataService.getQuote(symbol);
+    const ltp = quote?.ltp && quote.ltp > 0 ? quote.ltp : 0;
+
+    if (side === OrderSide.BUY) {
+      const ask = quote?.askPrice && quote.askPrice > 0 ? quote.askPrice : 0;
+      if (ask > 0) return ask;
+      if (ltp > 0) return ltp;
+      return fallbackPrice;
+    }
+
+    const bid = quote?.bidPrice && quote.bidPrice > 0 ? quote.bidPrice : 0;
+    if (bid > 0) return bid;
+    if (ltp > 0) return ltp;
+    return fallbackPrice;
   }
 }

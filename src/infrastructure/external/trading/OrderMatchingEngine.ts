@@ -4,6 +4,7 @@ import { IPositionRepository } from "../../../domain/repositories/trading/IPosit
 import { ITradeRepository } from "../../../domain/repositories/trading/ITradeRepository";
 import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
 import { IMarketDataService } from "../../../application/interface/services/IMarketDataService";
+import { IOrderMatchingEngine } from "../../../application/interface/services/IOrderMatchingEngine";
 import { MarketHoursService } from "../../../application/services/trading/MarketHoursService";
 import { Order, OrderSide, ProductType } from "../../../domain/entities/trading/Order";
 import { Position, PositionSide } from "../../../domain/entities/trading/Position";
@@ -14,7 +15,7 @@ import { Money } from "../../../domain/value-objects/Money";
 import { MarketTick } from "../../../domain/entities/market/MarketTick";
 import { logger } from "../../logging/logger";
 
-export class OrderMatchingEngine {
+export class OrderMatchingEngine implements IOrderMatchingEngine {
   private orderBook = new Map<string, Order[]>();
   private executingOrderIds = new Set<string>();
 

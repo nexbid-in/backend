@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import { IPositionRepository } from "../../domain/repositories/trading/IPositionRepository";
-import { SquareOffPositionUseCase } from "../../application/use-cases/trading/SquareOffPositionUseCase";
+import { ISquareOffPositionUseCase } from "../../application/interface/use-cases/trading/ISquareOffPositionUseCase";
 import { logger } from "../logging/logger";
 
 export class AutoSquareOffCron {
@@ -8,7 +8,7 @@ export class AutoSquareOffCron {
 
   constructor(
     private readonly positionRepo: IPositionRepository,
-    private readonly squareOffUseCase: SquareOffPositionUseCase,
+    private readonly squareOffUseCase: ISquareOffPositionUseCase,
     private readonly cronSchedule: string = "20 15 * * 1-5"
   ) {}
 

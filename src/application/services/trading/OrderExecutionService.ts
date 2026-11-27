@@ -1,12 +1,14 @@
-import { OrderMatchingEngine } from "../../../infrastructure/external/trading/OrderMatchingEngine";
-import { IMarketDataService } from "../../interface/services/IMarketDataService";
 import { Order, OrderType } from "../../../domain/entities/trading/Order";
+import { IMarketDataService } from "../../interface/services/IMarketDataService";
+import { IOrderMatchingEngine } from "../../interface/services/IOrderMatchingEngine";
 import { MarketStatusInfo } from "./MarketHoursService";
-import { env } from "../../../infrastructure/config/env";
 
+/**
+ * Dispatches validated orders for immediate market execution or resting order-book placement.
+ */
 export class OrderExecutionService {
   constructor(
-    private readonly matchingEngine: OrderMatchingEngine,
+    private readonly matchingEngine: IOrderMatchingEngine,
     private readonly marketDataService: IMarketDataService
   ) {}
 
@@ -18,7 +20,7 @@ export class OrderExecutionService {
     const canExecuteImmediately =
       order.orderType === OrderType.MARKET &&
       !order.isAmo &&
-      (!env.ENFORCE_MARKET_HOURS || marketStatus.isOpen);
+      (!marketStatus.enforceMarketHours || marketStatus.isOpen);
 
     if (canExecuteImmediately) {
       return await this.matchingEngine.executeOrder(order, referencePrice);

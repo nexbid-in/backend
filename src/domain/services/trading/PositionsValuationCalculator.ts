@@ -77,39 +77,16 @@ export class PositionsValuationCalculator {
       const quote = quotesBySymbol.get(pos.symbol) ?? null;
       const currentLtp =
         quote?.ltp && quote.ltp > 0 ? quote.ltp : pos.averagePrice;
+      const item = this.buildEvaluatedItem(pos, todayRealizedByKey, currentLtp);
 
-      const unrealizedPnL = pos.calculateUnrealizedPnL(currentLtp);
-      const realizedPnL =
-        todayRealizedByKey.get(`${pos.symbol}:${pos.productType}`)?.toNumber() ??
-        0;
-      const totalPnL = +(realizedPnL + unrealizedPnL).toFixed(2);
-      const totalCost = +(pos.averagePrice * pos.quantity).toFixed(2);
-      const pnlPercentage =
-        totalCost > 0 ? +((unrealizedPnL / totalCost) * 100).toFixed(2) : 0;
-
-      const isOpen = pos.isOpen();
-      if (isOpen) {
+      if (item.isOpen) {
         openCount++;
-        totalUnrealizedMoney = totalUnrealizedMoney.add(unrealizedPnL);
+        totalUnrealizedMoney = totalUnrealizedMoney.add(item.unrealizedPnL);
       } else {
         closedCount++;
       }
 
-      return {
-        id: pos.id,
-        symbol: pos.symbol,
-        productType: pos.productType,
-        side: pos.side,
-        quantity: pos.quantity,
-        averagePrice: pos.averagePrice,
-        currentLtp,
-        unrealizedPnL,
-        realizedPnL,
-        totalPnL,
-        pnlPercentage,
-        isOpen,
-        updatedAt: pos.updatedAt,
-      };
+      return item;
     });
 
     const realizedNum = totalRealizedPnL.toNumber();
@@ -125,6 +102,49 @@ export class PositionsValuationCalculator {
         openCount,
         closedCount,
       },
+    };
+  }
+
+  /**
+   * Evaluates a single position against its today's realized trades and a resolved LTP.
+   */
+  static evaluateSinglePosition(
+    pos: Position,
+    todayTrades: Trade[],
+    currentLtp: number
+  ): EvaluatedPositionItem {
+    const { todayRealizedByKey } = this.aggregateTodayRealized(todayTrades);
+    return this.buildEvaluatedItem(pos, todayRealizedByKey, currentLtp);
+  }
+
+  private static buildEvaluatedItem(
+    pos: Position,
+    todayRealizedByKey: ReadonlyMap<string, Money>,
+    currentLtp: number
+  ): EvaluatedPositionItem {
+    const unrealizedPnL = pos.calculateUnrealizedPnL(currentLtp);
+    const realizedPnL =
+      todayRealizedByKey.get(`${pos.symbol}:${pos.productType}`)?.toNumber() ??
+      0;
+    const totalPnL = +(realizedPnL + unrealizedPnL).toFixed(2);
+    const totalCost = +(pos.averagePrice * pos.quantity).toFixed(2);
+    const pnlPercentage =
+      totalCost > 0 ? +((unrealizedPnL / totalCost) * 100).toFixed(2) : 0;
+
+    return {
+      id: pos.id,
+      symbol: pos.symbol,
+      productType: pos.productType,
+      side: pos.side,
+      quantity: pos.quantity,
+      averagePrice: pos.averagePrice,
+      currentLtp,
+      unrealizedPnL,
+      realizedPnL,
+      totalPnL,
+      pnlPercentage,
+      isOpen: pos.isOpen(),
+      updatedAt: pos.updatedAt,
     };
   }
 

@@ -37,7 +37,7 @@ export class PositionDTOMapper {
     };
   }
 
-  private static toItemDTO(item: EvaluatedPositionItem): PositionResponseDTO {
+  static toItemDTO(item: EvaluatedPositionItem): PositionResponseDTO {
     return {
       id: item.id,
       symbol: item.symbol,

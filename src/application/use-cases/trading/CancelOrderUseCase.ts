@@ -1,6 +1,6 @@
 import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRepository";
 import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
-import { OrderMatchingEngine } from "../../../infrastructure/external/trading/OrderMatchingEngine";
+import { IOrderMatchingEngine } from "../../interface/services/IOrderMatchingEngine";
 import { OrderResponseMapper } from "../../mapper/trading/OrderResponseMapper";
 import { CancelOrderRequestDTO, OrderResponseDTO } from "../../dto/trading/OrderDTOs";
 import { ICancelOrderUseCase } from "../../interface/use-cases/trading/ICancelOrderUseCase";
@@ -11,7 +11,7 @@ export class CancelOrderUseCase implements ICancelOrderUseCase {
   constructor(
     private readonly orderRepo: IOrderRepository,
     private readonly walletRepo: IWalletRepository,
-    private readonly matchingEngine: OrderMatchingEngine
+    private readonly matchingEngine: IOrderMatchingEngine
   ) {}
 
   async execute(dto: CancelOrderRequestDTO): Promise<OrderResponseDTO> {
