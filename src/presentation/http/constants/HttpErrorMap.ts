@@ -131,6 +131,11 @@ export const HttpErrorMap: Record<
     message: ErrorMessages.PAYMENT_VERIFICATION_FAILED,
   },
 
+  [ErrorCodes.PAYMENT_ORDER_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: ErrorMessages.PAYMENT_ORDER_NOT_FOUND,
+  },
+
   [ErrorCodes.ORDER_NOT_FOUND]: {
     status: HttpStatus.NOT_FOUND,
     message: ErrorMessages.ORDER_NOT_FOUND,

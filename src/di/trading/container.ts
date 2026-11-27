@@ -14,6 +14,7 @@ import { env } from "../../infrastructure/config/env";
 import { HttpErrorMap } from "../../presentation/http/constants/HttpErrorMap";
 import { PlaceOrderUseCase } from "../../application/use-cases/trading/PlaceOrderUseCase";
 import { GetOrdersUseCase } from "../../application/use-cases/trading/GetOrdersUseCase";
+import { GetMarketStatusUseCase } from "../../application/use-cases/trading/GetMarketStatusUseCase";
 import { CancelOrderUseCase } from "../../application/use-cases/trading/CancelOrderUseCase";
 import { GetPositionsUseCase } from "../../application/use-cases/trading/GetPositionsUseCase";
 import { GetHoldingsUseCase } from "../../application/use-cases/trading/GetHoldingsUseCase";
@@ -123,10 +124,15 @@ export const eodOrderExpiryCron = new EodOrderExpiryCron(
   orderMatchingEngine
 );
 
+export const getMarketStatusUseCase = new GetMarketStatusUseCase(
+  env.ENFORCE_MARKET_HOURS
+);
+
 export const orderController = new OrderController(
   placeOrderUseCase,
   getOrdersUseCase,
-  cancelOrderUseCase
+  cancelOrderUseCase,
+  getMarketStatusUseCase
 );
 
 export const getHoldingsUseCase = new GetHoldingsUseCase(

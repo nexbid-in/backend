@@ -61,7 +61,8 @@ const verifyTopupPaymentUseCase = new VerifyTopupPaymentUseCase(
 );
 
 const failTopupPaymentUseCase = new FailTopupPaymentUseCase(
-  paymentOrderRepository
+  paymentOrderRepository,
+  logger
 );
 
 const getTopupHistoryUseCase = new GetTopupHistoryUseCase(

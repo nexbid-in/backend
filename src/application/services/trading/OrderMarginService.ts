@@ -46,10 +46,7 @@ export class OrderMarginService {
 
     if (requiredMargin > 0) {
       if (wallet.availableMargin.isLessThan(requiredMargin)) {
-        throw new AppError(
-          ErrorCodes.INSUFFICIENT_FUNDS,
-          `Insufficient funds. Required margin: ₹${requiredMargin.toFixed(2)}, Available: ₹${wallet.availableMargin.toFixed(2)}`
-        );
+        throw new AppError(ErrorCodes.INSUFFICIENT_FUNDS);
       }
 
       if (dto.productType === ProductType.MIS || dto.orderType === OrderType.LIMIT) {

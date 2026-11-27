@@ -22,7 +22,7 @@ export class VerifyTopupPaymentUseCase implements IVerifyTopupPaymentUseCase {
   async execute(data: VerifyTopupPaymentRequestDTO): Promise<VerifyTopupPaymentResponseDTO> {
     const paymentOrder = await this._paymentOrderRepo.findByOrderId(data.orderId);
     if (!paymentOrder) {
-      throw new AppError(ErrorCodes.ORDER_NOT_FOUND);
+      throw new AppError(ErrorCodes.PAYMENT_ORDER_NOT_FOUND);
     }
 
     if (paymentOrder.userId !== data.userId) {

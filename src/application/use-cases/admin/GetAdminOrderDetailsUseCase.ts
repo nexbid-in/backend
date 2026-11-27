@@ -10,7 +10,7 @@ export class GetAdminOrderDetailsUseCase implements IGetAdminOrderDetailsUseCase
   async execute(orderId: string): Promise<AdminOrderDetailsDTO> {
     const details = await this.orderRepo.findDetailsById(orderId);
     if (!details) {
-      throw new AppError(ErrorCodes.ORDER_NOT_FOUND, "Order not found");
+      throw new AppError(ErrorCodes.ORDER_NOT_FOUND);
     }
     return details;
   }

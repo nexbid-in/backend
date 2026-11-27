@@ -10,7 +10,6 @@ import { SuccessMessages } from "../../constants/SuccessMessages";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { AppError } from "../../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
-import { logger } from "../../../../infrastructure/logging/logger";
 import {
   getWalletStatementQuerySchema,
   createTopupOrderSchema,
@@ -137,17 +136,6 @@ export class WalletController {
         userId,
         ...validated,
       });
-
-      logger.info(
-        {
-          orderId: validated.orderId,
-          paymentId: validated.paymentId,
-          reason: validated.reason ?? "No reason provided",
-          userId,
-          status: result.status,
-        },
-        "Top-up payment failure processed"
-      );
 
       ApiResponse.success(
         res,

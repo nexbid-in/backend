@@ -136,7 +136,7 @@ export class Order {
 
   public markExecuted(fillPrice: number, filledQty?: number): void {
     if (!this.isPending()) {
-      throw new AppError(ErrorCodes.VALIDATION_FAILED, "Only pending orders can be executed");
+      throw new AppError(ErrorCodes.VALIDATION_FAILED);
     }
     this.props.status = OrderStatus.EXECUTED;
     this.props.averagePrice = fillPrice;
@@ -157,7 +157,7 @@ export class Order {
 
   public markRejected(reason: string): void {
     if (!this.isPending()) {
-      throw new AppError(ErrorCodes.VALIDATION_FAILED, "Only pending orders can be rejected");
+      throw new AppError(ErrorCodes.VALIDATION_FAILED);
     }
     this.props.status = OrderStatus.REJECTED;
     this.props.rejectionReason = reason;

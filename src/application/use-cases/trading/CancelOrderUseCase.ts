@@ -17,14 +17,11 @@ export class CancelOrderUseCase implements ICancelOrderUseCase {
   async execute(dto: CancelOrderRequestDTO): Promise<OrderResponseDTO> {
     const order = await this.orderRepo.findById(dto.orderId);
     if (!order || order.userId !== dto.userId) {
-      throw new AppError(ErrorCodes.ORDER_NOT_FOUND, "Order not found");
+      throw new AppError(ErrorCodes.ORDER_NOT_FOUND);
     }
 
     if (!order.canBeCancelled()) {
-      throw new AppError(
-        ErrorCodes.ORDER_CANNOT_BE_CANCELLED,
-        "Only pending orders can be cancelled"
-      );
+      throw new AppError(ErrorCodes.ORDER_CANNOT_BE_CANCELLED);
     }
 
     order.markCancelled();

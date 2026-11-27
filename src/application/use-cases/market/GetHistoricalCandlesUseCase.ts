@@ -10,7 +10,7 @@ export class GetHistoricalCandlesUseCase implements IGetHistoricalCandlesUseCase
 
     async execute(data: GetHistoricalCandlesRequestDTO): Promise<Candle[]> {
         if (!data.symbol) {
-            throw new AppError(ErrorCodes.VALIDATION_FAILED, "Stock symbol is required");
+            throw new AppError(ErrorCodes.VALIDATION_FAILED);
         }
 
         const toTimestamp = data.to || Date.now();

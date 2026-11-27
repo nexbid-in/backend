@@ -29,7 +29,8 @@ export const ErrorMessages = {
   INSUFFICIENT_FUNDS: "Insufficient funds / available margin.",
   INVALID_AMOUNT: "Invalid transaction amount.",
   PAYMENT_VERIFICATION_FAILED: "Payment verification failed. Invalid signature.",
-  ORDER_NOT_FOUND: "Payment order not found.",
+  PAYMENT_ORDER_NOT_FOUND: "Payment order not found.",
+  ORDER_NOT_FOUND: "Order not found.",
 
   STOCK_NOT_FOUND: "Stock not found or is currently inactive.",
   STOCK_ALREADY_IN_WATCHLIST: "Stock is already in your watchlist.",

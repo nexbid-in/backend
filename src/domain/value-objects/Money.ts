@@ -18,11 +18,11 @@ export class Money {
     try {
       const dec = new Decimal(typeof value === "object" && value !== null && "toString" in value ? value.toString() : value);
       if (dec.isNaN()) {
-        throw new AppError(ErrorCodes.INVALID_AMOUNT, "Amount must be a valid number");
+        throw new AppError(ErrorCodes.INVALID_AMOUNT);
       }
       return new Money(dec);
     } catch {
-      throw new AppError(ErrorCodes.INVALID_AMOUNT, "Invalid monetary format");
+      throw new AppError(ErrorCodes.INVALID_AMOUNT);
     }
   }
 
@@ -47,7 +47,7 @@ export class Money {
   public divide(divisor: number | string | Decimal): Money {
     const d = new Decimal(divisor.toString());
     if (d.isZero()) {
-      throw new AppError(ErrorCodes.INVALID_AMOUNT, "Division by zero");
+      throw new AppError(ErrorCodes.INVALID_AMOUNT);
     }
     return new Money(this._amount.dividedBy(d));
   }

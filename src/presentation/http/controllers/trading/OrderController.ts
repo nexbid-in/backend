@@ -2,8 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { IPlaceOrderUseCase } from "../../../../application/interface/use-cases/trading/IPlaceOrderUseCase";
 import { IGetOrdersUseCase } from "../../../../application/interface/use-cases/trading/IGetOrdersUseCase";
 import { ICancelOrderUseCase } from "../../../../application/interface/use-cases/trading/ICancelOrderUseCase";
-import { MarketHoursService } from "../../../../application/services/trading/MarketHoursService";
-import { env } from "../../../../infrastructure/config/env";
+import { IGetMarketStatusUseCase } from "../../../../application/interface/use-cases/trading/IGetMarketStatusUseCase";
 import {
   placeOrderSchema,
   getOrdersQuerySchema,
@@ -19,7 +18,8 @@ export class OrderController {
   constructor(
     private readonly placeOrderUseCase: IPlaceOrderUseCase,
     private readonly getOrdersUseCase: IGetOrdersUseCase,
-    private readonly cancelOrderUseCase: ICancelOrderUseCase
+    private readonly cancelOrderUseCase: ICancelOrderUseCase,
+    private readonly getMarketStatusUseCase: IGetMarketStatusUseCase
   ) {}
 
   async placeOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -56,7 +56,7 @@ export class OrderController {
 
   getMarketStatus(_req: Request, res: Response, next: NextFunction): void {
     try {
-      const status = MarketHoursService.getMarketStatus(env.ENFORCE_MARKET_HOURS);
+      const status = this.getMarketStatusUseCase.execute();
       ApiResponse.success(
         res,
         HttpStatus.OK,
