@@ -16,7 +16,10 @@ import { MarketController } from "../../presentation/http/controllers/market/Mar
 
 export const marketSymbolRegistry = new MarketSymbolRegistry();
 export const fyersAuthService: IBrokerAuthService = new FyersAuthService();
-export const fyersTokenRefreshCron = new FyersTokenRefreshCron(fyersAuthService);
+export const fyersTokenRefreshCron = new FyersTokenRefreshCron(
+    fyersAuthService,
+    env.MARKET_DATA_PROVIDER === "fyers"
+);
 
 export const marketDataService: IMarketDataService =
     env.MARKET_DATA_PROVIDER === "fyers"

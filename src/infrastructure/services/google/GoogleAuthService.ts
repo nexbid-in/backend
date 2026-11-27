@@ -21,7 +21,7 @@ export class GoogleAuthService implements IGoogleAuthService {
       const payload = ticket.getPayload();
 
       if (!payload || !payload.email || !payload.sub) {
-        throw new AppError(ErrorCodes.UNAUTHORIZED, "Invalid Google token payload");
+        throw new AppError(ErrorCodes.INVALID_GOOGLE_TOKEN);
       }
 
       return {
@@ -33,7 +33,7 @@ export class GoogleAuthService implements IGoogleAuthService {
       };
     } catch (error) {
       if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCodes.UNAUTHORIZED, "Failed to verify Google token");
+      throw new AppError(ErrorCodes.GOOGLE_AUTH_FAILED);
     }
   }
 }

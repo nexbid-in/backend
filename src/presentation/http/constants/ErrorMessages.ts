@@ -4,6 +4,8 @@ export const ErrorMessages = {
   INVALID_AUTH_HEADER: "Invalid authorization header",
   INVALID_CREDENTIALS: "Invalid email or password.",
   LOGIN_RATE_LIMIT_EXCEEDED: "Too many login attempts. Please try again in 5 minutes.",
+  INVALID_GOOGLE_TOKEN: "Invalid Google token payload.",
+  GOOGLE_AUTH_FAILED: "Failed to verify Google token.",
   ACCOUNT_BLOCKED: "This account has been blocked.",
   PASSWORD_NOT_SET: "Password has not been set for this account.",
   INVALID_CURRENT_PASSWORD: "Current password is incorrect.",

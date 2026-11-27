@@ -245,5 +245,15 @@ export const HttpErrorMap: Record<
     status: HttpStatus.BAD_REQUEST,
     message: ErrorMessages.AMO_NOT_ALLOWED_DURING_MARKET,
   },
+
+  [ErrorCodes.INVALID_GOOGLE_TOKEN]: {
+    status: HttpStatus.UNAUTHORIZED,
+    message: ErrorMessages.INVALID_GOOGLE_TOKEN,
+  },
+
+  [ErrorCodes.GOOGLE_AUTH_FAILED]: {
+    status: HttpStatus.UNAUTHORIZED,
+    message: ErrorMessages.GOOGLE_AUTH_FAILED,
+  },
 };
 
