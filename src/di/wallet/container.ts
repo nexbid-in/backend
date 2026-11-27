@@ -4,6 +4,7 @@ import { PaymentOrderRepository } from "../../infrastructure/repositories/paymen
 import { UserRepository } from "../../infrastructure/repositories/user/UserRepository";
 import { RazorpayService } from "../../infrastructure/services/payment/RazorpayService";
 import { env } from "../../infrastructure/config/env";
+import { logger } from "../../infrastructure/logging/logger";
 
 import { GetWalletOverviewUseCase } from "../../application/use-cases/wallet/GetWalletOverviewUseCase";
 import { GetWalletStatementUseCase } from "../../application/use-cases/wallet/GetWalletStatementUseCase";
@@ -72,7 +73,8 @@ const reconcilePendingOrdersUseCase = new ReconcilePendingOrdersUseCase(
   paymentOrderRepository,
   walletRepository,
   paymentGatewayService,
-  walletTopupSettlementService
+  walletTopupSettlementService,
+  logger
 );
 
 export const paymentReconciliationCron = new PaymentReconciliationCron(

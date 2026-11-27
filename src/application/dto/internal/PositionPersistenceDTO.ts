@@ -1,7 +1,7 @@
 import { ProductType, PositionSide } from "../../../domain/entities/trading/Position";
-import { Prisma } from "../../../infrastructure/database/generated/prisma/client";
+import { DecimalLike } from "./WalletPersistenceDTO";
 
-export type DecimalLike = Prisma.Decimal | number | string;
+export type { DecimalLike };
 
 export interface PositionPersistenceDTO {
   id: string;

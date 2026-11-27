@@ -1,7 +1,7 @@
 import { OrderSide, ProductType } from "../../../domain/entities/trading/Order";
-import { Prisma } from "../../../infrastructure/database/generated/prisma/client";
+import { DecimalLike } from "./WalletPersistenceDTO";
 
-export type DecimalLike = Prisma.Decimal | number | string;
+export type { DecimalLike };
 
 export interface TradePersistenceDTO {
   id: string;

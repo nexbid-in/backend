@@ -5,11 +5,11 @@ function toNum(val: DecimalLike | null | undefined): number {
   if (val === null || val === undefined) return 0;
   if (typeof val === "number") return val;
   if (typeof val === "string") return parseFloat(val);
-  return val.toNumber();
+  return val.toNumber ? val.toNumber() : parseFloat(val.toString());
 }
 
 export class PositionPersistenceMapper {
-  static toPrisma(position: Position): PositionPersistenceDTO {
+  static toPrisma(position: Position) {
     return {
       id: position.id,
       userId: position.userId,

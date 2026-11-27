@@ -3,7 +3,7 @@ import { TradePersistenceDTO } from "../../dto/internal/TradePersistenceDTO";
 import { Money } from "../../../domain/value-objects/Money";
 
 export class TradePersistenceMapper {
-  static toPrisma(trade: Trade): TradePersistenceDTO {
+  static toPrisma(trade: Trade) {
     return {
       id: trade.id,
       orderId: trade.orderId,
@@ -13,16 +13,16 @@ export class TradePersistenceMapper {
       side: trade.side,
       productType: trade.productType,
       quantity: trade.quantity,
-      price: trade.price.toDecimal(),
-      tradeValue: trade.tradeValue.toDecimal(),
-      realizedPnL: trade.realizedPnL.toDecimal(),
-      brokerage: trade.brokerage.toDecimal(),
-      stt: trade.stt.toDecimal(),
-      exchangeTurnoverCharges: trade.exchangeTurnoverCharges.toDecimal(),
-      sebiCharges: trade.sebiCharges.toDecimal(),
-      stampDuty: trade.stampDuty.toDecimal(),
-      gst: trade.gst.toDecimal(),
-      totalCharges: trade.totalCharges.toDecimal(),
+      price: trade.price.toString(),
+      tradeValue: trade.tradeValue.toString(),
+      realizedPnL: trade.realizedPnL.toString(),
+      brokerage: trade.brokerage.toString(),
+      stt: trade.stt.toString(),
+      exchangeTurnoverCharges: trade.exchangeTurnoverCharges.toString(),
+      sebiCharges: trade.sebiCharges.toString(),
+      stampDuty: trade.stampDuty.toString(),
+      gst: trade.gst.toString(),
+      totalCharges: trade.totalCharges.toString(),
       executedAt: trade.executedAt,
     };
   }
