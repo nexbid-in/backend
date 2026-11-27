@@ -6,9 +6,6 @@ export type GetWatchlistRequestDTO = {
 
 export type WatchlistItemDTO = {
   id: string;
-  stockId: string;
-  order: number;
-  addedAt: Date;
   stock: StockItemDTO;
 };
 
