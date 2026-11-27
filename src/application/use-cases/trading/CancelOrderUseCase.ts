@@ -1,17 +1,21 @@
 import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRepository";
-import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
-import { IOrderMatchingEngine } from "../../interface/services/IOrderMatchingEngine";
-import { OrderResponseMapper } from "../../mapper/trading/OrderResponseMapper";
-import { CancelOrderRequestDTO, OrderResponseDTO } from "../../dto/trading/OrderDTOs";
-import { ICancelOrderUseCase } from "../../interface/use-cases/trading/ICancelOrderUseCase";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
+import {
+  CancelOrderRequestDTO,
+  OrderResponseDTO,
+} from "../../dto/trading/OrderDTOs";
+import { ICancelOrderUseCase } from "../../interface/use-cases/trading/ICancelOrderUseCase";
+import { OrderResponseMapper } from "../../mapper/trading/OrderResponseMapper";
+import { OrderCancellationService } from "../../services/trading/OrderCancellationService";
 
+/**
+ * Orchestrates user-initiated cancellation of an owned pending order.
+ */
 export class CancelOrderUseCase implements ICancelOrderUseCase {
   constructor(
     private readonly orderRepo: IOrderRepository,
-    private readonly walletRepo: IWalletRepository,
-    private readonly matchingEngine: IOrderMatchingEngine
+    private readonly cancellationService: OrderCancellationService
   ) {}
 
   async execute(dto: CancelOrderRequestDTO): Promise<OrderResponseDTO> {
@@ -20,22 +24,7 @@ export class CancelOrderUseCase implements ICancelOrderUseCase {
       throw new AppError(ErrorCodes.ORDER_NOT_FOUND);
     }
 
-    if (!order.canBeCancelled()) {
-      throw new AppError(ErrorCodes.ORDER_CANNOT_BE_CANCELLED);
-    }
-
-    order.markCancelled();
-    await this.orderRepo.update(order);
-
-    this.matchingEngine.removeOrderFromBook(order.id, order.symbol);
-
-    if (order.blockedMargin > 0) {
-      const wallet = await this.walletRepo.findOrCreateByUserId(dto.userId);
-      wallet.releaseMargin(order.blockedMargin);
-      await this.walletRepo.update(wallet);
-    }
-
-    return OrderResponseMapper.toDTO(order);
+    const cancelled = await this.cancellationService.cancelOrder(order);
+    return OrderResponseMapper.toDTO(cancelled);
   }
 }
-

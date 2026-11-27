@@ -10,6 +10,7 @@ import { OrderPricingService } from "../../application/services/trading/OrderPri
 import { OrderMarginService } from "../../application/services/trading/OrderMarginService";
 import { OrderExecutionService } from "../../application/services/trading/OrderExecutionService";
 import { OrderRejectionService } from "../../application/services/trading/OrderRejectionService";
+import { OrderCancellationService } from "../../application/services/trading/OrderCancellationService";
 import { env } from "../../infrastructure/config/env";
 import { HttpErrorMap } from "../../presentation/http/constants/HttpErrorMap";
 import { PlaceOrderUseCase } from "../../application/use-cases/trading/PlaceOrderUseCase";
@@ -85,10 +86,15 @@ export const placeOrderUseCase = new PlaceOrderUseCase(
 
 export const getOrdersUseCase = new GetOrdersUseCase(orderRepository);
 
+export const orderCancellationService = new OrderCancellationService(
+  orderRepository,
+  orderMarginService,
+  orderMatchingEngine
+);
+
 export const cancelOrderUseCase = new CancelOrderUseCase(
   orderRepository,
-  walletRepository,
-  orderMatchingEngine
+  orderCancellationService
 );
 
 export const getPositionsUseCase = new GetPositionsUseCase(
@@ -114,14 +120,15 @@ export const autoSquareOffCron = new AutoSquareOffCron(
 
 export const amoDispatchCron = new AmoDispatchCron(
   orderRepository,
-  marketDataService,
+  orderPricingService,
   orderMatchingEngine
 );
 
 export const eodOrderExpiryCron = new EodOrderExpiryCron(
   orderRepository,
-  walletRepository,
-  orderMatchingEngine
+  orderMatchingEngine,
+  orderCancellationService,
+  env.ENFORCE_MARKET_HOURS
 );
 
 export const getMarketStatusUseCase = new GetMarketStatusUseCase(

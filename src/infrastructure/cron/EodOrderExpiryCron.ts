@@ -1,10 +1,8 @@
 import cron from "node-cron";
-import { IOrderRepository } from "../../domain/repositories/trading/IOrderRepository";
-import { IWalletRepository } from "../../domain/repositories/wallet/IWalletRepository";
-import { OrderMatchingEngine } from "../external/trading/OrderMatchingEngine";
-import { OrderType, ProductType } from "../../domain/entities/trading/Order";
+import { IOrderMatchingEngine } from "../../application/interface/services/IOrderMatchingEngine";
 import { MarketHoursService } from "../../application/services/trading/MarketHoursService";
-import { env } from "../config/env";
+import { OrderCancellationService } from "../../application/services/trading/OrderCancellationService";
+import { IOrderRepository } from "../../domain/repositories/trading/IOrderRepository";
 import { logger } from "../logging/logger";
 
 export class EodOrderExpiryCron {
@@ -12,8 +10,9 @@ export class EodOrderExpiryCron {
 
   constructor(
     private readonly orderRepo: IOrderRepository,
-    private readonly walletRepo: IWalletRepository,
-    private readonly matchingEngine: OrderMatchingEngine,
+    private readonly matchingEngine: IOrderMatchingEngine,
+    private readonly cancellationService: OrderCancellationService,
+    private readonly enforceMarketHours: boolean,
     private readonly eodSchedule: string = "31 15 * * 1-5",
     private readonly rolloverSchedule: string = "0 0 * * *"
   ) {}
@@ -27,7 +26,7 @@ export class EodOrderExpiryCron {
     cron.schedule(
       this.eodSchedule,
       async () => {
-        if (env.ENFORCE_MARKET_HOURS) {
+        if (this.enforceMarketHours) {
           await this.expirePendingDayOrders();
         }
       },
@@ -75,19 +74,10 @@ export class EodOrderExpiryCron {
             continue;
           }
 
-          current.markCancelled("Day order expired at market close");
-          await this.orderRepo.update(current);
-
-          if (
-            current.blockedMargin > 0 &&
-            (current.productType === ProductType.MIS || current.orderType === OrderType.LIMIT)
-          ) {
-            const wallet = await this.walletRepo.findOrCreateByUserId(current.userId);
-            if (wallet.usedMargin.isGreaterThanOrEqual(current.blockedMargin)) {
-              wallet.releaseMargin(current.blockedMargin);
-              await this.walletRepo.update(wallet);
-            }
-          }
+          await this.cancellationService.cancelOrder(
+            current,
+            "Day order expired at market close"
+          );
 
           logger.info(
             { orderId: current.id, symbol: current.symbol, userId: current.userId },
@@ -107,4 +97,3 @@ export class EodOrderExpiryCron {
     }
   }
 }
-

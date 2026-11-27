@@ -1,8 +1,8 @@
 import cron from "node-cron";
-import { IOrderRepository } from "../../domain/repositories/trading/IOrderRepository";
-import { IMarketDataService } from "../../application/interface/services/IMarketDataService";
-import { OrderMatchingEngine } from "../external/trading/OrderMatchingEngine";
+import { IOrderMatchingEngine } from "../../application/interface/services/IOrderMatchingEngine";
+import { OrderPricingService } from "../../application/services/trading/OrderPricingService";
 import { OrderType } from "../../domain/entities/trading/Order";
+import { IOrderRepository } from "../../domain/repositories/trading/IOrderRepository";
 import { logger } from "../logging/logger";
 
 export class AmoDispatchCron {
@@ -10,8 +10,8 @@ export class AmoDispatchCron {
 
   constructor(
     private readonly orderRepo: IOrderRepository,
-    private readonly marketDataService: IMarketDataService,
-    private readonly matchingEngine: OrderMatchingEngine,
+    private readonly pricingService: OrderPricingService,
+    private readonly matchingEngine: IOrderMatchingEngine,
     private readonly cronSchedule: string = "15 9 * * 1-5"
   ) {}
 
@@ -54,8 +54,11 @@ export class AmoDispatchCron {
       for (const order of pendingAmos) {
         try {
           if (order.orderType === OrderType.MARKET) {
-            const quote = await this.marketDataService.getQuote(order.symbol);
-            const fillPrice = quote?.ltp && quote.ltp > 0 ? quote.ltp : 100;
+            const fillPrice = await this.pricingService.resolveMarketPrice(
+              order.symbol,
+              order.side,
+              100
+            );
 
             await this.matchingEngine.executeOrder(order, fillPrice);
             logger.info(
@@ -82,4 +85,3 @@ export class AmoDispatchCron {
     }
   }
 }
-

@@ -4,8 +4,7 @@ import { AdminUserController } from "../../presentation/http/controllers/admin/A
 import { UpdateUserStatusUseCase } from "../../application/use-cases/admin/UpdateUserStatusUseCase";
 import {
   orderRepository,
-  walletRepository,
-  orderMatchingEngine,
+  orderCancellationService,
   stockRepository,
 } from "../trading/container";
 import { marketDataService } from "../market/container";
@@ -38,8 +37,7 @@ const getAdminOrderMetricsUseCase = new GetAdminOrderMetricsUseCase(orderReposit
 const getAdminOrderDetailsUseCase = new GetAdminOrderDetailsUseCase(orderRepository);
 const adminCancelOrderUseCase = new AdminCancelOrderUseCase(
   orderRepository,
-  walletRepository,
-  orderMatchingEngine
+  orderCancellationService
 );
 
 export const adminOrderController = new AdminOrderController(
