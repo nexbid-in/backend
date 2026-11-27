@@ -17,7 +17,6 @@ export type WalletStatementItemDTO = {
   amount: number;
   balanceAfter: number;
   description: string;
-  metadata?: Record<string, unknown> | null;
   createdAt: Date;
 };
 

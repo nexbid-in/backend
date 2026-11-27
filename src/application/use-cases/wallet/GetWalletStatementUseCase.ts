@@ -42,7 +42,6 @@ export class GetWalletStatementUseCase implements IGetWalletStatementUseCase {
       amount: tx.amount.toNumber(),
       balanceAfter: tx.balanceAfter.toNumber(),
       description: tx.description,
-      metadata: tx.metadata,
       createdAt: tx.createdAt,
     }));
 

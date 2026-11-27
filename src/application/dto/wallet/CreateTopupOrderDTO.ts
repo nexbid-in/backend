@@ -5,7 +5,6 @@ export type CreateTopupOrderRequestDTO = {
 
 export type CreateTopupOrderResponseDTO = {
   orderId: string;
-  paymentOrderId: string;
   amount: number;
   currency: string;
   virtualAmount: number;
