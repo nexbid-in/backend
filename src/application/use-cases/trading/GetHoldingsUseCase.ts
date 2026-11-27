@@ -70,7 +70,6 @@ export class GetHoldingsUseCase implements IGetHoldingsUseCase {
 
       mappedHoldings.push({
         id: pos.id,
-        stockId: pos.stockId,
         symbol: pos.symbol,
         quantity: pos.quantity,
         buyAvgPrice: pos.averagePrice,
@@ -83,8 +82,6 @@ export class GetHoldingsUseCase implements IGetHoldingsUseCase {
         dayChangePercentage,
         dayPnL,
         isBoughtToday,
-        createdAt: pos.createdAt,
-        updatedAt: pos.updatedAt,
       });
     }
 
@@ -112,7 +109,6 @@ export class GetHoldingsUseCase implements IGetHoldingsUseCase {
 
       mappedExitedHoldings.push({
         id: pos.id,
-        stockId: pos.stockId,
         symbol: pos.symbol,
         quantity: pos.sellQty,
         buyAvgPrice,
@@ -126,8 +122,6 @@ export class GetHoldingsUseCase implements IGetHoldingsUseCase {
         dayPnL,
         isBoughtToday,
         isExited: true,
-        createdAt: pos.createdAt,
-        updatedAt: pos.updatedAt,
       });
     }
 

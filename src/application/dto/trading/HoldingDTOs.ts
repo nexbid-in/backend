@@ -1,6 +1,5 @@
 export interface HoldingItemDTO {
   id: string;
-  stockId: string;
   symbol: string;
   quantity: number;
   buyAvgPrice: number;
@@ -14,8 +13,6 @@ export interface HoldingItemDTO {
   dayPnL: number;
   isBoughtToday: boolean;
   isExited?: boolean;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface HoldingsSummaryDTO {
