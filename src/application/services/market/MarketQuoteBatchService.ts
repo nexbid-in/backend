@@ -1,12 +1,12 @@
 import { MarketQuote } from "../../../domain/entities/market/MarketQuote";
-import { IMarketDataService } from "../../interface/services/IMarketDataService";
+import { IMarketQuoteReader } from "../../interface/services/IMarketDataService";
 
 /**
  * Application service responsible for deduplicating symbols and concurrently
  * fetching live market quotes in a single batch.
  */
 export class MarketQuoteBatchService {
-  constructor(private readonly marketDataService: IMarketDataService) {}
+  constructor(private readonly quoteReader: IMarketQuoteReader) {}
 
   async fetchQuotes(
     symbols: Iterable<string>
@@ -20,7 +20,7 @@ export class MarketQuoteBatchService {
 
     const entries = await Promise.all(
       uniqueSymbols.map(async (symbol) => {
-        const quote = await this.marketDataService.getQuote(symbol);
+        const quote = await this.quoteReader.getQuote(symbol);
         return [symbol, quote] as const;
       })
     );

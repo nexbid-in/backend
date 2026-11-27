@@ -2,13 +2,13 @@ import { OrderSide, OrderType } from "../../../domain/entities/trading/Order";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 import { PlaceOrderRequestDTO } from "../../dto/trading/OrderDTOs";
-import { IMarketDataService } from "../../interface/services/IMarketDataService";
+import { IMarketQuoteReader } from "../../interface/services/IMarketDataService";
 
 /**
  * Resolves reference and execution prices for market and limit orders from live quotes.
  */
 export class OrderPricingService {
-  constructor(private readonly marketDataService: IMarketDataService) {}
+  constructor(private readonly quoteReader: IMarketQuoteReader) {}
 
   async resolveReferencePrice(
     dto: PlaceOrderRequestDTO,
@@ -43,7 +43,7 @@ export class OrderPricingService {
     side: OrderSide,
     fallbackPrice = 0
   ): Promise<number> {
-    const quote = await this.marketDataService.getQuote(symbol);
+    const quote = await this.quoteReader.getQuote(symbol);
     const ltp = quote?.ltp && quote.ltp > 0 ? quote.ltp : 0;
 
     if (side === OrderSide.BUY) {

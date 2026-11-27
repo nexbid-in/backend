@@ -45,10 +45,29 @@ export class UserRepository extends BaseRepository<UserPersistenceDTO, Prisma.Us
         return !!user;
     }
 
+    async existsById(id: string): Promise<boolean> {
+        try {
+            return await this._existsById(id);
+        } catch (error) {
+            handlePrismaError(error);
+        }
+    }
+
+    async delete(id: string): Promise<boolean> {
+        try {
+            return await this._delete(id);
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+                return false;
+            }
+            handlePrismaError(error);
+        }
+    }
+
     async save(user: User): Promise<void> {
         try {
             const data = UserPersistenceMapper.toPrisma(user);
-            const exists = await this.existsById(data.id);
+            const exists = await this._existsById(data.id);
             if (exists) {
                 await this._update(data.id, data);
             } else {

@@ -1,7 +1,10 @@
 import { Server as HttpServer } from "http";
 import { WebSocketServer, WebSocket, RawData } from "ws";
 import { logger } from "../logging/logger";
-import { IMarketDataService } from "../../application/interface/services/IMarketDataService";
+import {
+    IMarketQuoteReader,
+    IMarketStreamService,
+} from "../../application/interface/services/IMarketDataService";
 import { MarketSymbolMapper } from "../external/market/MarketSymbolMapper";
 
 interface ClientWsMessage {
@@ -16,7 +19,11 @@ export class MarketWebSocketGateway {
     private symbolSubscribers = new Map<string, Set<WebSocket>>();
     private brokerUnsubscribeTimers = new Map<string, NodeJS.Timeout>();
 
-    constructor(server: HttpServer, private readonly marketService: IMarketDataService) {
+    constructor(
+        server: HttpServer,
+        private readonly marketStream: IMarketStreamService,
+        private readonly quoteReader: IMarketQuoteReader
+    ) {
         this.wss = new WebSocketServer({ server, path: "/ws/market-feed" });
         this.initialize();
     }
@@ -78,12 +85,12 @@ export class MarketWebSocketGateway {
                             );
 
                             if (isFirstSubscriber) {
-                                void this.marketService.subscribe([cleanSym]);
+                                void this.marketStream.subscribe([cleanSym]);
                             }
 
                             void (async () => {
                                 try {
-                                    const quote = await this.marketService.getQuote(cleanSym);
+                                    const quote = await this.quoteReader.getQuote(cleanSym);
                                     if (quote && ws.readyState === WebSocket.OPEN) {
                                         ws.send(
                                             JSON.stringify({
@@ -156,7 +163,7 @@ export class MarketWebSocketGateway {
                                                 { cleanSym },
                                                 "No remaining subscribers after debounce; unsubscribing broker feed"
                                             );
-                                            void this.marketService.unsubscribe([cleanSym]);
+                                            void this.marketStream.unsubscribe([cleanSym]);
                                             this.symbolSubscribers.delete(cleanSym);
                                         }
                                         this.brokerUnsubscribeTimers.delete(cleanSym);
@@ -184,7 +191,7 @@ export class MarketWebSocketGateway {
                                         { cleanSym },
                                         "No remaining subscribers after socket disconnect; unsubscribing broker feed"
                                     );
-                                    void this.marketService.unsubscribe([cleanSym]);
+                                    void this.marketStream.unsubscribe([cleanSym]);
                                     this.symbolSubscribers.delete(cleanSym);
                                 }
                                 this.brokerUnsubscribeTimers.delete(cleanSym);
@@ -201,7 +208,7 @@ export class MarketWebSocketGateway {
             });
         });
 
-        this.marketService.onTick((tick) => {
+        this.marketStream.onTick((tick) => {
             const payload = JSON.stringify({
                 type: "TICK",
                 symbol: tick.symbol,

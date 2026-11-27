@@ -1,4 +1,4 @@
-import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRepository";
+import { IAdminOrderQueryRepository } from "../../interface/repositories/admin/IAdminOrderQueryRepository";
 import {
   AdminOrdersQueryDTO,
   PaginatedAdminOrdersResponseDTO,
@@ -6,7 +6,7 @@ import {
 import { IGetAdminOrdersUseCase } from "../../interface/use-cases/admin/IGetAdminOrdersUseCase";
 
 export class GetAdminOrdersUseCase implements IGetAdminOrdersUseCase {
-  constructor(private readonly orderRepo: IOrderRepository) {}
+  constructor(private readonly orderQueryRepo: IAdminOrderQueryRepository) {}
 
   async execute(
     query: AdminOrdersQueryDTO
@@ -18,7 +18,7 @@ export class GetAdminOrdersUseCase implements IGetAdminOrdersUseCase {
       endDate.setHours(23, 59, 59, 999);
     }
 
-    const { data: orders, total } = await this.orderRepo.findManyWithFilters({
+    const { data: orders, total } = await this.orderQueryRepo.findManyWithFilters({
       page: query.page,
       limit: query.limit,
       search: query.search,

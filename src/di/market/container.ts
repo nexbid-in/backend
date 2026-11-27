@@ -28,6 +28,8 @@ export const getHistoricalCandlesUseCase = new GetHistoricalCandlesUseCase(marke
 export const getStockOverviewUseCase = new GetStockOverviewUseCase(
     stockRepository,
     marketDataService,
+    marketDataService,
+    marketDataService,
     stockStatsCacheService,
     logger
 );

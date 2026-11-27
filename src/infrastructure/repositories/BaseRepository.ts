@@ -24,7 +24,7 @@ export abstract class BaseRepository<TEntity, TDelegate> {
         return await this.delegate.findMany();
     }
 
-    public async existsById(id: string): Promise<boolean> {
+    protected async _existsById(id: string): Promise<boolean> {
         const record = await this.delegate.findUnique({
             where: { id },
             select: { id: true },
@@ -44,15 +44,11 @@ export abstract class BaseRepository<TEntity, TDelegate> {
         });
     }
 
-    public async delete(id: string): Promise<boolean> {
-        try {
-            await this.delegate.delete({
-                where: { id }
-            });
-            return true;
-        } catch {
-            return false;
-        }
+    protected async _delete(id: string): Promise<boolean> {
+        await this.delegate.delete({
+            where: { id }
+        });
+        return true;
     }
 }
 

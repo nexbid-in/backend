@@ -2,17 +2,17 @@ import { IStockRepository } from "../../../domain/repositories/stock/IStockRepos
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
 import { VerifyStockSymbolResponseDTO } from "../../dto/admin/AdminStockDTOs";
-import { IMarketDataService } from "../../interface/services/IMarketDataService";
+import { IMarketSymbolVerifier } from "../../interface/services/IMarketDataService";
 import { IMarketSymbolRegistry } from "../../interface/services/IMarketSymbolRegistry";
 
 /**
  * Validates broker feed symbol uniqueness and verifies ticker availability
- * against the configured market data service.
+ * against the configured market symbol verifier.
  */
 export class StockFeedVerificationService {
   constructor(
     private readonly stockRepo: IStockRepository,
-    private readonly marketDataService: IMarketDataService,
+    private readonly symbolVerifier: IMarketSymbolVerifier,
     private readonly symbolRegistry: IMarketSymbolRegistry
   ) {}
 
@@ -31,12 +31,7 @@ export class StockFeedVerificationService {
     feedSymbol: string | null
   ): Promise<void> {
     const targetFeedSymbol = feedSymbol ?? this.symbolRegistry.toFeedSymbol(symbol);
-    if (!this.marketDataService.verifySymbol) {
-      return;
-    }
-
-    const verification =
-      await this.marketDataService.verifySymbol(targetFeedSymbol);
+    const verification = await this.symbolVerifier.verifySymbol(targetFeedSymbol);
     if (!verification.valid) {
       throw new AppError(ErrorCodes.INVALID_BROKER_FEED_SYMBOL);
     }
@@ -51,17 +46,7 @@ export class StockFeedVerificationService {
       ? rawFeedSymbol.toUpperCase().trim()
       : this.symbolRegistry.toFeedSymbol(symbol);
 
-    if (!this.marketDataService.verifySymbol) {
-      return {
-        valid: true,
-        symbol,
-        resolvedFeedSymbol,
-        message: "Symbol accepted.",
-      };
-    }
-
-    const verification =
-      await this.marketDataService.verifySymbol(resolvedFeedSymbol);
+    const verification = await this.symbolVerifier.verifySymbol(resolvedFeedSymbol);
 
     if (!verification.valid) {
       return {

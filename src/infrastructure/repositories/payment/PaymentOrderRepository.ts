@@ -40,7 +40,7 @@ export class PaymentOrderRepository
   async save(order: PaymentOrder): Promise<void> {
     try {
       const data = PaymentOrderPersistenceMapper.toPrisma(order);
-      const exists = await this.existsById(data.id);
+      const exists = await this._existsById(data.id);
 
       if (exists) {
         await this._update(data.id, {

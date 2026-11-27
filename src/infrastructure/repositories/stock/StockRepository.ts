@@ -5,19 +5,20 @@ import {
   IStockRepository,
   StockSearchOptions,
   StockSearchResult,
-  AdminStockFilters,
-  AdminStockMetrics,
 } from "../../../domain/repositories/stock/IStockRepository";
 import { Stock } from "../../../domain/entities/Stock";
 import { StockPersistenceDTO } from "../../../application/dto/internal/StockPersistenceDTO";
 import { StockPersistenceMapper } from "../../../application/mapper/stock/StockPersistenceMapper";
 import { handlePrismaError } from "../../database/handlePrismaError";
+import { DEFAULT_PRIORITY_BENCHMARKS } from "../../config/stockSearchConfig";
 
 export class StockRepository
   extends BaseRepository<StockPersistenceDTO, Prisma.StockDelegate>
   implements IStockRepository
 {
-  constructor() {
+  constructor(
+    private readonly priorityBenchmarks: readonly string[] = DEFAULT_PRIORITY_BENCHMARKS
+  ) {
     super(prisma.stock);
   }
 
@@ -97,20 +98,6 @@ export class StockRepository
         filtered = filtered.filter((s) => s.type === "INDEX");
       }
 
-      const PRIORITY_BENCHMARKS = [
-        "NIFTY 50",
-        "SENSEX",
-        "BSE SENSEX",
-        "BANKNIFTY",
-        "NIFTY BANK",
-        "NIFTY IT",
-        "NIFTY AUTO",
-        "NIFTY PHARMA",
-        "NIFTY METAL",
-        "NIFTY FMCG",
-        "NIFTY MIDCAP 50",
-      ];
-
       if (trimmed) {
         const qUpper = trimmed.toUpperCase();
         filtered.sort((a, b) => {
@@ -121,8 +108,8 @@ export class StockRepository
         });
       } else {
         filtered.sort((a, b) => {
-          const rankA = this.getBrowseScore(a, PRIORITY_BENCHMARKS);
-          const rankB = this.getBrowseScore(b, PRIORITY_BENCHMARKS);
+          const rankA = this.getBrowseScore(a, this.priorityBenchmarks);
+          const rankB = this.getBrowseScore(b, this.priorityBenchmarks);
           if (rankA !== rankB) return rankA - rankB;
           return a.symbol.localeCompare(b.symbol);
         });
@@ -152,87 +139,12 @@ export class StockRepository
     return 5;
   }
 
-  private getBrowseScore(stock: Stock, priorityBenchmarks: string[]): number {
+  private getBrowseScore(stock: Stock, priorityBenchmarks: readonly string[]): number {
     if (stock.type === "INDEX") {
       const idx = priorityBenchmarks.indexOf(stock.symbol);
       return idx !== -1 ? idx : 50;
     }
     return 100;
-  }
-
-  async findAdminStocks(filters: AdminStockFilters): Promise<{
-    stocks: Stock[];
-    total: number;
-    metrics: AdminStockMetrics;
-    orderCounts: Record<string, number>;
-  }> {
-    try {
-      const page = filters.page && filters.page > 0 ? filters.page : 1;
-      const limit = filters.limit && filters.limit > 0 ? Math.min(filters.limit, 100) : 20;
-      const skip = (page - 1) * limit;
-
-      const where: Prisma.StockWhereInput = {};
-
-      if (filters.query?.trim()) {
-        const q = filters.query.trim();
-        where.OR = [
-          { symbol: { contains: q, mode: "insensitive" } },
-          { name: { contains: q, mode: "insensitive" } },
-          { feedSymbol: { contains: q, mode: "insensitive" } },
-        ];
-      }
-
-      if (filters.type && filters.type !== "ALL") {
-        where.type = filters.type;
-      }
-
-      if (filters.isActive !== undefined) {
-        where.isActive = filters.isActive;
-      }
-
-      if (filters.isTradable !== undefined) {
-        where.isTradable = filters.isTradable;
-      }
-
-      const [rawStocks, total, totalStocks, activeStocks, tradableStocks] =
-        await Promise.all([
-          prisma.stock.findMany({
-            where,
-            orderBy: [{ type: "asc" }, { symbol: "asc" }],
-            skip,
-            take: limit,
-          }),
-          prisma.stock.count({ where }),
-          prisma.stock.count(),
-          prisma.stock.count({ where: { isActive: true } }),
-          prisma.stock.count({ where: { isTradable: true } }),
-        ]);
-
-      const stockIds = rawStocks.map((s) => s.id);
-      const orderCountsRaw = await prisma.order.groupBy({
-        by: ["stockId"],
-        where: { stockId: { in: stockIds } },
-        _count: { id: true },
-      });
-
-      const orderCounts: Record<string, number> = {};
-      for (const item of orderCountsRaw) {
-        orderCounts[item.stockId] = item._count.id;
-      }
-
-      return {
-        stocks: rawStocks.map((r) => StockPersistenceMapper.toDomain(r)),
-        total,
-        metrics: {
-          totalStocks,
-          activeStocks,
-          tradableStocks,
-        },
-        orderCounts,
-      };
-    } catch (error) {
-      handlePrismaError(error);
-    }
   }
 
   async save(stock: Stock): Promise<Stock> {

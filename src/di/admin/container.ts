@@ -1,4 +1,6 @@
 import { UserRepository } from "../../infrastructure/repositories/user/UserRepository";
+import { AdminOrderQueryRepository } from "../../infrastructure/repositories/admin/AdminOrderQueryRepository";
+import { AdminStockQueryRepository } from "../../infrastructure/repositories/admin/AdminStockQueryRepository";
 import { GetUsersUseCase } from "../../application/use-cases/admin/GetUsersUseCase";
 import { AdminUserController } from "../../presentation/http/controllers/admin/AdminUserController";
 import { UpdateUserStatusUseCase } from "../../application/use-cases/admin/UpdateUserStatusUseCase";
@@ -32,9 +34,10 @@ export const adminUserController = new AdminUserController(
   updateUserStatusUseCase
 );
 
-const getAdminOrdersUseCase = new GetAdminOrdersUseCase(orderRepository);
-const getAdminOrderMetricsUseCase = new GetAdminOrderMetricsUseCase(orderRepository);
-const getAdminOrderDetailsUseCase = new GetAdminOrderDetailsUseCase(orderRepository);
+const adminOrderQueryRepository = new AdminOrderQueryRepository();
+const getAdminOrdersUseCase = new GetAdminOrdersUseCase(adminOrderQueryRepository);
+const getAdminOrderMetricsUseCase = new GetAdminOrderMetricsUseCase(adminOrderQueryRepository);
+const getAdminOrderDetailsUseCase = new GetAdminOrderDetailsUseCase(adminOrderQueryRepository);
 const adminCancelOrderUseCase = new AdminCancelOrderUseCase(
   orderRepository,
   orderCancellationService
@@ -54,7 +57,8 @@ const stockFeedVerificationService = new StockFeedVerificationService(
   marketSymbolRegistry
 );
 
-const getAdminStocksUseCase = new GetAdminStocksUseCase(stockRepository);
+const adminStockQueryRepository = new AdminStockQueryRepository();
+const getAdminStocksUseCase = new GetAdminStocksUseCase(adminStockQueryRepository);
 const createStockUseCase = new CreateStockUseCase(
   stockRepository,
   stockFeedVerificationService,

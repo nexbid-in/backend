@@ -1,4 +1,4 @@
-import { IMarketDataService } from "../../interface/services/IMarketDataService";
+import { IHistoricalMarketDataReader } from "../../interface/services/IMarketDataService";
 import { Candle } from "../../../domain/entities/market/Candle";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
@@ -6,7 +6,7 @@ import { IGetHistoricalCandlesUseCase } from "../../interface/use-cases/market/I
 import { GetHistoricalCandlesRequestDTO } from "../../dto/market/GetHistoricalCandlesDTO";
 
 export class GetHistoricalCandlesUseCase implements IGetHistoricalCandlesUseCase {
-    constructor(private readonly marketService: IMarketDataService) { }
+    constructor(private readonly historicalDataReader: IHistoricalMarketDataReader) { }
 
     async execute(data: GetHistoricalCandlesRequestDTO): Promise<Candle[]> {
         if (!data.symbol) {
@@ -16,7 +16,7 @@ export class GetHistoricalCandlesUseCase implements IGetHistoricalCandlesUseCase
         const toTimestamp = data.to || Date.now();
         const fromTimestamp = data.from || toTimestamp - 30 * 24 * 60 * 60 * 1000;
 
-        return await this.marketService.getHistoricalCandles(
+        return await this.historicalDataReader.getHistoricalCandles(
             data.symbol.toUpperCase().trim(),
             data.resolution,
             fromTimestamp,

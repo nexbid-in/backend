@@ -3,7 +3,7 @@ import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRep
 import { IPositionRepository } from "../../../domain/repositories/trading/IPositionRepository";
 import { ITradeRepository } from "../../../domain/repositories/trading/ITradeRepository";
 import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
-import { IMarketDataService } from "../../../application/interface/services/IMarketDataService";
+import { IMarketStreamService } from "../../../application/interface/services/IMarketDataService";
 import { IOrderMatchingEngine } from "../../../application/interface/services/IOrderMatchingEngine";
 import { MarketHoursService } from "../../../application/services/trading/MarketHoursService";
 import { Order, OrderSide, ProductType } from "../../../domain/entities/trading/Order";
@@ -24,7 +24,7 @@ export class OrderMatchingEngine implements IOrderMatchingEngine {
     private readonly positionRepo: IPositionRepository,
     private readonly tradeRepo: ITradeRepository,
     private readonly walletRepo: IWalletRepository,
-    private readonly marketDataService: IMarketDataService
+    private readonly marketStream: IMarketStreamService
   ) {}
 
   public async start(): Promise<void> {
@@ -43,13 +43,13 @@ export class OrderMatchingEngine implements IOrderMatchingEngine {
       );
 
       if (symbolsToSubscribe.size > 0) {
-        await this.marketDataService.subscribe(Array.from(symbolsToSubscribe));
+        await this.marketStream.subscribe(Array.from(symbolsToSubscribe));
       }
     } catch (err) {
       logger.error({ err }, "Failed to hydrate order book on matching engine startup");
     }
 
-    this.marketDataService.onTick((tick) => {
+    this.marketStream.onTick((tick) => {
       void this.processTick(tick);
     });
     logger.info("Virtual Order Matching Engine started and listening to market ticks");

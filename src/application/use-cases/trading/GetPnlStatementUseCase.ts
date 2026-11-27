@@ -1,7 +1,7 @@
 import { ITradeRepository } from "../../../domain/repositories/trading/ITradeRepository";
 import { IPositionRepository } from "../../../domain/repositories/trading/IPositionRepository";
 import { IStockRepository } from "../../../domain/repositories/stock/IStockRepository";
-import { IMarketDataService } from "../../interface/services/IMarketDataService";
+import { IMarketQuoteReader } from "../../interface/services/IMarketDataService";
 import { IGetPnlStatementUseCase } from "../../interface/use-cases/trading/IGetPnlStatementUseCase";
 import {
   PnlStatementQueryDTO,
@@ -23,7 +23,7 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
     private readonly tradeRepo: ITradeRepository,
     private readonly positionRepo: IPositionRepository,
     private readonly stockRepo: IStockRepository,
-    private readonly marketDataService: IMarketDataService
+    private readonly quoteReader: IMarketQuoteReader
   ) {}
 
   async execute(
@@ -99,7 +99,7 @@ export class GetPnlStatementUseCase implements IGetPnlStatementUseCase {
 
     const quotes = await Promise.all(
       symbols.map(async (symbol) => {
-        const quote = await this.marketDataService.getQuote(symbol);
+        const quote = await this.quoteReader.getQuote(symbol);
         return { symbol, ltp: quote?.ltp };
       })
     );

@@ -27,7 +27,7 @@ const startServer = async () => {
         const initialStocks = await stockRepository.findAll();
         MarketSymbolMapper.init(initialStocks);
 
-        new MarketWebSocketGateway(server, marketDataService);
+        new MarketWebSocketGateway(server, marketDataService, marketDataService);
         await eodOrderExpiryCron.expireStaleDayOrders();
         await orderMatchingEngine.start();
 

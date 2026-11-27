@@ -4,7 +4,11 @@ import {
   StockOverviewResponseDTO,
 } from "../../dto/market/StockOverviewDTO";
 import { IStockRepository } from "../../../domain/repositories/stock/IStockRepository";
-import { IMarketDataService } from "../../interface/services/IMarketDataService";
+import {
+  IHistoricalMarketDataReader,
+  IMarketDepthReader,
+  IMarketQuoteReader,
+} from "../../interface/services/IMarketDataService";
 import { IStockStatsCacheService } from "../../interface/services/IStockStatsCacheService";
 import { ILogger } from "../../interface/services/ILogger";
 import {
@@ -26,7 +30,9 @@ export class GetStockOverviewUseCase implements IGetStockOverviewUseCase {
 
   constructor(
     private readonly _stockRepository: IStockRepository,
-    private readonly _marketDataService: IMarketDataService,
+    private readonly _quoteReader: IMarketQuoteReader,
+    private readonly _depthReader: IMarketDepthReader,
+    private readonly _historicalDataReader: IHistoricalMarketDataReader,
     private readonly _statsCacheService: IStockStatsCacheService,
     private readonly _logger: ILogger
   ) {}
@@ -40,10 +46,8 @@ export class GetStockOverviewUseCase implements IGetStockOverviewUseCase {
     }
 
     const [quote, depth] = await Promise.all([
-      this._marketDataService.getQuote(cleanSymbol),
-      this._marketDataService.getMarketDepth
-        ? this._marketDataService.getMarketDepth(cleanSymbol)
-        : Promise.resolve(null),
+      this._quoteReader.getQuote(cleanSymbol),
+      this._depthReader.getMarketDepth(cleanSymbol),
     ]);
 
     const vitals = StockPerformanceCalculator.buildVitals(quote, depth);
@@ -78,7 +82,7 @@ export class GetStockOverviewUseCase implements IGetStockOverviewUseCase {
     let stats: StockOverviewStats = StockPerformanceCalculator.buildDefaultStats(vitals);
 
     try {
-      const candles = await this._marketDataService.getHistoricalCandles(
+      const candles = await this._historicalDataReader.getHistoricalCandles(
         symbol,
         "D",
         lookbackStart,

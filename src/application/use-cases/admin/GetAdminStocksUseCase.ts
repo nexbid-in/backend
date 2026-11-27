@@ -1,4 +1,4 @@
-import { IStockRepository } from "../../../domain/repositories/stock/IStockRepository";
+import { IAdminStockQueryRepository } from "../../interface/repositories/admin/IAdminStockQueryRepository";
 import {
   AdminStocksQueryDTO,
   PaginatedAdminStocksResponseDTO,
@@ -10,13 +10,13 @@ import { AdminStockDTOMapper } from "../../mapper/admin/AdminStockDTOMapper";
  * Orchestrates querying paginated admin stocks and projecting them to DTOs.
  */
 export class GetAdminStocksUseCase implements IGetAdminStocksUseCase {
-  constructor(private readonly stockRepo: IStockRepository) {}
+  constructor(private readonly stockQueryRepo: IAdminStockQueryRepository) {}
 
   async execute(
     query: AdminStocksQueryDTO
   ): Promise<PaginatedAdminStocksResponseDTO> {
     const { stocks, total, metrics, orderCounts } =
-      await this.stockRepo.findAdminStocks({
+      await this.stockQueryRepo.findAdminStocks({
         query: query.query,
         type: query.type,
         isActive: query.isActive,

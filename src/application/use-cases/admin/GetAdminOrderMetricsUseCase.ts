@@ -1,11 +1,11 @@
-import { IOrderRepository } from "../../../domain/repositories/trading/IOrderRepository";
+import { IAdminOrderQueryRepository } from "../../interface/repositories/admin/IAdminOrderQueryRepository";
 import { AdminOrderMetricsDTO } from "../../dto/admin/AdminOrderDTOs";
 import { IGetAdminOrderMetricsUseCase } from "../../interface/use-cases/admin/IGetAdminOrderMetricsUseCase";
 
 export class GetAdminOrderMetricsUseCase implements IGetAdminOrderMetricsUseCase {
-  constructor(private readonly orderRepo: IOrderRepository) {}
+  constructor(private readonly orderQueryRepo: IAdminOrderQueryRepository) {}
 
   async execute(): Promise<AdminOrderMetricsDTO> {
-    return this.orderRepo.getAggregateMetrics();
+    return this.orderQueryRepo.getAggregateMetrics();
   }
 }

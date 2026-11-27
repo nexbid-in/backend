@@ -1,5 +1,5 @@
 import { Order, OrderType } from "../../../domain/entities/trading/Order";
-import { IMarketDataService } from "../../interface/services/IMarketDataService";
+import { IMarketStreamService } from "../../interface/services/IMarketDataService";
 import { IOrderMatchingEngine } from "../../interface/services/IOrderMatchingEngine";
 import { MarketStatusInfo } from "./MarketHoursService";
 
@@ -9,7 +9,7 @@ import { MarketStatusInfo } from "./MarketHoursService";
 export class OrderExecutionService {
   constructor(
     private readonly matchingEngine: IOrderMatchingEngine,
-    private readonly marketDataService: IMarketDataService
+    private readonly marketStream: IMarketStreamService
   ) {}
 
   async dispatchOrder(
@@ -27,7 +27,7 @@ export class OrderExecutionService {
     }
 
     this.matchingEngine.addOrderToBook(order);
-    await this.marketDataService.subscribe([order.symbol]);
+    await this.marketStream.subscribe([order.symbol]);
     return order;
   }
 }
