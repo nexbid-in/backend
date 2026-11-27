@@ -178,13 +178,54 @@ export class FyersAuthService implements IBrokerAuthService {
     }
   }
 
+  public isTokenExpired(token: string): boolean {
+    try {
+      const parts = token.split(".");
+      if (parts.length !== 3) return true;
+      const payload = JSON.parse(
+        Buffer.from(parts[1], "base64").toString("utf-8")
+      ) as { exp?: number };
+      if (typeof payload.exp !== "number") return true;
+      return payload.exp * 1000 <= Date.now() + 60000;
+    } catch {
+      return true;
+    }
+  }
+
   public async getOrRefreshToken(force = false): Promise<string> {
-    if (!force) {
-      const existing = await redis.get(FyersAuthService.REDIS_TOKEN_KEY);
-      if (existing) {
-        return existing;
+    if (force) {
+      logger.info("Forced refresh requested; generating new Fyers access token...");
+      return this.generateAndStoreAccessToken();
+    }
+
+    let token = await redis.get(FyersAuthService.REDIS_TOKEN_KEY);
+    if (token && this.isTokenExpired(token)) {
+      logger.warn("Cached Fyers access token in Redis is expired; generating fresh token...");
+      token = null;
+    }
+
+    if (!token) {
+      logger.info("Fyers access token not found or expired; generating via automated auth...");
+      try {
+        token = await this.generateAndStoreAccessToken();
+      } catch (authErr) {
+        logger.error({ authErr }, "Failed automated Fyers token generation");
       }
     }
-    return this.generateAndStoreAccessToken();
+
+    if (!token) {
+      const envToken = env.FYERS_ACCESS_TOKEN;
+      if (envToken && !this.isTokenExpired(envToken)) {
+        token = envToken;
+      }
+    }
+
+    if (!token) {
+      throw new Error(
+        "Active Fyers access token not found in Redis, .env, or via automated auth"
+      );
+    }
+
+    return token;
   }
 }

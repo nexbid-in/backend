@@ -9,13 +9,12 @@ import {
   orderCancellationService,
   stockRepository,
 } from "../trading/container";
-import { marketDataService } from "../market/container";
+import { marketDataService, marketSymbolRegistry } from "../market/container";
 import { GetAdminOrdersUseCase } from "../../application/use-cases/admin/GetAdminOrdersUseCase";
 import { GetAdminOrderMetricsUseCase } from "../../application/use-cases/admin/GetAdminOrderMetricsUseCase";
 import { GetAdminOrderDetailsUseCase } from "../../application/use-cases/admin/GetAdminOrderDetailsUseCase";
 import { AdminCancelOrderUseCase } from "../../application/use-cases/admin/AdminCancelOrderUseCase";
 import { AdminOrderController } from "../../presentation/http/controllers/admin/AdminOrderController";
-import { MarketSymbolRegistry } from "../../infrastructure/external/market/MarketSymbolRegistry";
 import { StockFeedVerificationService } from "../../application/services/admin/StockFeedVerificationService";
 import { GetAdminStocksUseCase } from "../../application/use-cases/admin/GetAdminStocksUseCase";
 import { CreateStockUseCase } from "../../application/use-cases/admin/CreateStockUseCase";
@@ -50,7 +49,6 @@ export const adminOrderController = new AdminOrderController(
   adminCancelOrderUseCase
 );
 
-const marketSymbolRegistry = new MarketSymbolRegistry();
 const stockFeedVerificationService = new StockFeedVerificationService(
   stockRepository,
   marketDataService,

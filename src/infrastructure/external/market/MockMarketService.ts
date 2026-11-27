@@ -1,8 +1,9 @@
 import { IMarketDataService } from "../../../application/interface/services/IMarketDataService";
+import { IMarketSymbolRegistry } from "../../../application/interface/services/IMarketSymbolRegistry";
 import { Candle } from "../../../domain/entities/market/Candle";
 import { MarketTick } from "../../../domain/entities/market/MarketTick";
 import { MarketQuote } from "../../../domain/entities/market/MarketQuote";
-import { MarketSymbolMapper } from "./MarketSymbolMapper";
+import { MarketSymbolRegistry } from "./MarketSymbolRegistry";
 
 interface MockSymbolState {
   symbol: string;
@@ -64,16 +65,18 @@ export class MockMarketService implements IMarketDataService {
   private symbolStates = new Map<string, MockSymbolState>();
   private timer: NodeJS.Timeout | null = null;
 
-  constructor() {
+  constructor(
+    private readonly symbolRegistry: IMarketSymbolRegistry = new MarketSymbolRegistry()
+  ) {
     this.startMockTickGenerator();
   }
 
   private cleanSymbol(symbol: string): string {
-    return MarketSymbolMapper.fromFyersSymbol(symbol.toUpperCase().trim());
+    return this.symbolRegistry.fromFeedSymbol(symbol.toUpperCase().trim());
   }
 
   private isIndex(cleanSymbol: string): boolean {
-    const fyersSymbol = MarketSymbolMapper.toFyersSymbol(cleanSymbol);
+    const fyersSymbol = this.symbolRegistry.toFeedSymbol(cleanSymbol);
     return fyersSymbol.includes("-INDEX");
   }
 

@@ -1,8 +1,12 @@
+/**
+ * Stateful bi-directional symbol mapper converting between internal instrument symbols
+ * and exchange/broker feed symbols.
+ */
 export class MarketSymbolMapper {
-  private static symbolToFeedMap = new Map<string, string>();
-  private static feedToSymbolMap = new Map<string, string>();
+  private readonly symbolToFeedMap = new Map<string, string>();
+  private readonly feedToSymbolMap = new Map<string, string>();
 
-  static init(stocks: Array<{ symbol: string; feedSymbol?: string | null }>): void {
+  init(stocks: Array<{ symbol: string; feedSymbol?: string | null }>): void {
     this.symbolToFeedMap.clear();
     this.feedToSymbolMap.clear();
 
@@ -13,7 +17,7 @@ export class MarketSymbolMapper {
     }
   }
 
-  static register(symbol: string, feedSymbol: string): void {
+  register(symbol: string, feedSymbol: string): void {
     const cleanSym = symbol.toUpperCase().trim();
     const cleanFeed = feedSymbol.toUpperCase().trim();
     const spacelessSym = cleanSym.replace(/\s+/g, "");
@@ -23,11 +27,13 @@ export class MarketSymbolMapper {
     this.feedToSymbolMap.set(cleanFeed, cleanSym);
   }
 
-  static unregister(symbol: string): void {
+  unregister(symbol: string): void {
     const cleanSym = symbol.toUpperCase().trim();
     const spacelessSym = cleanSym.replace(/\s+/g, "");
 
-    const feedSymbol = this.symbolToFeedMap.get(cleanSym) || this.symbolToFeedMap.get(spacelessSym);
+    const feedSymbol =
+      this.symbolToFeedMap.get(cleanSym) ||
+      this.symbolToFeedMap.get(spacelessSym);
     if (feedSymbol) {
       this.feedToSymbolMap.delete(feedSymbol);
     }
@@ -36,7 +42,7 @@ export class MarketSymbolMapper {
     this.symbolToFeedMap.delete(spacelessSym);
   }
 
-  static toFeedSymbol(symbol: string): string {
+  toFeedSymbol(symbol: string): string {
     const raw = symbol.toUpperCase().trim();
 
     if (this.symbolToFeedMap.has(raw)) {
@@ -49,7 +55,10 @@ export class MarketSymbolMapper {
     }
 
     if (raw.startsWith("NSE:") || raw.startsWith("BSE:")) {
-      const cleanBase = raw.replace(/^(NSE|BSE):/, "").replace(/-EQ$/, "").replace(/-INDEX$/, "");
+      const cleanBase = raw
+        .replace(/^(NSE|BSE):/, "")
+        .replace(/-EQ$/, "")
+        .replace(/-INDEX$/, "");
       if (this.symbolToFeedMap.has(cleanBase)) {
         return this.symbolToFeedMap.get(cleanBase)!;
       }
@@ -59,7 +68,7 @@ export class MarketSymbolMapper {
     return `NSE:${spaceless}-EQ`;
   }
 
-  static fromFeedSymbol(feedSymbol: string): string {
+  fromFeedSymbol(feedSymbol: string): string {
     const raw = feedSymbol.trim();
     const upper = raw.toUpperCase();
 
@@ -74,13 +83,5 @@ export class MarketSymbolMapper {
       .replace(/^(NSE|BSE):/, "")
       .replace(/-EQ$/, "")
       .replace(/-INDEX$/, "");
-  }
-
-  static toFyersSymbol(symbol: string): string {
-    return this.toFeedSymbol(symbol);
-  }
-
-  static fromFyersSymbol(fyersSymbol: string): string {
-    return this.fromFeedSymbol(fyersSymbol);
   }
 }

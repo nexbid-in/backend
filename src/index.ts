@@ -5,7 +5,11 @@ import { connectRedis } from "./infrastructure/config/redis";
 import { env } from "./infrastructure/config/env";
 import { logger } from "./infrastructure/logging/logger";
 import { paymentReconciliationCron } from "./di/wallet/container";
-import { marketDataService, fyersTokenRefreshCron } from "./di/market/container";
+import {
+    marketDataService,
+    fyersTokenRefreshCron,
+    marketSymbolRegistry,
+} from "./di/market/container";
 import {
     orderMatchingEngine,
     autoSquareOffCron,
@@ -14,7 +18,6 @@ import {
     stockRepository,
 } from "./di/trading/container";
 import { MarketWebSocketGateway } from "./infrastructure/websocket/MarketWebSocketGateway";
-import { MarketSymbolMapper } from "./infrastructure/external/market/MarketSymbolMapper";
 
 const startServer = async () => {
     try {
@@ -25,9 +28,14 @@ const startServer = async () => {
         await connectRedis();
 
         const initialStocks = await stockRepository.findAll();
-        MarketSymbolMapper.init(initialStocks);
+        marketSymbolRegistry.init(initialStocks);
 
-        new MarketWebSocketGateway(server, marketDataService, marketDataService);
+        new MarketWebSocketGateway(
+            server,
+            marketDataService,
+            marketDataService,
+            marketSymbolRegistry
+        );
         await eodOrderExpiryCron.expireStaleDayOrders();
         await orderMatchingEngine.start();
 

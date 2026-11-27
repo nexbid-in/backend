@@ -5,6 +5,7 @@ import { FyersMarketService } from "../../infrastructure/external/market/FyersMa
 import { FyersAuthService } from "../../infrastructure/external/market/FyersAuthService";
 import { FyersTokenRefreshCron } from "../../infrastructure/cron/FyersTokenRefreshCron";
 import { MockMarketService } from "../../infrastructure/external/market/MockMarketService";
+import { MarketSymbolRegistry } from "../../infrastructure/external/market/MarketSymbolRegistry";
 import { StockRepository } from "../../infrastructure/repositories/stock/StockRepository";
 import { RedisStockStatsCacheService } from "../../infrastructure/redis/RedisStockStatsCacheService";
 import { logger } from "../../infrastructure/logging/logger";
@@ -13,13 +14,14 @@ import { GetHistoricalCandlesUseCase } from "../../application/use-cases/market/
 import { GetStockOverviewUseCase } from "../../application/use-cases/market/GetStockOverviewUseCase";
 import { MarketController } from "../../presentation/http/controllers/market/MarketController";
 
+export const marketSymbolRegistry = new MarketSymbolRegistry();
 export const fyersAuthService: IBrokerAuthService = new FyersAuthService();
 export const fyersTokenRefreshCron = new FyersTokenRefreshCron(fyersAuthService);
 
 export const marketDataService: IMarketDataService =
     env.MARKET_DATA_PROVIDER === "fyers"
-        ? new FyersMarketService(fyersAuthService)
-        : new MockMarketService();
+        ? new FyersMarketService(fyersAuthService, marketSymbolRegistry, logger)
+        : new MockMarketService(marketSymbolRegistry);
 
 export const marketQuoteBatchService = new MarketQuoteBatchService(marketDataService);
 export const stockRepository = new StockRepository();
