@@ -2,7 +2,8 @@ import { UserRepository } from "../../infrastructure/repositories/user/UserRepos
 import { WalletRepository } from "../../infrastructure/repositories/wallet/WalletRepository";
 import { PositionRepository } from "../../infrastructure/repositories/trading/PositionRepository";
 import { TradeRepository } from "../../infrastructure/repositories/trading/TradeRepository";
-import { marketDataService } from "../market/container";
+import { marketQuoteBatchService } from "../market/container";
+import { env } from "../../infrastructure/config/env";
 import { GetDashboardOverviewUseCase } from "../../application/use-cases/dashboard/GetDashboardOverviewUseCase";
 import { DashboardController } from "../../presentation/http/controllers/dashboard/DashboardController";
 
@@ -16,7 +17,8 @@ export const getDashboardOverviewUseCase = new GetDashboardOverviewUseCase(
   walletRepository,
   positionRepository,
   tradeRepository,
-  marketDataService
+  marketQuoteBatchService,
+  env.ENFORCE_MARKET_HOURS
 );
 
 export const dashboardController = new DashboardController(

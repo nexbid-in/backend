@@ -1,30 +1,36 @@
-import { IUserRepository } from "../../../domain/repositories/user/IUserRepository";
-import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
 import { IPositionRepository } from "../../../domain/repositories/trading/IPositionRepository";
 import { ITradeRepository } from "../../../domain/repositories/trading/ITradeRepository";
-import { IMarketDataService } from "../../interface/services/IMarketDataService";
-import { IGetDashboardOverviewUseCase } from "../../interface/use-cases/dashboard/IGetDashboardOverviewUseCase";
-import { DashboardOverviewResponseDTO } from "../../dto/dashboard/DashboardOverviewDTO";
-import { ProductType } from "../../../domain/entities/trading/Position";
-import { MarketHoursService } from "../../services/trading/MarketHoursService";
-import { env } from "../../../infrastructure/config/env";
-import { Money } from "../../../domain/value-objects/Money";
+import { IUserRepository } from "../../../domain/repositories/user/IUserRepository";
+import { IWalletRepository } from "../../../domain/repositories/wallet/IWalletRepository";
+import { HoldingsValuationCalculator } from "../../../domain/services/trading/HoldingsValuationCalculator";
+import { PositionsValuationCalculator } from "../../../domain/services/trading/PositionsValuationCalculator";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
+import { DashboardOverviewResponseDTO } from "../../dto/dashboard/DashboardOverviewDTO";
+import { IGetDashboardOverviewUseCase } from "../../interface/use-cases/dashboard/IGetDashboardOverviewUseCase";
+import { DashboardOverviewDTOMapper } from "../../mapper/dashboard/DashboardOverviewDTOMapper";
+import { MarketQuoteBatchService } from "../../services/market/MarketQuoteBatchService";
+import { MarketHoursService } from "../../services/trading/MarketHoursService";
 
-export class GetDashboardOverviewUseCase implements IGetDashboardOverviewUseCase {
+/**
+ * Orchestrates user/wallet validation, concurrent portfolio data loading, single-batch
+ * live quote retrieval, domain portfolio valuation, and dashboard DTO mapping.
+ */
+export class GetDashboardOverviewUseCase
+  implements IGetDashboardOverviewUseCase
+{
   constructor(
     private readonly userRepo: IUserRepository,
     private readonly walletRepo: IWalletRepository,
     private readonly positionRepo: IPositionRepository,
     private readonly tradeRepo: ITradeRepository,
-    private readonly marketDataService: IMarketDataService
+    private readonly quoteBatchService: MarketQuoteBatchService,
+    private readonly enforceMarketHours: boolean
   ) {}
 
   async execute(userId: string): Promise<DashboardOverviewResponseDTO> {
     const startOfTodayIst = MarketHoursService.getStartOfTodayIst();
 
-    // 1. Fetch user, wallet, positions, and today's trades concurrently
     const [user, wallet, allPositions, todayTrades] = await Promise.all([
       this.userRepo.findById(userId),
       this.walletRepo.findOrCreateByUserId(userId),
@@ -40,127 +46,42 @@ export class GetDashboardOverviewUseCase implements IGetDashboardOverviewUseCase
       throw new AppError(ErrorCodes.ACCOUNT_BLOCKED, "Account is blocked");
     }
 
-    // 2. Market Status (seed time for header clock)
-    const marketStatusInfo = MarketHoursService.getMarketStatus(env.ENFORCE_MARKET_HOURS);
-
-    // 3. Margins & Capital
-    const availableCash = wallet.balance.toNumber();
-    const availableMargin = wallet.availableMargin.toNumber();
-    const usedMargin = wallet.usedMargin.toNumber();
-
-    // 4. Holdings Overview (CNC)
-    const cncPositions = allPositions.filter(
-      (pos) => pos.productType === ProductType.CNC && pos.quantity > 0
+    const marketStatus = MarketHoursService.getMarketStatus(
+      this.enforceMarketHours
     );
 
-    let totalInvestedMoney = Money.zero();
-    let totalCurrentValueMoney = Money.zero();
-    let totalDayPnlMoney = Money.zero();
+    const { active: activeHoldings } =
+      HoldingsValuationCalculator.selectHoldings(allPositions, startOfTodayIst);
+    const sessionMisPositions =
+      PositionsValuationCalculator.selectSessionPositions(
+        allPositions,
+        startOfTodayIst
+      );
+    const openMisPositions = sessionMisPositions.filter((pos) => pos.isOpen());
 
-    for (const pos of cncPositions) {
-      const quote = await this.marketDataService.getQuote(pos.symbol);
-      const currentLtp = quote?.ltp && quote.ltp > 0 ? quote.ltp : pos.averagePrice;
-
-      const avgMoney = Money.of(pos.averagePrice);
-      const ltpMoney = Money.of(currentLtp);
-
-      const invMoney = avgMoney.multiply(pos.quantity);
-      const curMoney = ltpMoney.multiply(pos.quantity);
-      const pnlMoney = curMoney.subtract(invMoney);
-
-      totalInvestedMoney = totalInvestedMoney.add(invMoney);
-      totalCurrentValueMoney = totalCurrentValueMoney.add(curMoney);
-
-      const isBoughtToday = pos.createdAt >= startOfTodayIst;
-      if (isBoughtToday) {
-        totalDayPnlMoney = totalDayPnlMoney.add(pnlMoney);
-      } else {
-        const prevClose = quote?.close && quote.close > 0 ? quote.close : pos.averagePrice;
-        const dayChange = currentLtp - prevClose;
-        const dayPnl = Money.of(dayChange).multiply(pos.quantity);
-        totalDayPnlMoney = totalDayPnlMoney.add(dayPnl);
-      }
-    }
-
-    const totalInvestedNum = totalInvestedMoney.toNumber();
-    const totalCurrentValNum = totalCurrentValueMoney.toNumber();
-    const totalPnlMoney = totalCurrentValueMoney.subtract(totalInvestedMoney);
-    const totalPnlNum = totalPnlMoney.toNumber();
-    const totalPnlPercentage =
-      totalInvestedNum > 0 ? +((totalPnlNum / totalInvestedNum) * 100).toFixed(2) : 0;
-
-    const totalDayPnlNum = totalDayPnlMoney.toNumber();
-    const totalDayPnlPercentage =
-      totalInvestedNum > 0 ? +((totalDayPnlNum / totalInvestedNum) * 100).toFixed(2) : 0;
-
-    // 5. Positions Overview (MIS)
-    let totalRealizedPnL = Money.zero();
-    for (const trade of todayTrades) {
-      if (trade.productType === ProductType.MIS) {
-        totalRealizedPnL = totalRealizedPnL.add(trade.realizedPnL);
-      }
-    }
-
-    const sessionMisPositions = allPositions.filter(
-      (pos) =>
-        pos.productType === ProductType.MIS &&
-        (pos.isOpen() || pos.updatedAt >= startOfTodayIst)
+    const quotesBySymbol = await this.quoteBatchService.fetchQuotes(
+      [...activeHoldings, ...openMisPositions].map((pos) => pos.symbol)
     );
 
-    let totalUnrealizedPnL = Money.zero();
-    let openPositionsCount = 0;
+    const holdingsEvaluation = HoldingsValuationCalculator.evaluate({
+      positions: allPositions,
+      quotesBySymbol,
+      startOfTodayIst,
+      includeExited: false,
+    });
 
-    for (const pos of sessionMisPositions) {
-      // Only fetch live quote for active open positions
-      if (pos.isOpen()) {
-        openPositionsCount++;
-        const quote = await this.marketDataService.getQuote(pos.symbol);
-        const currentLtp = quote?.ltp && quote.ltp > 0 ? quote.ltp : pos.averagePrice;
-        const unrealized = pos.calculateUnrealizedPnL(currentLtp);
-        totalUnrealizedPnL = totalUnrealizedPnL.add(unrealized);
-      }
-    }
+    const positionsEvaluation = PositionsValuationCalculator.evaluate({
+      sessionPositions: sessionMisPositions,
+      todayTrades,
+      quotesBySymbol,
+    });
 
-    const dayRealizedNum = totalRealizedPnL.toNumber();
-    const dayUnrealizedNum = totalUnrealizedPnL.toNumber();
-    const dayNetPnL = +(dayRealizedNum + dayUnrealizedNum).toFixed(2);
-
-    const userName = `${user.firstName} ${user.lastName}`.trim();
-
-    return {
-      user: {
-        id: user.id,
-        name: userName || user.firstName,
-        email: user.email.getValue(),
-      },
-      marketStatus: {
-        isOpen: marketStatusInfo.isOpen,
-        session: marketStatusInfo.session,
-        currentIstTime: marketStatusInfo.currentIstTime,
-      },
-      margins: {
-        availableMargin,
-        usedMargin,
-        availableCash,
-        openingBalance: +(availableCash + usedMargin).toFixed(2),
-        tradingStatus: wallet.status,
-      },
-      holdings: {
-        totalHoldingsCount: cncPositions.length,
-        totalInvestmentValue: totalInvestedNum,
-        totalCurrentValue: totalCurrentValNum,
-        totalPnl: totalPnlNum,
-        totalPnlPercentage,
-        dayPnl: totalDayPnlNum,
-        dayPnlPercentage: totalDayPnlPercentage,
-      },
-      positions: {
-        openPositionsCount,
-        dayRealizedPnL: dayRealizedNum,
-        dayUnrealizedPnL: dayUnrealizedNum,
-        dayNetPnL,
-        sessionPositionsCount: sessionMisPositions.length,
-      },
-    };
+    return DashboardOverviewDTOMapper.toDTO({
+      user,
+      wallet,
+      marketStatus,
+      holdingsSummary: holdingsEvaluation.summary,
+      positionsSummary: positionsEvaluation.summary,
+    });
   }
 }

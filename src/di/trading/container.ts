@@ -3,7 +3,7 @@ import { PositionRepository } from "../../infrastructure/repositories/trading/Po
 import { TradeRepository } from "../../infrastructure/repositories/trading/TradeRepository";
 import { WalletRepository } from "../../infrastructure/repositories/wallet/WalletRepository";
 import { StockRepository } from "../../infrastructure/repositories/stock/StockRepository";
-import { marketDataService } from "../market/container";
+import { marketDataService, marketQuoteBatchService } from "../market/container";
 import { OrderMatchingEngine } from "../../infrastructure/external/trading/OrderMatchingEngine";
 import { TradeValidationService } from "../../application/services/trading/TradeValidationService";
 import { OrderPricingService } from "../../application/services/trading/OrderPricingService";
@@ -79,7 +79,7 @@ export const cancelOrderUseCase = new CancelOrderUseCase(
 export const getPositionsUseCase = new GetPositionsUseCase(
   positionRepository,
   tradeRepository,
-  marketDataService
+  marketQuoteBatchService
 );
 
 export const squareOffPositionUseCase = new SquareOffPositionUseCase(
@@ -116,7 +116,7 @@ export const orderController = new OrderController(
 
 export const getHoldingsUseCase = new GetHoldingsUseCase(
   positionRepository,
-  marketDataService
+  marketQuoteBatchService
 );
 
 export const getPnlStatementUseCase = new GetPnlStatementUseCase(

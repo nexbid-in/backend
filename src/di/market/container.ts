@@ -8,6 +8,7 @@ import { MockMarketService } from "../../infrastructure/external/market/MockMark
 import { StockRepository } from "../../infrastructure/repositories/stock/StockRepository";
 import { RedisStockStatsCacheService } from "../../infrastructure/redis/RedisStockStatsCacheService";
 import { logger } from "../../infrastructure/logging/logger";
+import { MarketQuoteBatchService } from "../../application/services/market/MarketQuoteBatchService";
 import { GetHistoricalCandlesUseCase } from "../../application/use-cases/market/GetHistoricalCandlesUseCase";
 import { GetStockOverviewUseCase } from "../../application/use-cases/market/GetStockOverviewUseCase";
 import { MarketController } from "../../presentation/http/controllers/market/MarketController";
@@ -20,6 +21,7 @@ export const marketDataService: IMarketDataService =
         ? new FyersMarketService(fyersAuthService)
         : new MockMarketService();
 
+export const marketQuoteBatchService = new MarketQuoteBatchService(marketDataService);
 export const stockRepository = new StockRepository();
 export const stockStatsCacheService = new RedisStockStatsCacheService();
 export const getHistoricalCandlesUseCase = new GetHistoricalCandlesUseCase(marketDataService);

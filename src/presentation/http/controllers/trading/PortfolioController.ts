@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import { GetPositionsUseCase } from "../../../../application/use-cases/trading/GetPositionsUseCase";
-import { GetHoldingsUseCase } from "../../../../application/use-cases/trading/GetHoldingsUseCase";
-import { SquareOffPositionUseCase } from "../../../../application/use-cases/trading/SquareOffPositionUseCase";
-import { GetPnlStatementUseCase } from "../../../../application/use-cases/trading/GetPnlStatementUseCase";
-import { GetTradebookUseCase } from "../../../../application/use-cases/trading/GetTradebookUseCase";
+import { IGetPositionsUseCase } from "../../../../application/interface/use-cases/trading/IGetPositionsUseCase";
+import { IGetHoldingsUseCase } from "../../../../application/interface/use-cases/trading/IGetHoldingsUseCase";
+import { ISquareOffPositionUseCase } from "../../../../application/interface/use-cases/trading/ISquareOffPositionUseCase";
+import { IGetPnlStatementUseCase } from "../../../../application/interface/use-cases/trading/IGetPnlStatementUseCase";
+import { IGetTradebookUseCase } from "../../../../application/interface/use-cases/trading/IGetTradebookUseCase";
 import {
   getPositionsQuerySchema,
   squareOffParamsSchema,
@@ -18,11 +18,11 @@ import { ErrorCodes } from "../../../../shared/errors/ErrorCodes";
 
 export class PortfolioController {
   constructor(
-    private readonly getPositionsUseCase: GetPositionsUseCase,
-    private readonly getHoldingsUseCase: GetHoldingsUseCase,
-    private readonly squareOffUseCase: SquareOffPositionUseCase,
-    private readonly getPnlStatementUseCase: GetPnlStatementUseCase,
-    private readonly getTradebookUseCase: GetTradebookUseCase
+    private readonly getPositionsUseCase: IGetPositionsUseCase,
+    private readonly getHoldingsUseCase: IGetHoldingsUseCase,
+    private readonly squareOffUseCase: ISquareOffPositionUseCase,
+    private readonly getPnlStatementUseCase: IGetPnlStatementUseCase,
+    private readonly getTradebookUseCase: IGetTradebookUseCase
   ) {}
 
   async getPositions(req: Request, res: Response, next: NextFunction): Promise<void> {
