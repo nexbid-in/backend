@@ -10,6 +10,10 @@ import { UniqueUserIdService } from "../../infrastructure/services/idGenerator/U
 import { GoogleAuthService } from "../../infrastructure/services/google/GoogleAuthService";
 import { RedisUserActivityService } from "../../infrastructure/redis/RedisUserActivityService";
 
+import { OtpDispatchService } from "../../application/services/auth/OtpDispatchService";
+import { OtpVerificationService } from "../../application/services/auth/OtpVerificationService";
+import { AuthSessionService } from "../../application/services/auth/AuthSessionService";
+
 import { RegisterUserUseCase } from "../../application/use-cases/auth/RegisterUserUseCase";
 import { VerifyEmailAndCreateAccountUseCase } from "../../application/use-cases/auth/VerifyEmailAndCreateAccountUseCase";
 import { ResendOtpUseCase } from "../../application/use-cases/auth/ResendOtpUseCase";
@@ -38,70 +42,71 @@ const uniqueUserIdService = new UniqueUserIdService(
   userIdGenerator
 );
 
-const redisUserActivityService = new RedisUserActivityService(
-  userRepository
-);
+const redisUserActivityService = new RedisUserActivityService(userRepository);
 
-const registerUserUseCase = new RegisterUserUseCase(
-  userRepository,
+const otpDispatchService = new OtpDispatchService(
   redisOtpSessionService,
   otpService,
   emailService,
-  passwordHashService,
   redisRateLimiter
 );
 
-const verifyEmailAndCreateAccountUseCase = new VerifyEmailAndCreateAccountUseCase(
+const otpVerificationService = new OtpVerificationService(
   redisOtpSessionService,
-  otpService,
+  otpService
+);
+
+const authSessionService = new AuthSessionService(authTokenService);
+
+const registerUserUseCase = new RegisterUserUseCase(
+  userRepository,
+  passwordHashService,
+  otpDispatchService
+);
+
+const verifyEmailAndCreateAccountUseCase = new VerifyEmailAndCreateAccountUseCase(
+  otpVerificationService,
   userRepository,
   uniqueUserIdService,
-  authTokenService
+  authSessionService
 );
 
 const resendOtpUseCase = new ResendOtpUseCase(
   redisOtpSessionService,
-  otpService,
-  emailService,
-  redisRateLimiter
+  otpDispatchService
 );
 
 const loginUserUseCase = new LoginUserUseCase(
   userRepository,
   passwordHashService,
-  authTokenService,
+  authSessionService,
   redisRateLimiter
 );
 
-const getCurrentUserUseCase = new GetCurrentUserUseCase(
-  userRepository
-);
+const getCurrentUserUseCase = new GetCurrentUserUseCase(userRepository);
 
 const sendPasswordResetOtpUseCase = new SendPasswordResetOtpUseCase(
   userRepository,
-  redisOtpSessionService,
-  otpService,
-  emailService,
-  redisRateLimiter
+  otpDispatchService
 );
 
 const verifyOtpAndResetPasswordUseCase = new VerifyOtpAndResetPasswordUseCase(
-  redisOtpSessionService,
-  otpService,
+  otpVerificationService,
   userRepository,
   passwordHashService
 );
 
 const refreshTokenUseCase = new RefreshTokenUseCase(
   userRepository,
-  authTokenService
+  authTokenService,
+  authSessionService
 );
 
 const googleAuthUseCase = new GoogleAuthUseCase(
   googleAuthService,
   userRepository,
   uniqueUserIdService,
-  authTokenService
+  authSessionService
 );
 
 export const authMiddleware = createAuthMiddleware(

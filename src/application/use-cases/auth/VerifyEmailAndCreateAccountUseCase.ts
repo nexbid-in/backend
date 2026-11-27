@@ -1,92 +1,63 @@
 import { User } from "../../../domain/entities/User";
-import { Email } from "../../../domain/value-objects/Email";
-
-import { VerifyEmailDTO } from "../../dto/auth/RegisterDTO";
-import { AuthResponseDTO } from "../../dto/auth/AuthResponseDTO";
-
-import { IVerifyEmailAndCreateAccountUseCase } from "../../interface/use-cases/auth/IVerifyEmailAndCreateAccountUseCase";
-import { IOtpSessionService } from "../../interface/services/IOtpSessionService";
 import { IUserRepository } from "../../../domain/repositories/user/IUserRepository";
-import { IOtpService } from "../../interface/services/IOtpService";
-import { IAuthTokenService } from "../../interface/services/ITokenService";
-import { IUniqueUserIdService } from "../../interface/services/IUserIdGenerator";
-
+import { Email } from "../../../domain/value-objects/Email";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
+import { AuthResponseDTO } from "../../dto/auth/AuthResponseDTO";
+import { VerifyEmailDTO } from "../../dto/auth/RegisterDTO";
+import { IUniqueUserIdService } from "../../interface/services/IUserIdGenerator";
+import { IVerifyEmailAndCreateAccountUseCase } from "../../interface/use-cases/auth/IVerifyEmailAndCreateAccountUseCase";
+import { AuthDTOMapper } from "../../mapper/auth/AuthDTOMapper";
+import { AuthSessionService } from "../../services/auth/AuthSessionService";
+import { OtpVerificationService } from "../../services/auth/OtpVerificationService";
 
+/**
+ * Orchestrates OTP verification, account creation, OTP consumption, and session issuance.
+ */
+export class VerifyEmailAndCreateAccountUseCase
+  implements IVerifyEmailAndCreateAccountUseCase
+{
+  constructor(
+    private readonly _otpVerificationService: OtpVerificationService,
+    private readonly _userRepo: IUserRepository,
+    private readonly _userIdService: IUniqueUserIdService,
+    private readonly _authSessionService: AuthSessionService
+  ) {}
 
-export class VerifyEmailAndCreateAccountUseCase implements IVerifyEmailAndCreateAccountUseCase {
-    private MAX_ATTEMPTS = 5;
+  async execute(input: VerifyEmailDTO): Promise<AuthResponseDTO> {
+    const emailVO = Email.create(input.email);
+    const email = emailVO.getValue();
 
-    constructor(
-        private readonly _otpRepo: IOtpSessionService,
-        private readonly _otpService: IOtpService,
-        private readonly _userRepo: IUserRepository,
-        private readonly _userIdService: IUniqueUserIdService,
-        private readonly _authTokenService: IAuthTokenService
-    ) { }
+    const sessionData = await this._otpVerificationService.verify({
+      email,
+      otp: input.otp,
+    });
 
-    async execute(input: VerifyEmailDTO): Promise<AuthResponseDTO> {
-
-        const emailVO = Email.create(input.email);
-
-        const record = await this._otpRepo.get(emailVO.getValue());
-
-        if (!record) {
-            throw new AppError(ErrorCodes.OTP_EXPIRED);
-        }
-
-        if (record.attempts >= this.MAX_ATTEMPTS) {
-            throw new AppError(ErrorCodes.OTP_TOO_MANY_ATTEMPTS);
-        }
-
-        const isValid = await this._otpService.compare(input.otp, record.otpHash);
-
-        if (!isValid) {
-            await this._otpRepo.incrementAttempts(emailVO.getValue());
-            throw new AppError(ErrorCodes.OTP_INVALID);
-        }
-
-        if (!record.data || !record.data.firstName || !record.data.lastName || !record.data.passwordHash) {
-            throw new AppError(ErrorCodes.VALIDATION_FAILED);
-        }
-
-        const userId = await this._userIdService.generate(record.data.firstName);
-
-        const user = User.create({
-            id: userId,
-            email: emailVO,
-            firstName: record.data.firstName,
-            lastName: record.data.lastName,
-            password: record.data.passwordHash
-        });
-
-        await this._userRepo.save(user);
-
-        const payload = {
-            userId: user.id,
-            email: user.email.getValue(),
-            role: user.role,
-        };
-
-
-        const accessToken = this._authTokenService.generateAccessToken(payload);
-        const refreshToken = this._authTokenService.generateRefreshToken(payload);
-
-        await this._otpRepo.delete(input.email);
-
-        return {
-            accessToken,
-            refreshToken,
-            user: {
-                id: user.id,
-                email: user.email.getValue(),
-                firstName: user.firstName,
-                lastName: user.lastName,
-                role: user.role,
-                profileImage: user.profileImage,
-            }
-        };
-
+    if (
+      !sessionData ||
+      !sessionData.firstName ||
+      !sessionData.lastName ||
+      !sessionData.passwordHash
+    ) {
+      throw new AppError(ErrorCodes.VALIDATION_FAILED);
     }
+
+    const userId = await this._userIdService.generate(sessionData.firstName);
+
+    const user = User.create({
+      id: userId,
+      email: emailVO,
+      firstName: sessionData.firstName,
+      lastName: sessionData.lastName,
+      password: sessionData.passwordHash,
+    });
+
+    await this._userRepo.save(user);
+    await this._otpVerificationService.consume(email);
+
+    const { accessToken, refreshToken } =
+      this._authSessionService.issueTokens(user);
+
+    return AuthDTOMapper.toAuthResponse({ user, accessToken, refreshToken });
+  }
 }

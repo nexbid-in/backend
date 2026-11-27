@@ -2,10 +2,13 @@ import { IStockRepository } from "../../../domain/repositories/stock/IStockRepos
 import {
   AdminStocksQueryDTO,
   PaginatedAdminStocksResponseDTO,
-  AdminStockItemDTO,
 } from "../../dto/admin/AdminStockDTOs";
 import { IGetAdminStocksUseCase } from "../../interface/use-cases/admin/IGetAdminStocksUseCase";
+import { AdminStockDTOMapper } from "../../mapper/admin/AdminStockDTOMapper";
 
+/**
+ * Orchestrates querying paginated admin stocks and projecting them to DTOs.
+ */
 export class GetAdminStocksUseCase implements IGetAdminStocksUseCase {
   constructor(private readonly stockRepo: IStockRepository) {}
 
@@ -22,30 +25,13 @@ export class GetAdminStocksUseCase implements IGetAdminStocksUseCase {
         limit: query.limit,
       });
 
-    const stockItems: AdminStockItemDTO[] = stocks.map((s) => ({
-      id: s.id,
-      symbol: s.symbol,
-      name: s.name,
-      exchange: s.exchange,
-      sector: s.sector,
-      type: s.type,
-      feedSymbol: s.feedSymbol,
-      isActive: s.isActive,
-      isTradable: s.isTradable,
-      createdAt: s.createdAt,
-      updatedAt: s.updatedAt,
-      canDelete: (orderCounts[s.id] || 0) === 0,
-    }));
-
-    return {
-      stocks: stockItems,
-      pagination: {
-        page: query.page,
-        limit: query.limit,
-        totalStocks: total,
-        totalPages: Math.ceil(total / query.limit),
-      },
+    return AdminStockDTOMapper.toPaginatedDTO({
+      stocks,
+      orderCounts,
+      total,
+      page: query.page,
+      limit: query.limit,
       metrics,
-    };
+    });
   }
 }

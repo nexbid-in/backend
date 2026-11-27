@@ -14,6 +14,8 @@ import { GetAdminOrderMetricsUseCase } from "../../application/use-cases/admin/G
 import { GetAdminOrderDetailsUseCase } from "../../application/use-cases/admin/GetAdminOrderDetailsUseCase";
 import { AdminCancelOrderUseCase } from "../../application/use-cases/admin/AdminCancelOrderUseCase";
 import { AdminOrderController } from "../../presentation/http/controllers/admin/AdminOrderController";
+import { MarketSymbolRegistry } from "../../infrastructure/external/market/MarketSymbolRegistry";
+import { StockFeedVerificationService } from "../../application/services/admin/StockFeedVerificationService";
 import { GetAdminStocksUseCase } from "../../application/use-cases/admin/GetAdminStocksUseCase";
 import { CreateStockUseCase } from "../../application/use-cases/admin/CreateStockUseCase";
 import { UpdateStockStatusUseCase } from "../../application/use-cases/admin/UpdateStockStatusUseCase";
@@ -47,12 +49,32 @@ export const adminOrderController = new AdminOrderController(
   adminCancelOrderUseCase
 );
 
+const marketSymbolRegistry = new MarketSymbolRegistry();
+const stockFeedVerificationService = new StockFeedVerificationService(
+  stockRepository,
+  marketDataService,
+  marketSymbolRegistry
+);
+
 const getAdminStocksUseCase = new GetAdminStocksUseCase(stockRepository);
-const createStockUseCase = new CreateStockUseCase(stockRepository, marketDataService);
+const createStockUseCase = new CreateStockUseCase(
+  stockRepository,
+  stockFeedVerificationService,
+  marketSymbolRegistry
+);
 const updateStockStatusUseCase = new UpdateStockStatusUseCase(stockRepository);
-const updateStockUseCase = new UpdateStockUseCase(stockRepository, marketDataService);
-const deleteStockUseCase = new DeleteStockUseCase(stockRepository);
-const verifyStockSymbolUseCase = new VerifyStockSymbolUseCase(marketDataService);
+const updateStockUseCase = new UpdateStockUseCase(
+  stockRepository,
+  stockFeedVerificationService,
+  marketSymbolRegistry
+);
+const deleteStockUseCase = new DeleteStockUseCase(
+  stockRepository,
+  marketSymbolRegistry
+);
+const verifyStockSymbolUseCase = new VerifyStockSymbolUseCase(
+  stockFeedVerificationService
+);
 
 export const adminStockController = new AdminStockController(
   getAdminStocksUseCase,

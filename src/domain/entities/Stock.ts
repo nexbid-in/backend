@@ -76,6 +76,9 @@ export class Stock {
   get updatedAt(): Date { return this.props.updatedAt; }
 
   updateStatus(isActive?: boolean, isTradable?: boolean): void {
+    if (this.props.type === InstrumentType.INDEX && isTradable === true) {
+      throw new AppError(ErrorCodes.INDEX_CANNOT_BE_TRADABLE);
+    }
     if (isActive !== undefined) {
       this.props.isActive = isActive;
     }

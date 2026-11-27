@@ -1,47 +1,38 @@
-import { IOtpSessionService } from "../../interface/services/IOtpSessionService";
 import { Email } from "../../../domain/value-objects/Email";
 import { AppError } from "../../../shared/errors/AppError";
 import { ErrorCodes } from "../../../shared/errors/ErrorCodes";
-import { IEmailService } from "../../interface/services/IEmailService";
-import { IOtpService } from "../../interface/services/IOtpService";
-import { IRateLimiter } from "../../interface/services/IRateLimiter";
-import { IResendOtpUseCase } from "../../interface/use-cases/auth/IResendOtpUseCase";
 import { ResendOtpDTO } from "../../dto/auth/RegisterDTO";
+import { IOtpSessionService } from "../../interface/services/IOtpSessionService";
+import { IResendOtpUseCase } from "../../interface/use-cases/auth/IResendOtpUseCase";
+import { OtpDispatchService } from "../../services/auth/OtpDispatchService";
 
-
+/**
+ * Orchestrates resending a registration OTP for an existing active OTP session.
+ */
 export class ResendOtpUseCase implements IResendOtpUseCase {
-    constructor(
-        private readonly _otpRepo: IOtpSessionService,
-        private readonly _otpService: IOtpService,
-        private readonly _emailService: IEmailService,
-        private readonly _rateLimiter: IRateLimiter,
-    ) { }
+  constructor(
+    private readonly _otpSessionService: IOtpSessionService,
+    private readonly _otpDispatchService: OtpDispatchService
+  ) {}
 
-    async execute(input: ResendOtpDTO): Promise<void> {
+  async execute(input: ResendOtpDTO): Promise<void> {
+    const email = Email.create(input.email).getValue();
 
-        const emailVO = Email.create(input.email);
-        const email = emailVO.getValue();
+    await this._otpDispatchService.checkRateLimit(
+      `rate_limit:otp:${email}`,
+      5,
+      900
+    );
 
-        const RATE_LIMIT_KEY = `rate_limit:otp:${email}`;
-        const isAllowed = await this._rateLimiter.incrementAndCheck(RATE_LIMIT_KEY, 5, 900);
-
-        if (!isAllowed) {
-            throw new AppError(ErrorCodes.OTP_RATE_LIMIT_EXCEEDED);
-        }
-
-        const existingRecord = await this._otpRepo.get(email);
-
-        if (!existingRecord) {
-            throw new AppError(ErrorCodes.OTP_EXPIRED);
-        }
-
-        const otp = this._otpService.generate();
-        const otpHash = await this._otpService.hash(otp);
-
-        await this._otpRepo.save(email, otpHash, existingRecord.data);
-
-        const subject = "Your nexbid Registration OTP Code (Resent)";
-
-        await this._emailService.sendOtp(email, subject, otp);
+    const existingRecord = await this._otpSessionService.get(email);
+    if (!existingRecord) {
+      throw new AppError(ErrorCodes.OTP_EXPIRED);
     }
+
+    await this._otpDispatchService.generateAndSendOtp({
+      email,
+      subject: "Your nexbid Registration OTP Code (Resent)",
+      sessionData: existingRecord.data,
+    });
+  }
 }
