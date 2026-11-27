@@ -20,9 +20,6 @@ export class WatchlistDTOMapper {
   static toItemDTO(item: WatchlistItem): WatchlistItemDTO {
     return {
       id: item.id,
-      stockId: item.stockId,
-      order: item.order,
-      addedAt: item.createdAt,
       stock: item.stock ? this.toStockDTO(item.stock) : ({} as StockItemDTO),
     };
   }

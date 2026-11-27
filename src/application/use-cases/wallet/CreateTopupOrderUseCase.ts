@@ -60,7 +60,6 @@ export class CreateTopupOrderUseCase implements ICreateTopupOrderUseCase {
 
     return {
       orderId: gatewayOrder.orderId,
-      paymentOrderId: paymentOrder.id,
       amount: gatewayOrder.amount,
       currency: gatewayOrder.currency,
       virtualAmount,

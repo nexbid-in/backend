@@ -18,7 +18,6 @@ export type TopupHistoryItemDTO = {
   virtualAmount: number;
   status: PaymentStatus;
   createdAt: Date;
-  updatedAt: Date;
 };
 
 export type PaginatedTopupHistoryResponseDTO = {

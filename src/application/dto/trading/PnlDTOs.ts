@@ -1,5 +1,3 @@
-import { ProductType } from "../../../domain/entities/trading/Order";
-
 export type PnlViewType = "COMBINED" | "REALIZED" | "UNREALIZED";
 export type PnlSegment = "ALL" | "CNC" | "MIS" | "COMBINED" | "DELIVERY" | "INTRADAY";
 
@@ -31,7 +29,6 @@ export interface PnlHeatmapDayDTO {
 export interface PnlHeatmapSummaryDTO {
   greenDays: number;
   redDays: number;
-  neutralDays: number;
   days: PnlHeatmapDayDTO[];
 }
 
@@ -46,19 +43,14 @@ export interface PnlSummaryDTO {
 export interface PnlSymbolSummaryDTO {
   symbol: string;
   exchange: string;         // e.g. "NSE"
-  productType?: ProductType; // "CNC" | "MIS" (omitted/optional when blended across segments)
   quantity: number;         // Matched closed quantity
   buyAvg: number;
   buyValue: number;
   sellAvg: number;
   sellValue: number;
-  grossRealizedPnL: number;
-  charges: number;
   netRealizedPnL: number;   // Net Realized P&L (Zerodha primary column)
-  chargesBreakdown: PnlChargesBreakdownDTO;
   unrealizedPnL: number;    // MTM on open quantity
   openQuantity: number;     // Open inventory still holding
-  currentLtp: number;
 }
 
 export interface GetPnlStatementResponseDTO {

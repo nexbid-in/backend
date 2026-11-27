@@ -43,7 +43,6 @@ export class GetTopupHistoryUseCase implements IGetTopupHistoryUseCase {
       virtualAmount: order.virtualAmount,
       status: order.status,
       createdAt: order.createdAt,
-      updatedAt: order.updatedAt,
     }));
 
     return {

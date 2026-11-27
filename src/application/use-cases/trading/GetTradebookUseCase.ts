@@ -58,23 +58,27 @@ export class GetTradebookUseCase implements IGetTradebookUseCase {
     });
 
     // 3. Compute macro summary metrics across all matching executions
-    let buyTradesCount = 0;
-    let sellTradesCount = 0;
-    let totalBuyQty = 0;
-    let totalSellQty = 0;
     let totalBuyTurnover = Money.zero();
     let totalSellTurnover = Money.zero();
     let totalCharges = Money.zero();
+    let totalBrokerage = Money.zero();
+    let totalStt = Money.zero();
+    let totalExchangeCharges = Money.zero();
+    let totalSebiCharges = Money.zero();
+    let totalStampDuty = Money.zero();
+    let totalGst = Money.zero();
 
     for (const t of allMatchingTrades) {
       totalCharges = totalCharges.add(t.totalCharges);
+      totalBrokerage = totalBrokerage.add(t.brokerage);
+      totalStt = totalStt.add(t.stt);
+      totalExchangeCharges = totalExchangeCharges.add(t.exchangeTurnoverCharges);
+      totalSebiCharges = totalSebiCharges.add(t.sebiCharges);
+      totalStampDuty = totalStampDuty.add(t.stampDuty);
+      totalGst = totalGst.add(t.gst);
       if (t.side === OrderSide.BUY) {
-        buyTradesCount++;
-        totalBuyQty += t.quantity;
         totalBuyTurnover = totalBuyTurnover.add(t.tradeValue);
       } else {
-        sellTradesCount++;
-        totalSellQty += t.quantity;
         totalSellTurnover = totalSellTurnover.add(t.tradeValue);
       }
     }
@@ -112,13 +116,18 @@ export class GetTradebookUseCase implements IGetTradebookUseCase {
       trades,
       summary: {
         totalTrades,
-        buyTradesCount,
-        sellTradesCount,
-        totalBuyQty,
-        totalSellQty,
         totalBuyTurnover: totalBuyTurnover.toNumber(),
         totalSellTurnover: totalSellTurnover.toNumber(),
         totalCharges: totalCharges.toNumber(),
+        chargesBreakdown: {
+          brokerage: totalBrokerage.toNumber(),
+          stt: totalStt.toNumber(),
+          exchangeTurnoverCharges: totalExchangeCharges.toNumber(),
+          sebiCharges: totalSebiCharges.toNumber(),
+          stampDuty: totalStampDuty.toNumber(),
+          gst: totalGst.toNumber(),
+          totalCharges: totalCharges.toNumber(),
+        },
       },
       pagination: {
         page,

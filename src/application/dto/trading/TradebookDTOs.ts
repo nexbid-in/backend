@@ -37,15 +37,22 @@ export interface TradebookItemDTO {
   executedAt: string;
 }
 
+export interface TradeChargesBreakdownDTO {
+  brokerage: number;
+  stt: number;
+  exchangeTurnoverCharges: number;
+  sebiCharges: number;
+  stampDuty: number;
+  gst: number;
+  totalCharges: number;
+}
+
 export interface TradebookSummaryDTO {
   totalTrades: number;
-  buyTradesCount: number;
-  sellTradesCount: number;
-  totalBuyQty: number;
-  totalSellQty: number;
   totalBuyTurnover: number;
   totalSellTurnover: number;
   totalCharges: number;
+  chargesBreakdown: TradeChargesBreakdownDTO;
 }
 
 export interface TradebookPaginationDTO {

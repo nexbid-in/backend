@@ -90,24 +90,16 @@ export class SquareOffPositionUseCase implements ISquareOffPositionUseCase {
 
     return {
       id: finalPosition.id,
-      userId: finalPosition.userId,
-      stockId: finalPosition.stockId,
       symbol: finalPosition.symbol,
       productType: finalPosition.productType,
       side: finalPosition.side,
       quantity: finalPosition.quantity,
-      buyQty: finalPosition.buyQty,
-      buyAmount: finalPosition.buyAmount,
-      sellQty: finalPosition.sellQty,
-      sellAmount: finalPosition.sellAmount,
       averagePrice: finalPosition.averagePrice,
       currentLtp: exitPrice,
       unrealizedPnL,
       realizedPnL,
       totalPnL: +(realizedPnL + unrealizedPnL).toFixed(2),
       pnlPercentage: 0,
-      blockedMargin: finalPosition.blockedMargin,
-      createdAt: finalPosition.createdAt,
       updatedAt: finalPosition.updatedAt,
     };
   }
