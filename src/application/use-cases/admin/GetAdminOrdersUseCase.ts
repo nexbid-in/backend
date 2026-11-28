@@ -1,4 +1,4 @@
-import { IAdminOrderQueryRepository } from "../../interface/repositories/admin/IAdminOrderQueryRepository";
+import { IAdminOrderQueryRepository } from "../../../domain/repositories/admin/IAdminOrderQueryRepository";
 import {
   AdminOrdersQueryDTO,
   PaginatedAdminOrdersResponseDTO,

@@ -3,7 +3,7 @@ import {
   OrderStatus,
   OrderType,
   ProductType,
-} from "../../../../domain/entities/trading/Order";
+} from "../../entities/trading/Order";
 
 export interface AdminOrderFilterOptions {
   page: number;

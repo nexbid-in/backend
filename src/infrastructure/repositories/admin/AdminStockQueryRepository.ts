@@ -5,7 +5,7 @@ import {
   AdminStockFilters,
   AdminStockQueryResult,
   IAdminStockQueryRepository,
-} from "../../../application/interface/repositories/admin/IAdminStockQueryRepository";
+} from "../../../domain/repositories/admin/IAdminStockQueryRepository";
 import { StockPersistenceMapper } from "../../../application/mapper/stock/StockPersistenceMapper";
 
 /**

@@ -8,7 +8,7 @@ import {
   AdminOrderWithRelations,
   IAdminOrderQueryRepository,
   PaginatedAdminOrdersResult,
-} from "../../../application/interface/repositories/admin/IAdminOrderQueryRepository";
+} from "../../../domain/repositories/admin/IAdminOrderQueryRepository";
 import {
   OrderSide,
   OrderStatus,

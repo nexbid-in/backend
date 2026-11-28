@@ -1,4 +1,4 @@
-import { Stock } from "../../../../domain/entities/Stock";
+import { Stock } from "../../entities/Stock";
 
 export interface AdminStockFilters {
   query?: string;

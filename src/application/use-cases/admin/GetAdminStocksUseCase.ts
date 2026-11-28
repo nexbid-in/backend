@@ -1,4 +1,4 @@
-import { IAdminStockQueryRepository } from "../../interface/repositories/admin/IAdminStockQueryRepository";
+import { IAdminStockQueryRepository } from "../../../domain/repositories/admin/IAdminStockQueryRepository";
 import {
   AdminStocksQueryDTO,
   PaginatedAdminStocksResponseDTO,

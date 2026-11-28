@@ -1,4 +1,4 @@
-import { IAdminOrderQueryRepository } from "../../interface/repositories/admin/IAdminOrderQueryRepository";
+import { IAdminOrderQueryRepository } from "../../../domain/repositories/admin/IAdminOrderQueryRepository";
 import { AdminOrderDetailsDTO } from "../../dto/admin/AdminOrderDTOs";
 import { IGetAdminOrderDetailsUseCase } from "../../interface/use-cases/admin/IGetAdminOrderDetailsUseCase";
 import { AppError } from "../../../shared/errors/AppError";
